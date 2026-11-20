@@ -1,0 +1,3067 @@
+{
+  "generatedAt": "2026-11-20T16:25:51.024Z",
+  "liveImageryMeasured": false,
+  "mapillaryTokenConfigured": false,
+  "statement": "Live Mapillary coverage was NOT measured: no Mapillary token is configured, no frames were ingested, and this run made no Mapillary call. Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. No coverage figure for real roads exists in this report, and none should be inferred from it.",
+  "frameRowsInDatabase": 0,
+  "config": {
+    "match": {
+      "lateralToleranceM": 15,
+      "maxLeftOffsetM": 3,
+      "bearingToleranceDeg": 25,
+      "minQualityScore": 0.5,
+      "allowMissingQuality": false
+    },
+    "classify": {
+      "minRunM": 60,
+      "maxGapM": 15,
+      "crossfadeMaxGapM": 30,
+      "discontinuityMaxGapM": 30,
+      "headingJumpDeg": 30,
+      "levelPadM": 20
+    },
+    "approachLengthM": 500,
+    "decisionWindowM": 80
+  },
+  "namedPoints": {
+    "kwameNkrumahInterchange": {
+      "name": "Kwame Nkrumah Interchange (Circle)",
+      "at": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      }
+    },
+    "tettehQuarshieInterchange": {
+      "name": "Tetteh Quarshie Interchange",
+      "at": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      }
+    },
+    "danquahCircle": {
+      "name": "Danquah Circle",
+      "at": {
+        "lat": 5.567,
+        "lon": -0.1809
+      }
+    }
+  },
+  "realRoutes": [
+    {
+      "routeId": "r01",
+      "label": "Accra Central -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 11.45384610441542,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 141,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2169,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 1180,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r01",
+      "label": "Accra Central -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 15.372595831893538,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 174,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 13,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 17,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 3789,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r02",
+      "label": "Tetteh Quarshie Interchange -> Accra Central",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 13.051961006741866,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 14,
+      "routeEdgeCount": 175,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2169,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r02",
+      "label": "Tetteh Quarshie Interchange -> Accra Central",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 14.064412923196656,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 195,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 16,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2158,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r03",
+      "label": "Kwame Nkrumah Interchange -> Airport",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "destination": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "status": "ok",
+      "routeLengthKm": 12.01105558586968,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 2,
+      "routeEdgeCount": 109,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 14,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 1138,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1164,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r03",
+      "label": "Kwame Nkrumah Interchange -> Airport",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "destination": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "status": "ok",
+      "routeLengthKm": 10.71331195283553,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 1,
+      "routeEdgeCount": 79,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 8,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 2330,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1164,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r04",
+      "label": "Achimota -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.615,
+        "lon": -0.233
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 7.268021410238706,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 84,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 10,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5875,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 3808,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r04",
+      "label": "Achimota -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.615,
+        "lon": -0.233
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 7.446791648633527,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 116,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 8,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5875,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 3808,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r05",
+      "label": "Kwame Nkrumah Interchange -> Danquah Circle",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 4.174273306664336,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 49,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 3,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5839,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r05",
+      "label": "Kwame Nkrumah Interchange -> Danquah Circle",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 4.174273306664336,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 49,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 3,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5839,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r06",
+      "label": "Danquah Circle -> Airport",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "destination": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "status": "ok",
+      "routeLengthKm": 9.738902442334,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 2,
+      "routeEdgeCount": 123,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 15,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3774,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 1138,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r06",
+      "label": "Danquah Circle -> Airport",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "destination": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "status": "ok",
+      "routeLengthKm": 8.953407029325582,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 1,
+      "routeEdgeCount": 62,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 9,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2788,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 2330,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r07",
+      "label": "Osu -> Danquah Circle",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 1.5345648164545305,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 41,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 2,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3787,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 6263,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r07",
+      "label": "Osu -> Danquah Circle",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 1.5345648164545305,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 41,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 2,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3787,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 6263,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r08",
+      "label": "Legon -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.6508,
+        "lon": -0.187
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 6.067006100655541,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 88,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 11,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 6659,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 5357,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r08",
+      "label": "Legon -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.6508,
+        "lon": -0.187
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 4.866592948070295,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 4,
+      "routeEdgeCount": 77,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 8,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 7094,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 6040,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r09",
+      "label": "Madina -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 16.688311994361367,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 190,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 17,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1199,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r09",
+      "label": "Madina -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 16.672383959481337,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 182,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 14,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1199,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r10",
+      "label": "Dzorwulu -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.602,
+        "lon": -0.195
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 4.448503896604039,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 54,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 5,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 4179,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 3934,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r10",
+      "label": "Dzorwulu -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.602,
+        "lon": -0.195
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 4.768552823802285,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 45,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 7,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 4179,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 4000,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r11",
+      "label": "Kaneshie -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.237
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 3.133957256244602,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 41,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 6,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 7407,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 3808,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r11",
+      "label": "Kaneshie -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.237
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 3.133957256244602,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 41,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 6,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 7407,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 3808,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r12",
+      "label": "Labone -> Danquah Circle",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.564,
+        "lon": -0.172
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 1.2004227856679757,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 23,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 2,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3813,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 6263,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r12",
+      "label": "Labone -> Danquah Circle",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.564,
+        "lon": -0.172
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 1.2004227856679757,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 23,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 2,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3813,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 6263,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r13",
+      "label": "Ridge -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.198
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 4.374790523512013,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 88,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 7301,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1965,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r13",
+      "label": "Ridge -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.198
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 4.404846450788298,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 91,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 14,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 7272,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1965,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r14",
+      "label": "Danquah Circle -> Madina",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "destination": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "status": "ok",
+      "routeLengthKm": 13.363358434405006,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 123,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2788,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r14",
+      "label": "Danquah Circle -> Madina",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "destination": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "status": "ok",
+      "routeLengthKm": 13.366191098323608,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 114,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 10,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2788,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r15",
+      "label": "Achimota -> Osu",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.615,
+        "lon": -0.233
+      },
+      "destination": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "status": "ok",
+      "routeLengthKm": 11.658887491550681,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 189,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 11,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 20,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5839,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 33,
+          "relation": "through"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r15",
+      "label": "Achimota -> Osu",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.615,
+        "lon": -0.233
+      },
+      "destination": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "status": "ok",
+      "routeLengthKm": 11.658706757553103,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 185,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 20,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5839,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 33,
+          "relation": "through"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r16",
+      "label": "Accra Central -> Madina",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "destination": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "status": "ok",
+      "routeLengthKm": 17.652579697598817,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 195,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 20,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2169,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1180,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r16",
+      "label": "Accra Central -> Madina",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "destination": {
+        "lat": 5.6683,
+        "lon": -0.1665
+      },
+      "status": "ok",
+      "routeLengthKm": 17.69294159009419,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 187,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 18,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2158,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1180,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r17",
+      "label": "East Legon -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.155
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 13.499481428075805,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 162,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 22,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 406,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1199,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r17",
+      "label": "East Legon -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.155
+      },
+      "destination": {
+        "lat": 5.5696,
+        "lon": -0.2152
+      },
+      "status": "ok",
+      "routeLengthKm": 14.339209360534726,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 7,
+      "routeEdgeCount": 191,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 16,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "ends_at"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1199,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r18",
+      "label": "Tetteh Quarshie Interchange -> Osu",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "destination": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "status": "ok",
+      "routeLengthKm": 10.323494433962862,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 141,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 8,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2746,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 33,
+          "relation": "through"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r18",
+      "label": "Tetteh Quarshie Interchange -> Osu",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "destination": {
+        "lat": 5.5541,
+        "lon": -0.1836
+      },
+      "status": "ok",
+      "routeLengthKm": 10.378629184879658,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 131,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2746,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 33,
+          "relation": "through"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r19",
+      "label": "Airport -> Accra Central",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 14.528822538291406,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 14,
+      "routeEdgeCount": 174,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 20,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2169,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 1138,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r19",
+      "label": "Airport -> Accra Central",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.6052,
+        "lon": -0.1668
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 14.18433430353351,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 176,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 15,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2158,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 2330,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r20",
+      "label": "Spintex -> Danquah Circle",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.105
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 15.261504236831804,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 15,
+      "routeEdgeCount": 231,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 22,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3773,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 2153,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r20",
+      "label": "Spintex -> Danquah Circle",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.105
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 17.12760329122179,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 195,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 3813,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5054,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r21",
+      "label": "Kaneshie -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.237
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 12.058552462055475,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 126,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 9,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 90,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 1164,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r21",
+      "label": "Kaneshie -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.56,
+        "lon": -0.237
+      },
+      "destination": {
+        "lat": 5.623259,
+        "lon": -0.175523
+      },
+      "status": "ok",
+      "routeLengthKm": 14.159604039881273,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 5,
+      "routeEdgeCount": 146,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 12,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 17,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 0,
+          "relation": "ends_at"
+        },
+        "danquahCircle": {
+          "distanceM": 3789,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r22",
+      "label": "Legon -> Danquah Circle",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.6508,
+        "lon": -0.187
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 11.464510748685187,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 159,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 11,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2746,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r22",
+      "label": "Legon -> Danquah Circle",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.6508,
+        "lon": -0.187
+      },
+      "destination": {
+        "lat": 5.567,
+        "lon": -0.1809
+      },
+      "status": "ok",
+      "routeLengthKm": 11.464510748685187,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 12,
+      "routeEdgeCount": 159,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 11,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2746,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 21,
+          "relation": "ends_at"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r23",
+      "label": "East Legon -> Accra Central",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.155
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 14.522079348833822,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 14,
+      "routeEdgeCount": 189,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 23,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2169,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 406,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r23",
+      "label": "East Legon -> Accra Central",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.635,
+        "lon": -0.155
+      },
+      "destination": {
+        "lat": 5.5502,
+        "lon": -0.2174
+      },
+      "status": "ok",
+      "routeLengthKm": 16.31916067040937,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 13,
+      "routeEdgeCount": 248,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 17,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 2158,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 110,
+          "relation": "through"
+        },
+        "danquahCircle": {
+          "distanceM": 1192,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r24",
+      "label": "Abeka -> Adabraka (through Kwame Nkrumah Interchange area)",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.5995,
+        "lon": -0.2285
+      },
+      "destination": {
+        "lat": 5.563,
+        "lon": -0.209
+      },
+      "status": "ok",
+      "routeLengthKm": 5.764548477926676,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 94,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 7,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 37,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5995,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 2958,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r24",
+      "label": "Abeka -> Adabraka (through Kwame Nkrumah Interchange area)",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.5995,
+        "lon": -0.2285
+      },
+      "destination": {
+        "lat": 5.563,
+        "lon": -0.209
+      },
+      "status": "ok",
+      "routeLengthKm": 5.776918631601651,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 8,
+      "routeEdgeCount": 103,
+      "unpaved_fallback": false,
+      "decisionWindowCount": 9,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 55,
+          "relation": "through"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 5995,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 2958,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    },
+    {
+      "routeId": "r25",
+      "label": "Phase 2 failing pair (corridor tetteh-quarshie-accra-central)",
+      "costing": "motor_scooter",
+      "origin": {
+        "lat": 5.60198221293278,
+        "lon": -0.2261231006379239
+      },
+      "destination": {
+        "lat": 5.578112799362279,
+        "lon": -0.2297016521100886
+      },
+      "status": "error",
+      "error": "Valhalla /route -> HTTP 400: {\"error_code\":442,\"error\":\"No path could be found for input\",\"status_code\":400,\"status\":\"Bad Request\"}"
+    },
+    {
+      "routeId": "r25",
+      "label": "Phase 2 failing pair (corridor tetteh-quarshie-accra-central)",
+      "costing": "auto",
+      "origin": {
+        "lat": 5.60198221293278,
+        "lon": -0.2261231006379239
+      },
+      "destination": {
+        "lat": 5.578112799362279,
+        "lon": -0.2297016521100886
+      },
+      "status": "ok",
+      "routeLengthKm": 3.841330123593705,
+      "approachLengthM": 500,
+      "approachWholeRoute": false,
+      "approachEdgeCount": 6,
+      "routeEdgeCount": 63,
+      "unpaved_fallback": true,
+      "decisionWindowCount": 10,
+      "named": {
+        "kwameNkrumahInterchange": {
+          "distanceM": 1849,
+          "relation": "no"
+        },
+        "tettehQuarshieInterchange": {
+          "distanceM": 6007,
+          "relation": "no"
+        },
+        "danquahCircle": {
+          "distanceM": 5454,
+          "relation": "no"
+        }
+      },
+      "classification": {
+        "modes": [
+          "BIRDS_EYE_3D"
+        ],
+        "usableFrames": 0,
+        "candidateFrames": 0,
+        "framesPer100m": 0,
+        "maxGapM": null,
+        "streetFraction": 0,
+        "levelUncertainSegments": 0,
+        "segmentCount": 1
+      }
+    }
+  ],
+  "synthetic": {
+    "synthetic": true,
+    "label": "SYNTHETIC: artificial frames generated by the test fixture builder to demonstrate classifier outcomes. This is not real imagery and not a coverage measurement.",
+    "scenarios": [
+      {
+        "id": "street-run",
+        "title": "Street run",
+        "description": "500 m route, one sequence, a frame every 5 m on the right-hand lane from 100 m to 400 m.",
+        "expectation": "One STREET_VIDEO segment 100-400 m, BIRDS_EYE_3D before and after.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 61,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 400,
+                "lengthM": 300,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002,
+                  1003
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 61,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 400,
+                "endM": 500.00000000003354,
+                "lengthM": 100.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 300,
+              "birdsEyeM": 200.00000000003354,
+              "streetFraction": 0.5999999999999598,
+              "usableFrameCount": 61,
+              "framesPer100m": 12.199999999999182,
+              "maxGapM": 5,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 61,
+          "usableFrames": 61,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "short-run",
+        "title": "Short run",
+        "description": "Same road, but frames only cover 50 m (below the 60 m minimum run).",
+        "expectation": "No STREET_VIDEO: the whole route is BIRDS_EYE_3D (run_too_short).",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 11,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 500.00000000003354,
+                "lengthM": 500.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 11,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "run_too_short"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 0,
+              "birdsEyeM": 500.00000000003354,
+              "streetFraction": 0,
+              "usableFrameCount": 11,
+              "framesPer100m": 2.1999999999998523,
+              "maxGapM": 5,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 11,
+          "usableFrames": 11,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-14m",
+        "title": "Gap of 14 m",
+        "description": "Frames every 14 m across 100-400 m (every consecutive gap is exactly 14 m; the limit is strict < 15 m).",
+        "expectation": "Qualifies: one STREET_VIDEO segment.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 21,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 380,
+                "lengthM": 280,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002,
+                  1003
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 21,
+                "maxGapM": 14,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 380,
+                "endM": 500.00000000003354,
+                "lengthM": 120.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 280,
+              "birdsEyeM": 220.00000000003354,
+              "streetFraction": 0.5599999999999624,
+              "usableFrameCount": 21,
+              "framesPer100m": 4.199999999999719,
+              "maxGapM": 14,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 21,
+          "usableFrames": 21,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-16m",
+        "title": "Gap of 16 m",
+        "description": "Frames every 16 m across 100-400 m (every consecutive gap is exactly 16 m; the limit is strict < 15 m).",
+        "expectation": "Does not qualify: BIRDS_EYE_3D (gap_too_large).",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 21,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 500.00000000003354,
+                "lengthM": 500.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 21,
+                "maxGapM": 16,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "gap_too_large"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 0,
+              "birdsEyeM": 500.00000000003354,
+              "streetFraction": 0,
+              "usableFrameCount": 21,
+              "framesPer100m": 4.199999999999719,
+              "maxGapM": 16,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 21,
+          "usableFrames": 21,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "opposite-lane",
+        "title": "Opposite-lane frames",
+        "description": "Eastbound route. 61 frames on the correct right-hand lane plus 167 frames from the opposite carriageway (7 m left, heading reversed).",
+        "expectation": "Opposite-lane frames are all dropped (left_of_centerline); the street run comes only from the own-direction sequence.",
+        "synthetic": true,
+        "routeLengthM": 500.000000000001,
+        "frameCount": 228,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.000000000001,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 400,
+                "lengthM": 300,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002,
+                  1003
+                ],
+                "sequenceId": "own-direction",
+                "frameCount": 61,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 400,
+                "endM": 500.000000000001,
+                "lengthM": 100.00000000000102,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 300,
+              "birdsEyeM": 200.00000000000102,
+              "streetFraction": 0.5999999999999988,
+              "usableFrameCount": 61,
+              "framesPer100m": 12.199999999999974,
+              "maxGapM": 5,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 228,
+          "usableFrames": 61,
+          "dropped": {
+            "left_of_centerline": 167
+          }
+        }
+      },
+      {
+        "id": "opposite-lane-only",
+        "title": "Opposite-lane frames only",
+        "description": "Same road, only the opposite carriageway has imagery.",
+        "expectation": "No usable frames: the whole route is BIRDS_EYE_3D.",
+        "synthetic": true,
+        "routeLengthM": 500.000000000001,
+        "frameCount": 167,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.000000000001,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 500.000000000001,
+                "lengthM": 500.000000000001,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 0,
+              "birdsEyeM": 500.000000000001,
+              "streetFraction": 0,
+              "usableFrameCount": 0,
+              "framesPer100m": 0,
+              "maxGapM": null,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 167,
+          "usableFrames": 0,
+          "dropped": {
+            "left_of_centerline": 167
+          }
+        }
+      },
+      {
+        "id": "interchange-discontinuity",
+        "title": "Interchange discontinuity",
+        "description": "One sequence runs continuously, but at 300 m the matched edge changes from a primary road to a motorway ramp on a bridge (a level change while the sequence continues).",
+        "expectation": "level_uncertain BIRDS_EYE_3D around 300 m; street video only on either side, not across the transition.",
+        "synthetic": true,
+        "routeLengthM": 600.0000000000205,
+        "frameCount": 121,
+        "result": {
+          "classification": {
+            "routeLengthM": 600.0000000000205,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 275,
+                "lengthM": 275,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 56,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 275,
+                "endM": 330,
+                "lengthM": 55,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003
+                ],
+                "sequenceId": null,
+                "frameCount": 10,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": true,
+                "level_uncertain_reasons": [
+                  "level_change"
+                ],
+                "crossfades": [],
+                "birdsEyeReason": "level_uncertain"
+              },
+              {
+                "startM": 330,
+                "endM": 600,
+                "lengthM": 270,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1003,
+                  1004,
+                  1005
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 55,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              }
+            ],
+            "summary": {
+              "streetVideoM": 545,
+              "birdsEyeM": 55.000000000020464,
+              "streetFraction": 0.9083333333333024,
+              "usableFrameCount": 121,
+              "framesPer100m": 20.16666666666598,
+              "maxGapM": 5,
+              "levelUncertainSegments": 1
+            }
+          },
+          "candidateFrames": 121,
+          "usableFrames": 121,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "interchange-sequence-jump",
+        "title": "Interchange sequence/heading jump",
+        "description": "Sequence A ends at 295 m and a different sequence B begins at 305 m on the next edge, with the heading relative to the road changing from -20 to +20 degrees.",
+        "expectation": "level_uncertain BIRDS_EYE_3D across the jump (sequence_jump and heading_jump).",
+        "synthetic": true,
+        "routeLengthM": 600.0000000000205,
+        "frameCount": 120,
+        "result": {
+          "classification": {
+            "routeLengthM": 600.0000000000205,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 270,
+                "lengthM": 270,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002
+                ],
+                "sequenceId": "A",
+                "frameCount": 55,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 270,
+                "endM": 330,
+                "lengthM": 60,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003
+                ],
+                "sequenceId": null,
+                "frameCount": 10,
+                "maxGapM": 10,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": true,
+                "level_uncertain_reasons": [
+                  "sequence_jump",
+                  "heading_jump"
+                ],
+                "crossfades": [],
+                "birdsEyeReason": "level_uncertain"
+              },
+              {
+                "startM": 330,
+                "endM": 600,
+                "lengthM": 270,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1003,
+                  1004,
+                  1005
+                ],
+                "sequenceId": "B",
+                "frameCount": 55,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              }
+            ],
+            "summary": {
+              "streetVideoM": 540,
+              "birdsEyeM": 60.000000000020464,
+              "streetFraction": 0.8999999999999693,
+              "usableFrameCount": 120,
+              "framesPer100m": 19.999999999999318,
+              "maxGapM": 10,
+              "levelUncertainSegments": 1
+            }
+          },
+          "candidateFrames": 120,
+          "usableFrames": 120,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "crossfade",
+        "title": "Crossfade inside a street run",
+        "description": "Two 80 m runs separated by a 20 m gap (above 15 m, below the 30 m crossfade ceiling).",
+        "expectation": "One STREET_VIDEO segment with the 20 m gap marked for crossfade (not a handoff).",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 34,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 280,
+                "lengthM": 180,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 34,
+                "maxGapM": 20,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [
+                  {
+                    "startM": 180,
+                    "endM": 200,
+                    "gapM": 20
+                  }
+                ],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 280,
+                "endM": 500.00000000003354,
+                "lengthM": 220.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 180,
+              "birdsEyeM": 320.00000000003354,
+              "streetFraction": 0.35999999999997584,
+              "usableFrameCount": 34,
+              "framesPer100m": 6.799999999999544,
+              "maxGapM": 20,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 34,
+          "usableFrames": 34,
+          "dropped": {}
+        }
+      }
+    ]
+  }
+}
