@@ -5,6 +5,7 @@
 // THIRD_PARTY_NOTICES.md); no code copied.
 import type { LandmarkMatch, Queryable } from "../geo/landmarkSearch";
 import { searchLandmarks } from "../geo/landmarkSearch";
+import { isLoopbackUrl, photonClient, SELF_HOSTED_PHOTON_URL } from "../geo/photon";
 
 export interface Place { lat: number; lon: number; label: string; source: string }
 
@@ -68,16 +69,6 @@ export function landmarkSearchGeocoder(
   };
 }
 
-/** True only for loopback hosts: the self-hosted geocoder must never be a public server. */
-export function isLoopbackUrl(u: string): boolean {
-  try {
-    const h = new URL(u).hostname;
-    return h === "127.0.0.1" || h === "localhost" || h === "[::1]" || h === "::1";
-  } catch {
-    return false;
-  }
-}
-
 /** Wrap a self-hosted HTTP provider (loopback only) with a timeout. Parsing is injected. */
 export function httpGeocoder(
   name: string,
@@ -101,23 +92,14 @@ export function httpGeocoder(
   };
 }
 
-export const SELF_HOSTED_PHOTON_URL = "http://127.0.0.1:2322";
+export { SELF_HOSTED_PHOTON_URL, isLoopbackUrl };
 
-/** Second stage: the self-hosted Ghana-only Photon (docker compose --profile geocoder). Loopback only, enforced by httpGeocoder. */
+/** Second stage: the self-hosted Ghana-only Photon (docker compose --profile geocoder). Hardened client in geo/photon.ts. */
 export function photonGeocoder(baseUrl = SELF_HOSTED_PHOTON_URL, timeoutMs = 3000): Geocoder {
+  const client = photonClient(baseUrl, timeoutMs);
   return httpGeocoder("photon-local", baseUrl, async (q, signal) => {
-    const u = new URL("/api", baseUrl);
-    u.searchParams.set("q", q);
-    u.searchParams.set("limit", "1");
-    const r = await fetch(u, { signal });
-    if (!r.ok) throw new Error(`photon ${r.status}`);
-    const body = (await r.json()) as { features?: Array<{ geometry?: { coordinates?: unknown[] }; properties?: Record<string, unknown> }> };
-    const f = body.features?.[0];
-    const [lon, lat] = f?.geometry?.coordinates ?? [];
-    if (typeof lat !== "number" || typeof lon !== "number" || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    const p = f!.properties ?? {};
-    const label = [p.name, p.street, p.district ?? p.suburb, p.city].filter((x): x is string => typeof x === "string" && x.length > 0).join(", ");
-    return { lat, lon, label: label || q, source: "photon-local" };
+    const [p] = await client.search(q, { limit: 1, signal });
+    return p ? { lat: p.lat, lon: p.lon, label: p.label, source: "photon-local" } : null;
   }, timeoutMs);
 }
 
