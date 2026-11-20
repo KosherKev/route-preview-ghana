@@ -73,22 +73,38 @@ export function edgesFromTraceAttributes(resp: { edges?: Record<string, unknown>
   }));
 }
 
-export async function postJson(base: string, path: string, body: unknown, fetchImpl: typeof fetch = fetch) {
-  const res = await fetchImpl(`${base}${path}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
+/** Default per-request timeout for Valhalla calls. */
+export const DEFAULT_TIMEOUT_MS = 30_000;
+
+export async function postJson(
+  base: string, path: string, body: unknown, fetchImpl: typeof fetch = fetch, timeoutMs = DEFAULT_TIMEOUT_MS,
+) {
+  let res: Response;
+  try {
+    res = await fetchImpl(`${base}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    const name = (e as Error).name;
+    if (name === "TimeoutError" || name === "AbortError") throw new Error(`Valhalla ${path} timed out after ${timeoutMs} ms`);
+    throw new Error(`Valhalla ${path} request failed: ${name}`);
+  }
   if (!res.ok) throw new Error(`Valhalla ${path} -> HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
   return (await res.json()) as any;
 }
 
-export async function routeWithEdges(base: string, costing: Costing, from: LatLon, to: LatLon, fetchImpl: typeof fetch = fetch) {
-  const route = await postJson(base, "/route", routeRequest(costing, from, to), fetchImpl);
-  const leg = route.trip.legs[0];
+export async function routeWithEdges(
+  base: string, costing: Costing, from: LatLon, to: LatLon, fetchImpl: typeof fetch = fetch, timeoutMs = DEFAULT_TIMEOUT_MS,
+) {
+  const route = await postJson(base, "/route", routeRequest(costing, from, to), fetchImpl, timeoutMs);
+  const leg = route?.trip?.legs?.[0];
+  if (!leg || typeof leg.shape !== "string") throw new Error("Valhalla /route returned no route leg (trip.legs[0] missing)");
   const polyline: string = leg.shape;
   const shape = decodePolyline6(polyline);
-  const attrs = await postJson(base, "/trace_attributes", traceAttributesRequest(costing, shape), fetchImpl);
+  const attrs = await postJson(base, "/trace_attributes", traceAttributesRequest(costing, shape), fetchImpl, timeoutMs);
   return {
     costing,
     distanceKm: route.trip.summary.length as number,

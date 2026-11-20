@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COSTING_OPTIONS, decodePolyline6, edgesFromTraceAttributes, routeRequest, routeWithEdges } from "../src/routing/valhalla";
+import { COSTING_OPTIONS, decodePolyline6, edgesFromTraceAttributes, postJson, routeRequest, routeWithEdges } from "../src/routing/valhalla";
 
 const A = { lat: 5.6361, lon: -0.175 };
 const B = { lat: 5.5502, lon: -0.2174 };
@@ -37,5 +37,22 @@ describe("valhalla helpers", () => {
     const r = await routeWithEdges("http://v", "auto", A, B, fake);
     expect(calls).toEqual(["http://v/route", "http://v/trace_attributes"]);
     expect(r.edges.map((e) => e.id)).toEqual([101, 202]);
+  });
+
+  it("throws a clear error when the route has no leg", async () => {
+    const fake = (async () => new Response(JSON.stringify({ trip: { legs: [] } }), { status: 200 })) as unknown as typeof fetch;
+    await expect(routeWithEdges("http://v", "auto", A, B, fake)).rejects.toThrow(/no route leg/);
+    const noTrip = (async () => new Response("{}", { status: 200 })) as unknown as typeof fetch;
+    await expect(routeWithEdges("http://v", "auto", A, B, noTrip)).rejects.toThrow(/no route leg/);
+  });
+
+  it("passes a timeout signal and reports a timeout clearly", async () => {
+    let signal: AbortSignal | undefined;
+    const slow = (async (_u: string, init?: RequestInit) => {
+      signal = init?.signal ?? undefined;
+      throw Object.assign(new Error("aborted"), { name: "TimeoutError" });
+    }) as unknown as typeof fetch;
+    await expect(postJson("http://v", "/route", {}, slow, 50)).rejects.toThrow("Valhalla /route timed out after 50 ms");
+    expect(signal).toBeInstanceOf(AbortSignal);
   });
 });
