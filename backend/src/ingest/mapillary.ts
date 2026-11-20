@@ -25,7 +25,9 @@ export interface MapillaryImage {
   width?: number;
   height?: number;
   quality_score?: number;
-  creator?: { id?: string; username?: string };
+  creator?: { id?: string; username?: string | null } | null;
+  /** Not requested today (the v4 images endpoint does not report a licence); honoured if a source ever states one. */
+  license?: string;
 }
 
 /** Row shape for the PostGIS `frames` table. */
@@ -43,11 +45,21 @@ export interface FrameRow {
   captured_at: string | null;
   source: "mapillary";
   creator: string | null;
+  /** Mapillary username of the contributor (null when the API did not return one). */
+  creator_username: string | null;
+  /** Link back to the Mapillary image page (see mapillaryImageUrl). */
+  source_url: string;
   license: string;
 }
 
-// Mapillary publishes street-level imagery under CC BY-SA 4.0. Legal review is deferred to Phase 6.
-export const MAPILLARY_LICENSE = "CC-BY-SA-4.0";
+// Used ONLY when the source does not state a licence for an image (the v4 API does not). Mapillary publishes
+// street-level imagery under CC BY-SA 4.0. Legal review is deferred to Phase 6.
+export const DEFAULT_MAPILLARY_LICENSE = "CC-BY-SA-4.0";
+
+/** Mapillary image page for an image id (documented in backend/README.md). */
+export function mapillaryImageUrl(imageId: string): string {
+  return `https://www.mapillary.com/app/?pKey=${encodeURIComponent(imageId)}`;
+}
 
 export interface MapillaryOptions {
   token: string;
@@ -143,7 +155,9 @@ export function convertImage(img: MapillaryImage): RowResult {
       captured_at: capIso,
       source: "mapillary",
       creator: img.creator?.username ?? img.creator?.id ?? null,
-      license: MAPILLARY_LICENSE,
+      creator_username: typeof img.creator?.username === "string" && img.creator.username !== "" ? img.creator.username : null,
+      source_url: mapillaryImageUrl(String(img.id)),
+      license: img.license || DEFAULT_MAPILLARY_LICENSE,
     },
   };
 }
