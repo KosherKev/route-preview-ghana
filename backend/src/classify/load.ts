@@ -1,7 +1,7 @@
 // PostGIS-backed frame loader. Reads the source-neutral `frames` table (any `source`); no imagery-source code is imported.
 import type { Client } from "pg";
 import type { Axis } from "../geo/local";
-import { disabledSources } from "../imagery/sources";
+import { disabledSources, warnOnceIfSuspiciousSources } from "../imagery/sources";
 import type { FrameRecord } from "./types";
 
 export interface LoadedFrames {
@@ -20,6 +20,7 @@ export interface LoadedFrames {
 export async function loadFramesAlongAxisDetailed(
   client: Pick<Client, "query">, axis: Axis, bufferM: number, disabled: readonly string[] = disabledSources(),
 ): Promise<LoadedFrames> {
+  warnOnceIfSuspiciousSources();
   const wkt = `LINESTRING(${axis.points.map((p) => `${p.lon} ${p.lat}`).join(",")})`;
   const res = await client.query(
     `SELECT image_id, sequence_id, ST_Y(geom) AS lat, ST_X(geom) AS lon, computed_compass_angle, quality_score, captured_at, source

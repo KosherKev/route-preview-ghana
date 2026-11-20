@@ -99,6 +99,12 @@ The one implementation is `src/imagery/sources.ts` (`disabledSources`, `isSource
 It is read from the environment on every call, never cached at import, so it takes effect on the next call (for a long-running process,
 set it in that process's environment and the next request sees it; there is no admin endpoint).
 
+The variable MUST be a comma-separated list of plain names (a-z, 0-9, `_`, `-`; e.g. `mapillary` or `mapillary,other`). Matching is only trim plus
+case-insensitive; an unrecognised entry disables nothing. In particular `;` or a space as a separator, fullwidth letters, zero-width spaces or a
+dotted capital I do NOT match, so `mapillary;other` leaves mapillary ENABLED. To make such typos visible, `suspiciousDisabledEntries(env)` lists entries that
+are not plain names, and the ingestion CLI, `MapillarySource` and the frame loader print ONE warning per process to stderr naming them
+(non-ASCII shown as `\u{...}`). It is a warning only; it does not change what is disabled.
+
 What it does when a source is disabled:
 
 - `npm run ingest:mapillary` refuses (exit code 4, "imagery source "mapillary" is disabled by IMAGERY_SOURCES_DISABLED") before any token check, network or DB access; `MapillarySource` also refuses every query, and re-checks the switch before every page fetch and every retry attempt, so an in-flight ingestion stops at its next request (with the same error) when the variable is set mid-run.

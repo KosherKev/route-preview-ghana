@@ -5,8 +5,10 @@ import { every, straightScene } from "../src/classify/synthetic";
 import { classifyFrames } from "../src/classify/pipeline";
 import {
   assertSourceEnabled, disabledSources, isClipServable, isSourceEnabled, parseDisabledSources, SourceDisabledError,
+  resetSuspiciousSourcesWarning, suspiciousDisabledEntries, warnOnceIfSuspiciousSources,
 } from "../src/imagery/sources";
 import { MapillarySource } from "../src/ingest/mapillary";
+import { loadFramesAlongAxisDetailed } from "../src/classify/load";
 
 const KEY = "IMAGERY_SOURCES_DISABLED";
 const original = process.env[KEY];
@@ -168,5 +170,71 @@ describe("MapillarySource and the ingestion CLI refuse when mapillary is disable
     expect(r.stderr).toMatch(/"mapillary" is disabled by IMAGERY_SOURCES_DISABLED/);
     expect(r.stderr).not.toMatch(/MAPILLARY_TOKEN is not set/); // refused before the token check
     expect(r.stdout).toBe("");
+  });
+});
+
+describe("suspicious IMAGERY_SOURCES_DISABLED entries", () => {
+  const odd: Record<string, string> = {
+    fullwidth: "\uFF2D\uFF21\uFF30\uFF29\uFF2C\uFF2C\uFF21\uFF32\uFF39",
+    zeroWidth: "mapil\u200Blary",
+    semicolon: "mapillary;other",
+    space: "mapillary other",
+    dottedI: "mapil\u0130ary",
+  };
+  it("flags entries that are not plain names, and not plain ones; matching semantics unchanged", () => {
+    for (const [k, v] of Object.entries(odd)) {
+      expect(suspiciousDisabledEntries({ [KEY]: v }), k).toHaveLength(1);
+      expect(isSourceEnabled("mapillary", { [KEY]: v }), k).toBe(true); // still disables nothing
+    }
+    expect(suspiciousDisabledEntries({ [KEY]: "mapillary, Rider-2 ,a_b" })).toEqual([]);
+    expect(suspiciousDisabledEntries({})).toEqual([]);
+    expect(suspiciousDisabledEntries({ [KEY]: "mapillary,mapillary;other" })).toEqual(["mapillary;other"]);
+  });
+  it("warns ONCE per process, names the raw value, escapes non-ASCII, and does nothing for a clean value", () => {
+    resetSuspiciousSourcesWarning();
+    const log = vi.fn();
+    expect(warnOnceIfSuspiciousSources({ [KEY]: "mapillary" }, log)).toBe(false);
+    expect(log).not.toHaveBeenCalled();
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.semicolon }, log)).toBe(true);
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.semicolon }, log)).toBe(false);
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.space }, log)).toBe(false);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls[0]![0]).toMatch(/"mapillary;other"/);
+    expect(log.mock.calls[0]![0]).toMatch(/disable NOTHING/);
+    resetSuspiciousSourcesWarning();
+    const log2 = vi.fn();
+    warnOnceIfSuspiciousSources({ [KEY]: odd.zeroWidth }, log2);
+    expect(log2.mock.calls[0]![0]).toContain("mapil\\u{200b}lary");
+    resetSuspiciousSourcesWarning();
+  });
+  it("MapillarySource and the loader warn once per process, not per call", async () => {
+    resetSuspiciousSourcesWarning();
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      process.env[KEY] = "mapillary;other";
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 }));
+      const src = new MapillarySource({ token: "test-token", fetchImpl: fetchImpl as unknown as typeof fetch, sleep: async () => {}, minIntervalMs: 0 });
+      await src.imagesNear(-0.2, 5.6, 50);
+      await src.imagesNear(-0.2, 5.6, 50);
+      await src.imagesInBBox([-0.21, 5.59, -0.19, 5.61]);
+      const sc = straightScene({ bearingDeg: 90, lengthM: 300 });
+      await loadFramesAlongAxisDetailed({ query: async () => ({ rows: [] }) } as any, sc.axis, 30);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(String(spy.mock.calls[0]![0])).toContain("mapillary;other");
+    } finally {
+      spy.mockRestore();
+      resetSuspiciousSourcesWarning();
+    }
+  });
+  it("the CLI prints the warning once on stderr", () => {
+    const backend = path.resolve(__dirname, "..");
+    const env: NodeJS.ProcessEnv = { ...process.env, [KEY]: "mapillary;other" };
+    delete env.MAPILLARY_TOKEN;
+    const r = spawnSync(path.join(backend, "node_modules/.bin/tsx"), ["src/ingest/cli.ts", "--bbox", "-0.21,5.59,-0.19,5.61"], {
+      cwd: backend, env, encoding: "utf8",
+    });
+    expect(r.stderr.match(/will disable NOTHING/g)).toHaveLength(1);
+    expect(r.stderr).toContain('"mapillary;other"');
+    expect(r.status).not.toBe(4); // not disabled: it got past the switch (and stopped at the missing token)
   });
 });

@@ -6,7 +6,7 @@
 // kill switch IMAGERY_SOURCES_DISABLED lists mapillary (exit 4).
 import pg from "pg";
 import { dbConfig, loadEnv } from "../config";
-import { assertSourceEnabled, SourceDisabledError } from "../imagery/sources";
+import { assertSourceEnabled, SourceDisabledError, warnOnceIfSuspiciousSources } from "../imagery/sources";
 import { CORRIDORS } from "./corridors";
 import { DEFAULT_MAX_TILES, MapillarySource, requireToken, validateBBox, type BBox } from "./mapillary";
 import { upsertFrames } from "./store";
@@ -40,6 +40,7 @@ function parseMaxTiles(argv: string[]): number {
 
 async function main() {
   loadEnv();
+  warnOnceIfSuspiciousSources();
   assertSourceEnabled("mapillary"); // kill switch: refuse before any argument, token, network or DB work
   const bbox = parseArgs(process.argv.slice(2));
   const token = requireToken(); // throws before anything is requested

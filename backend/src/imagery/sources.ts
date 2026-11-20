@@ -20,6 +20,44 @@ export function disabledSources(env: NodeJS.ProcessEnv = process.env): string[] 
   return parseDisabledSources(env[IMAGERY_SOURCES_DISABLED_VAR]);
 }
 
+const PLAIN_NAME = /^[a-z0-9_-]+$/;
+
+/**
+ * Entries (after trim + lower-case) that are not plain names ([a-z0-9_-]+): fullwidth letters, zero-width spaces,
+ * ';' or space used as a separator, dotted capital I, and so on. Matching semantics are NOT changed: such an entry
+ * simply matches no source, so it silently disables nothing. This helper exists so that can be made visible.
+ */
+export function suspiciousDisabledEntries(env: NodeJS.ProcessEnv = process.env): string[] {
+  return disabledSources(env).filter((n) => !PLAIN_NAME.test(n));
+}
+
+const visible = (s: string) => s.replace(/[^\x20-\x7e]/g, (c) => `\\u{${c.codePointAt(0)!.toString(16)}}`);
+let warned = false;
+
+/**
+ * Emit ONE warning per process (not per call) naming any suspicious entries of the switch variable, so a typo such as
+ * "mapillary;other" is visible. The variable is not a secret; non-ASCII characters are shown as \u{...} escapes.
+ * Returns true only when it actually warned.
+ */
+export function warnOnceIfSuspiciousSources(
+  env: NodeJS.ProcessEnv = process.env, log: (msg: string) => void = (m) => console.warn(m),
+): boolean {
+  if (warned) return false;
+  const bad = suspiciousDisabledEntries(env);
+  if (bad.length === 0) return false;
+  warned = true;
+  log(
+    `WARNING: ${IMAGERY_SOURCES_DISABLED_VAR} has entries that are not plain source names and will disable NOTHING: ` +
+      `${bad.map((b) => `"${visible(b)}"`).join(", ")}. Use comma-separated names made of a-z, 0-9, "_" and "-" (e.g. "mapillary").`,
+  );
+  return true;
+}
+
+/** Test hook: allow the once-per-process warning to fire again. */
+export function resetSuspiciousSourcesWarning(): void {
+  warned = false;
+}
+
 const norm = (name: string) => name.trim().toLowerCase();
 
 export function isSourceEnabled(name: string, env: NodeJS.ProcessEnv = process.env): boolean {
