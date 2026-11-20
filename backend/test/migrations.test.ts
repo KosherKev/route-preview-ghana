@@ -2,7 +2,9 @@ import { randomBytes } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { dbConfig, loadEnv } from "../src/config";
-import { applyMigrations } from "../src/db/migrate";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { applyMigrations, MIGRATIONS_DIR } from "../src/db/migrate";
 
 // Needs the PostGIS container (docker compose up -d postgis). It creates and drops its own throwaway database.
 loadEnv();
@@ -33,7 +35,7 @@ afterAll(async () => {
 describe("migrations on an empty database", () => {
   it("applies cleanly and is idempotent", async () => {
     const first = await applyMigrations(db);
-    expect(first.length).toBeGreaterThanOrEqual(4);
+    expect(first.length).toBeGreaterThanOrEqual(5);
     expect(await applyMigrations(db)).toEqual([]);
   });
 
@@ -41,13 +43,14 @@ describe("migrations on an empty database", () => {
     expect(await columns("frames")).toEqual(expect.arrayContaining([
       "image_id", "sequence_id", "geom", "computed_compass_angle", "is_pano", "camera_type",
       "width", "height", "quality_score", "captured_at", "source", "creator", "license",
+      "creator_username", "source_url",
     ]));
   });
 
   it("creates clips with the specified columns", async () => {
     expect(await columns("clips")).toEqual(expect.arrayContaining([
       "clip_id", "edge_id", "start_offset", "end_offset", "direction", "video_url", "length_m",
-      "imagery_version", "render_params", "status", "start_pose", "end_pose", "expires_at",
+      "imagery_version", "render_params", "status", "start_pose", "end_pose", "expires_at", "source_summary",
     ]));
   });
 
@@ -63,5 +66,34 @@ describe("migrations on an empty database", () => {
       { f_table_name: "frames", type: "POINT", srid: 4326 },
       { f_table_name: "landmarks", type: "POINT", srid: 4326 },
     ]);
+  });
+
+  it("adds the attribution columns with the right types and nullability (005)", async () => {
+    const r = await db.query(
+      `SELECT table_name, column_name, data_type, is_nullable, column_default FROM information_schema.columns
+        WHERE (table_name='frames' AND column_name IN ('creator_username','source_url','source','license','creator'))
+           OR (table_name='clips' AND column_name='source_summary') ORDER BY 1, 2`,
+    );
+    const by = Object.fromEntries(r.rows.map((x) => [`${x.table_name}.${x.column_name}`, x]));
+    expect(by["frames.creator_username"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
+    expect(by["frames.source_url"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
+    expect(by["clips.source_summary"]).toMatchObject({ data_type: "jsonb", is_nullable: "NO" });
+    // pre-existing columns are unchanged by 005
+    expect(by["frames.source"]).toMatchObject({ is_nullable: "NO", column_default: null });
+    expect(by["frames.license"]).toMatchObject({ is_nullable: "YES" });
+    expect(by["frames.creator"]).toMatchObject({ is_nullable: "YES" });
+  });
+
+  it("defaults clips.source_summary to an empty jsonb array", async () => {
+    await db.query("INSERT INTO clips (edge_id) VALUES (1)");
+    const r = await db.query("SELECT source_summary, jsonb_typeof(source_summary) AS t FROM clips WHERE edge_id=1");
+    expect(r.rows[0]).toEqual({ source_summary: [], t: "array" });
+  });
+
+  it("005 re-applies as a no-op on a database that already has the columns", async () => {
+    const sql = readFileSync(path.join(MIGRATIONS_DIR, "005_attribution_fields.sql"), "utf8");
+    await db.query(sql);
+    await db.query(sql);
+    expect(await columns("clips")).toContain("source_summary");
   });
 });
