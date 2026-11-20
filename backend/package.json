@@ -13,7 +13,8 @@
     "ingest:mapillary": "tsx src/ingest/cli.ts",
     "route": "tsx scripts/valhalla-route.ts",
     "serve": "tsx scripts/serve-approach.ts",
-    "validate": "tsx scripts/validate.ts"
+    "validate": "tsx scripts/validate.ts",
+    "audit:coverage": "tsx scripts/coverage-audit.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
