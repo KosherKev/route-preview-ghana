@@ -1,0 +1,26 @@
+{
+  "name": "route-preview-ghana-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "tsx src/db/migrate-cli.ts",
+    "ingest:mapillary": "tsx src/ingest/cli.ts",
+    "route": "tsx scripts/valhalla-route.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}

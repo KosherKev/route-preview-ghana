@@ -8,3 +8,4 @@ __pycache__/
 *.pbf
 *.pmtiles
 *.mp4
+dist/
