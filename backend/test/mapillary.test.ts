@@ -273,3 +273,35 @@ describe("bbox validation and tile cap", () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe("kill switch flipped mid-ingestion", () => {
+  const KEY = "IMAGERY_SOURCES_DISABLED";
+  it("stops before page 2 when the variable is set after page 1", async () => {
+    const saved = process.env[KEY];
+    try {
+      delete process.env[KEY];
+      const { src, calls } = make([
+        () => { process.env[KEY] = "mapillary"; return ok([img("1", -0.2, 5.6)], { next: "https://graph.mapillary.com/images?after=p2" }); },
+        () => ok([img("2", -0.2, 5.6)]),
+      ]);
+      await expect(src.imagesNear(-0.2, 5.6, 50)).rejects.toThrow(/"mapillary" is disabled by IMAGERY_SOURCES_DISABLED/);
+      expect(calls).toHaveLength(1);
+    } finally {
+      if (saved === undefined) delete process.env[KEY]; else process.env[KEY] = saved;
+    }
+  });
+  it("stops before a retry attempt when the variable is set after a failed attempt", async () => {
+    const saved = process.env[KEY];
+    try {
+      delete process.env[KEY];
+      const { src, calls } = make([
+        () => { process.env[KEY] = "mapillary"; return new Response("x", { status: 503 }); },
+        () => ok([]),
+      ]);
+      await expect(src.imagesNear(-0.2, 5.6, 50)).rejects.toThrow(/is disabled by IMAGERY_SOURCES_DISABLED/);
+      expect(calls).toHaveLength(1);
+    } finally {
+      if (saved === undefined) delete process.env[KEY]; else process.env[KEY] = saved;
+    }
+  });
+});

@@ -65,13 +65,36 @@ Points used: 5.6361 N, 0.1750 W (Tetteh Quarshie Interchange area) to 5.5502 N, 
 - DB tests (`test/migrations.test.ts`, `test/landmarks.test.ts`, `test/ingest-store.test.ts`) each create and drop their own throwaway
   database on the container, so `docker compose up -d postgis` must be running for `npm test`.
 
+## Landmark search and geocoding
+
+Riders name destinations by landmark ("near the Total station, Madina"), so search runs over the `landmarks` table in PostGIS.
+Migration `006_landmark_search.sql` (additive) enables `pg_trgm` and `unaccent`, adds the IMMUTABLE wrapper `landmarks_norm(text)`
+(lower-case, accent-folded) and a GIN trigram index `landmarks_name_trgm_idx` on it. `npm run serve` starts the loopback-only server
+with the endpoint enabled (needs `.env` for the database).
+
+`GET /landmarks/search?q=<text>&near=<lat>,<lon>&limit=<n>`
+
+- `q` required, trimmed, 1 to 100 characters, no control characters. `near` optional, finite `lat,lon`. `limit` optional integer 1 to 20 (default 5).
+- Ranking: trigram similarity first; among exactly equal scores (for example the many stations just called "Total") nearer to `near` first.
+- Response `200`: `{"query": "...", "results": [{"name", "category", "lat", "lon", "distance_m" (null without near), "score" (0..1)}]}`.
+- Errors are RFC 9457 problem JSON (`application/problem+json`: `type`, `title`, `status`, `detail`): `400` for bad input, `405` for non-GET,
+  `500` generic for database failures (details are logged server-side only). All SQL is parameterised.
+- Example: `curl 'http://127.0.0.1:8787/landmarks/search?q=asilum+down+farmacy&near=5.57,-0.2&limit=3'`
+
+Geocode chain (`src/patterns/geocodeChain.ts`, `buildGeocodeChain`): coordinate parse (no I/O), then the landmark search above, then an
+optional self-hosted geocoder. `httpGeocoder` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
+The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonGeocoder`): `scripts/fetch-photon.sh` (checksum-verified downloads into
+`data/photon`), then `docker compose --profile geocoder up -d photon` (127.0.0.1:2322, 1.5 GB limit, about 300 MiB used). The landmark stage only
+claims an answer at similarity >= 0.5, so place names that are not in the landmarks table fall through to Photon.
+Measured numbers and the verdict are in `../docs/validation/geocoder-spike.md`.
+
 ## Mapillary ingestion
 
 `src/ingest/mapillary.ts` implements `StreetImagerySource` (`src/patterns/imagerySource.ts`) for Graph API v4 `graph.mapillary.com/images`:
 bbox queries (large boxes are tiled at 0.09 degrees per side), radius queries (`closeto` + `radius`), frame fields
 (`computed_geometry`, `computed_compass_angle`, `captured_at`, `sequence`, `is_pano`, `camera_type`, `width`, `height`, `quality_score`,
 `creator`), 250 ms throttle, and `Retry-After` (seconds or HTTP date) honored on 429/5xx with exponential backoff otherwise.
-Rows are upserted into `frames` with `source = 'mapillary'`.
+Rows are upserted into `frames` with `source = 'mapillary'`, plus attribution fields (see below).
 
 The token comes only from `MAPILLARY_TOKEN` in `.env` and is sent only as an `Authorization` header. If it is unset the command stops
 with a message before any request. Tests use mocked HTTP only.
@@ -89,7 +112,56 @@ Accra corridor boxes (`minLon,minLat,maxLon,maxLat`, in `src/ingest/corridors.ts
 | `accra-core` | `-0.27,5.5,-0.1,5.7` |
 
 No live ingestion has been run. Unverified until a real token exists: the API's bbox area cap (assumed about 0.01 square degrees, hence the
-tiling), the licence string stored per frame (`CC-BY-SA-4.0`; legal review is deferred to Phase 6), and the real response paging shape.
+tiling), the licence stored per frame (the API reports none, so `DEFAULT_MAPILLARY_LICENSE` in `src/ingest/mapillary.ts` is used; legal review is deferred to Phase 6), and the real response paging shape.
+
+## Imagery source kill switch
+
+Set `IMAGERY_SOURCES_DISABLED` to a comma-separated list of source names to switch a street-imagery source off without a code change
+(e.g. `IMAGERY_SOURCES_DISABLED=mapillary`; names are trimmed and case-insensitive, empty entries ignored, unset = nothing disabled).
+The one implementation is `src/imagery/sources.ts` (`disabledSources`, `isSourceEnabled`, `assertSourceEnabled`, `isClipServable`).
+It is read from the environment on every call, never cached at import, so it takes effect on the next call (for a long-running process,
+set it in that process's environment and the next request sees it; there is no admin endpoint).
+
+The variable MUST be a comma-separated list of plain names (a-z, 0-9, `_`, `-`; e.g. `mapillary` or `mapillary,other`). Matching is only trim plus
+case-insensitive; an unrecognised entry disables nothing. In particular `;` or a space as a separator, fullwidth letters, zero-width spaces or a
+dotted capital I do NOT match, so `mapillary;other` leaves mapillary ENABLED. To make such typos visible, `suspiciousDisabledEntries(env)` lists entries that
+are not plain names, and the ingestion CLI, `MapillarySource` and the frame loader print ONE warning per process to stderr naming them
+(non-ASCII shown as `\u{...}`). It is a warning only; it does not change what is disabled.
+
+What it does when a source is disabled:
+
+- `npm run ingest:mapillary` refuses (exit code 4, "imagery source "mapillary" is disabled by IMAGERY_SOURCES_DISABLED") before any token check, network or DB access; `MapillarySource` also refuses every query, and re-checks the switch before every page fetch and every retry attempt, so an in-flight ingestion stops at its next request (with the same error) when the variable is set mid-run.
+- The frame loader (`src/classify/load.ts`) drops that source's frames before classification, so affected routes classify `BIRDS_EYE_3D`.
+- The classifier result (`PipelineResult.sourcesExcluded`) and the validation summary report which disabled sources had frames excluded (`[]` when none). `sourcesExcluded` lists only disabled sources that actually had frames excluded: an empty array does NOT mean nothing is disabled (use `disabledSources()` for that). The committed report under `docs/validation/` predates the `sourcesExcluded` field and has not been regenerated.
+- `isClipServable(clip)` FAILS CLOSED and never throws. It returns true only if (a) `source_summary` is undefined/null (a legacy row with no summary, treated as "no imagery source recorded") or a real Array, (b) every entry is a plain object with a non-empty string `source`, and (c) neither `clip.source` (if present, it must be a string) nor any entry's source is disabled. Any non-array value (e.g. a JSON string from a mis-parsed jsonb), any malformed entry, or any error while inspecting returns false. Limitation: pre-attribution clips default to `'[]'` (no sources recorded) and so stay servable; Phase 4 MUST populate `source_summary` via `toSourceSummary` when it writes clips. Anything that serves a stored clip must call it.
+
+What it does NOT do: it does not delete stored frames or clips; it does not recall anything already served, cached or copied elsewhere; it has
+no authentication (whoever controls the process environment controls it); and it is not retroactive for a process that has already read
+the value into its own variables (the helpers re-read on each call, so this only matters for code that copies the result).
+
+## Attribution fields
+
+Migration `migrations/005_attribution_fields.sql` is additive only (`ADD COLUMN IF NOT EXISTS`): `frames.creator_username text NULL`,
+`frames.source_url text NULL`, `clips.source_summary jsonb NOT NULL DEFAULT '[]'`. `frames.source` (NOT NULL, no default), `frames.creator`
+and `frames.license` already existed from migration 002 and are untouched.
+
+- `creator_username` overlaps the pre-existing `creator` column: `creator` falls back to the numeric creator id when no username is returned; `creator_username` is the username only (null otherwise). Prefer `creator_username` for credits.
+- A DEFAULT on `frames.source` would need `ALTER COLUMN`, which is not additive; it needs an interactive migration the owner approves, so it was not done. The ingestion always writes `source` explicitly.
+- Ingestion requests the `creator` field and maps `creator.username` to `creator_username`. `source_url` is the Mapillary image page, `https://www.mapillary.com/app/?pKey=<image_id>`.
+- `license` stores what the source reports; only when the source states none, the single constant `DEFAULT_MAPILLARY_LICENSE` is used. That value is an ASSUMPTION, not proof: the Mapillary API reports no licence, so every Mapillary frame gets the default. Legal review of the actual licence is deferred to Phase 6.
+- `creator_username` is stored raw and unsanitised exactly as the API returned it. Any renderer (HTML, SVG, markdown, a video overlay) MUST escape it.
+- `src/imagery/attribution.ts`: `buildAttribution(frames)` (de-duplicated creators, licences, source URLs, per-source entries, `requiresLogoAndLink: true` for Mapillary) and `toSourceSummary(frames)` (the `clips.source_summary` shape `[{source, creators[], license, sourceUrls[]}]`, one per source).
+
+Apply and re-apply: `npm run db:migrate` applies `005` once; running it again prints "no pending migrations" (the SQL itself is also safe to re-run).
+Live apply on 2026-11-20 against the project PostGIS container: applied, columns verified, second run a no-op (`frames` and `clips` were empty; no ingestion had been run).
+
+Manual rollback (documented only; never run automatically, and `schema_migrations` would also need `DELETE FROM schema_migrations WHERE name = '005_attribution_fields.sql'`):
+
+```sql
+ALTER TABLE frames DROP COLUMN IF EXISTS creator_username;
+ALTER TABLE frames DROP COLUMN IF EXISTS source_url;
+ALTER TABLE clips  DROP COLUMN IF EXISTS source_summary;
+```
 
 ## Phase 3: approach extractor, map-matcher, mode classifier
 
@@ -128,8 +200,9 @@ Thresholds (all in `DEFAULT_MATCH_CONFIG` / `DEFAULT_CLASSIFY_CONFIG`):
 | Sequence | one per route edge: keep the previous edge's sequence if it still has frames, else most frames, then most recent capture, then id |
 | Street run | extent >= 60 m (inclusive) AND every consecutive gap strictly < 15 m (a gap of exactly 15.0 m is not part of a run; 14.999 is) |
 | RIFE tier (gap < 15 m) | AI frame interpolation is permitted ONLY between consecutive frames spaced strictly less than 15 m apart, never across a 15 m or larger gap |
-| Bridge tier (15 m <= gap <= 30 m, both ends inclusive) | two qualifying runs (each >= 60 m, internal gaps < 15 m, headings within +/-25 deg) separated by one such gap are merged into ONE contiguous STREET_VIDEO segment; the gap is a crossfade bridge and is NEVER RIFE-interpolated. Exactly 15 m and exactly 30 m are bridges |
-| Handoff tier (gap > 30 m) | a gap over 30 m, or any run shorter than 60 m that cannot be bridged into a qualifying segment, ends the STREET_VIDEO segment and hands off to BIRDS_EYE_3D (also: a sequence change, no frames) |
+| Bridge tier (15 m <= gap <= 30 m, both ends inclusive) | two qualifying runs (each >= 60 m, internal gaps < 15 m, headings within +/-25 deg) separated by one such gap AND sharing the same `sequence_id` are merged into ONE contiguous STREET_VIDEO segment; the gap is a crossfade bridge and is NEVER RIFE-interpolated. Exactly 15 m and exactly 30 m are bridges. At most `maxBridgesPerSegment` (default 2) bridges per segment |
+| Same-sequence rule | a bridge needs both runs to share the same `sequence_id`; a different `sequence_id`, or a missing one on either side, across the gap is a handoff to BIRDS_EYE_3D, never a bridge |
+| Handoff tier (gap > 30 m) | a gap over 30 m, or any run shorter than 60 m that cannot be bridged into a qualifying segment, ends the STREET_VIDEO segment and hands off to BIRDS_EYE_3D (also: a sequence change across a 15-30 m gap, a gap that would be a segment's third bridge, no frames) |
 | `level_uncertain` | between consecutive frames closer than 30 m at an edge transition: sequence change, heading-relative-to-road change > 30 deg, or road class / use / bridge / tunnel / layer change while the sequence continues; the span plus 20 m each side is forced to BIRDS_EYE_3D and never merged away |
 
 All distance and threshold comparisons (gap tiers, extent, merge) are done in integer millimetres via `src/classify/mm.ts`, so an exact 15.000 m gap or 60.000 m extent is never decided by float noise. Frames are de-duplicated by `imageId` before sequence selection (latest `capturedAt` kept, ties keep the first; others drop as `duplicate_image`).
@@ -145,7 +218,7 @@ The two-tier gap rule above was **confirmed by the owner 2026-11-20**. Each STRE
 
 BIRDS_EYE_3D segments have `bridges: []`, `crossfades: []` and `internalMaxGapM: null`.
 
-**Pairwise-chain assumption (stated explicitly, for the owner to confirm).** The rule is applied pairwise: a chain of qualifying runs, each joined to the next by a single 15-30 m gap, merges into ONE segment with several bridges (three runs and two valid gaps: one segment, two bridges). A gap over 30 m anywhere in the chain ends the segment there, and the next qualifying run starts a new segment after a BIRDS_EYE_3D handoff. A run under 60 m is never bridged, even between two valid runs.
+**Pairwise chaining, capped (owner-confirmed 2026-11-20, follow-up E; see `docs/decisions/DECISIONS.md` D7 and D8).** The rule is applied pairwise, but a merged STREET_VIDEO segment holds at most `maxBridgesPerSegment` bridges (default 2, so at most 3 runs; a non-negative integer, compared as an integer). Three runs and two valid gaps: one segment, two bridges. When a chain would need a third bridge, the segment ends at the last frame of its third run (it keeps its two bridges), the gap that would have been the third bridge is an ordinary BIRDS_EYE_3D handoff, and the next qualifying run starts a NEW segment (which may bridge up to the cap again; a run under 60 m is flyover). A gap over 30 m anywhere in the chain ends the segment there. A run under 60 m is never bridged, even between two valid runs. A bridge also requires the same `sequence_id` on both runs (see the table). The alternative the owner allowed (require 60 m of dense frames with gaps under 15 m between bridges) is NOT implemented.
 
 The 3 m left-offset limit (`maxLeftOffsetM`) is a builder-chosen, configurable parameter that is not in the spec.
 

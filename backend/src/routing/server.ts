@@ -1,10 +1,12 @@
 // Smallest possible HTTP surface for the approach extractor. Node's built-in http only; loopback only.
 //   GET  /health
+//   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   POST /approach  {"origin":{"lat":..,"lon":..},"destination":{..},"costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
 import { ArgumentError, extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
 import type { Costing, LatLon } from "./valhalla";
+import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
 
 export const MAX_BODY_BYTES = 4096;
 export const REQUEST_DEADLINE_MS = 60_000;
@@ -54,6 +56,8 @@ export interface ServerOptions {
   extractor?: Extractor;
   extractOptions?: ApproachOptions;
   deadlineMs?: number;
+  /** Enables GET /landmarks/search. Injected so the server itself holds no database connection. */
+  landmarkSearch?: (p: SearchParams) => Promise<LandmarkMatch[]>;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
   onError?: (err: unknown, info: { status: number; path: string }) => void;
 }
@@ -62,6 +66,13 @@ export interface ServerOptions {
 const GENERIC: Record<number, string> = {
   400: "invalid request", 413: "body too large", 415: 'content-type must be application/json', 502: "upstream routing failure", 504: "deadline exceeded",
 };
+
+function sendProblem(res: http.ServerResponse, status: number, title: string, detail?: string) {
+  if (res.headersSent) return;
+  const text = JSON.stringify({ type: "about:blank", title, status, ...(detail ? { detail } : {}) });
+  res.writeHead(status, { "content-type": "application/problem+json", "content-length": Buffer.byteLength(text) });
+  res.end(text);
+}
 
 function send(res: http.ServerResponse, status: number, obj: unknown) {
   if (res.headersSent) return;
@@ -89,6 +100,20 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
     const url = new URL(req.url ?? "/", "http://localhost");
     try {
       if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { ok: true });
+      if (url.pathname === "/landmarks/search" && opts.landmarkSearch) {
+        if (req.method !== "GET") return sendProblem(res, 405, "Method Not Allowed", "use GET");
+        let params: SearchParams;
+        try { params = parseSearchParams(url.searchParams); } catch (e) {
+          if (e instanceof SearchInputError) return sendProblem(res, 400, "Invalid request", e.message);
+          throw e;
+        }
+        try {
+          return send(res, 200, { query: params.q, results: await opts.landmarkSearch(params) });
+        } catch (e) {
+          onError(e, { status: 500, path: url.pathname });
+          return sendProblem(res, 500, "Internal Server Error");
+        }
+      }
       if (url.pathname !== "/approach") return send(res, 404, { error: "not found" });
       if (req.method !== "POST") return send(res, 405, { error: "use POST" });
       const ct = String(req.headers["content-type"] ?? "").split(";")[0]!.trim().toLowerCase();

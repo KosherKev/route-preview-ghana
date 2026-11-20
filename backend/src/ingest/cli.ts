@@ -2,9 +2,11 @@
 //   npm run ingest:mapillary -- --bbox minLon,minLat,maxLon,maxLat
 //   npm run ingest:mapillary -- --corridor tetteh-quarshie-accra-central
 // Add --max-tiles N to raise the per-run tile cap (default 400) for an intentionally large bbox.
-// Stops with a clear message (before any network or DB access) when MAPILLARY_TOKEN is unset.
+// Stops with a clear message (before any network or DB access) when MAPILLARY_TOKEN is unset (exit 3), or when the
+// kill switch IMAGERY_SOURCES_DISABLED lists mapillary (exit 4).
 import pg from "pg";
 import { dbConfig, loadEnv } from "../config";
+import { assertSourceEnabled, SourceDisabledError, warnOnceIfSuspiciousSources } from "../imagery/sources";
 import { CORRIDORS } from "./corridors";
 import { DEFAULT_MAX_TILES, MapillarySource, requireToken, validateBBox, type BBox } from "./mapillary";
 import { upsertFrames } from "./store";
@@ -38,6 +40,8 @@ function parseMaxTiles(argv: string[]): number {
 
 async function main() {
   loadEnv();
+  warnOnceIfSuspiciousSources();
+  assertSourceEnabled("mapillary"); // kill switch: refuse before any argument, token, network or DB work
   const bbox = parseArgs(process.argv.slice(2));
   const token = requireToken(); // throws before anything is requested
   const source = new MapillarySource({ token, maxTiles: parseMaxTiles(process.argv.slice(2)) });
@@ -54,5 +58,5 @@ async function main() {
 
 main().catch((e) => {
   console.error(String((e as Error).message ?? e));
-  process.exit(e instanceof Error && e.message.startsWith("MAPILLARY_TOKEN") ? 3 : 1);
+  process.exit(e instanceof SourceDisabledError ? 4 : e instanceof Error && e.message.startsWith("MAPILLARY_TOKEN") ? 3 : 1);
 });

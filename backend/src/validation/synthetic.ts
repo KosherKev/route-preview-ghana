@@ -79,9 +79,21 @@ export function syntheticScenarios(): SyntheticScenario[] {
   }
   {
     const sc = straightScene({ bearingDeg: 0, lengthM: 500 });
-    out.push(run("bridge-chain", "Chain of three runs, two bridges", "Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).",
+    out.push(run("bridge-chain", "Chain of three runs, two bridges", "Three 60 m runs separated by gaps of 20 m and 25 m, all one sequence (pairwise rule: each qualifying run joins the previous one, up to the 2-bridge cap).",
       "ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).", sc,
       [...sc.frames(every(5, 50, 110)), ...sc.frames(every(5, 130, 190)), ...sc.frames(every(5, 215, 275))]));
+  }
+  {
+    const sc = straightScene({ bearingDeg: 0, lengthM: 600 });
+    out.push(run("bridge-cap", "Bridge cap: four runs, three valid gaps", "Four 60 m runs, one sequence, separated by gaps of 20 m, 25 m and 22 m. A segment may hold at most 2 bridges.",
+      "STREET_VIDEO 50-275 m with TWO bridges, a BIRDS_EYE_3D handoff over the third gap (275-297 m), then the fourth run (297-357 m) as its own STREET_VIDEO segment with no bridge.", sc,
+      [...sc.frames(every(5, 50, 110)), ...sc.frames(every(5, 130, 190)), ...sc.frames(every(5, 215, 275)), ...sc.frames(every(5, 297, 357))]));
+  }
+  {
+    const sc = straightScene({ bearingDeg: 0, lengthM: 500 });
+    out.push(run("bridge-sequence-change", "Same-sequence rule: 20 m gap, different sequence_id", "Two 60 m runs separated by a 20 m gap, but the second run belongs to a different sequence_id.",
+      "No bridge across the sequence change (the matcher keeps one sequence per edge, so the other run is dropped as other_sequence): ONE STREET_VIDEO segment with no bridges, the rest BIRDS_EYE_3D.", sc,
+      [...sc.frames(every(5, 100, 160), { seq: "A" }), ...sc.frames(every(5, 180, 240), { seq: "B" })]));
   }
   return out;
 }

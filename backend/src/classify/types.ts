@@ -11,6 +11,8 @@ export interface FrameRecord {
   qualityScore: number | null;
   /** ISO 8601 */
   capturedAt: string | null;
+  /** Imagery source name (the `frames.source` column, e.g. "mapillary"). Absent on fixtures; the kill switch only acts on frames that carry one. */
+  source?: string;
 }
 
 /** A route edge with its extent along the route axis (metres) and the attributes used for level-change detection. */
@@ -27,7 +29,7 @@ export interface EdgeSpan {
 }
 
 // Gap rule (owner-confirmed 2026-11-20; see classify.ts): gap < 15 m RIFE-eligible; 15-30 m (inclusive) crossfade bridge
-// inside one STREET_VIDEO segment, never RIFE; > 30 m (or an unbridgeable run < 60 m) hands off to BIRDS_EYE_3D.
+// inside one STREET_VIDEO segment (same sequence_id only, at most 2 bridges per segment), never RIFE; > 30 m (or an unbridgeable run < 60 m) hands off to BIRDS_EYE_3D.
 export type Mode = "STREET_VIDEO" | "BIRDS_EYE_3D";
 
 export type DropReason =

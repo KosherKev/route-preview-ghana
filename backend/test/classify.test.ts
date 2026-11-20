@@ -107,10 +107,19 @@ describe("hysteresis: no flicker", () => {
     expect(modes(c)).toEqual(["B0-600"]);
     expect(c.segments.length).toBe(1);
   });
-  it("alternating qualifying runs with crossfadable gaps collapse into ONE street segment", () => {
+  it("alternating qualifying runs with crossfadable gaps are capped at 2 bridges per street segment (follow-up E)", () => {
     const offs: number[] = [];
     for (let s = 0; s + 70 <= L; s += 90) offs.push(...every(5, s, s + 70)); // 70 m runs, 20 m gaps
     const c = run(sc0.frames(offs));
+    expect(streets(c).length).toBeGreaterThan(1);
+    for (const s of streets(c)) expect(s.bridges.length).toBeLessThanOrEqual(2);
+    expect(streets(c)[0]!.bridges.length).toBe(2);
+    invariants(c);
+  });
+  it("with a raised cap the same alternating runs collapse into ONE street segment", () => {
+    const offs: number[] = [];
+    for (let s = 0; s + 70 <= L; s += 90) offs.push(...every(5, s, s + 70));
+    const c = classifyFrames(sc0.axis, sc0.edges, sc0.frames(offs), undefined, { ...DEFAULT_CLASSIFY_CONFIG, maxBridgesPerSegment: 10 }).classification;
     expect(streets(c).length).toBe(1);
     expect(streets(c)[0]!.crossfades.length).toBeGreaterThanOrEqual(5);
     expect(c.segments.length).toBeLessThanOrEqual(3);

@@ -1,0 +1,240 @@
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { every, straightScene } from "../src/classify/synthetic";
+import { classifyFrames } from "../src/classify/pipeline";
+import {
+  assertSourceEnabled, disabledSources, isClipServable, isSourceEnabled, parseDisabledSources, SourceDisabledError,
+  resetSuspiciousSourcesWarning, suspiciousDisabledEntries, warnOnceIfSuspiciousSources,
+} from "../src/imagery/sources";
+import { MapillarySource } from "../src/ingest/mapillary";
+import { loadFramesAlongAxisDetailed } from "../src/classify/load";
+
+const KEY = "IMAGERY_SOURCES_DISABLED";
+const original = process.env[KEY];
+afterEach(() => {
+  if (original === undefined) delete process.env[KEY]; else process.env[KEY] = original;
+});
+
+describe("parsing IMAGERY_SOURCES_DISABLED", () => {
+  it("unset or empty disables nothing", () => {
+    expect(disabledSources({})).toEqual([]);
+    expect(disabledSources({ [KEY]: "" })).toEqual([]);
+    expect(disabledSources({ [KEY]: " , ,, " })).toEqual([]);
+  });
+  it("trims, lower-cases, ignores empties and de-duplicates", () => {
+    expect(parseDisabledSources("  Mapillary , ,RIDER-captured,,mapillary ")).toEqual(["mapillary", "rider-captured"]);
+  });
+  it("accepts unknown source names without error", () => {
+    expect(disabledSources({ [KEY]: "nonesuch" })).toEqual(["nonesuch"]);
+    expect(isSourceEnabled("mapillary", { [KEY]: "nonesuch" })).toBe(true);
+  });
+  it("isSourceEnabled is case and whitespace insensitive", () => {
+    expect(isSourceEnabled(" Mapillary ", { [KEY]: "mapillary" })).toBe(false);
+    expect(isSourceEnabled("mapillary", {})).toBe(true);
+  });
+  it("assertSourceEnabled throws a clear error naming the source and the variable", () => {
+    expect(() => assertSourceEnabled("mapillary", { [KEY]: "mapillary" })).toThrow(SourceDisabledError);
+    expect(() => assertSourceEnabled("mapillary", { [KEY]: "mapillary" })).toThrow(/"mapillary" is disabled by IMAGERY_SOURCES_DISABLED/);
+    expect(() => assertSourceEnabled("mapillary", {})).not.toThrow();
+  });
+});
+
+describe("isClipServable", () => {
+  const env = { [KEY]: "mapillary" };
+  it("is false for a clip whose source is disabled", () => {
+    expect(isClipServable({ source: "mapillary" }, env)).toBe(false);
+    expect(isClipServable({ source: "Mapillary" }, env)).toBe(false);
+  });
+  it("is false when ANY source in source_summary is disabled", () => {
+    expect(isClipServable({ source_summary: [{ source: "rider" }, { source: "mapillary" }] }, env)).toBe(false);
+  });
+  it("is true for another source, an empty summary, or nothing disabled", () => {
+    expect(isClipServable({ source: "rider" }, env)).toBe(true);
+    expect(isClipServable({ source: "rider", source_summary: [{ source: "rider" }] }, env)).toBe(true);
+    expect(isClipServable({ source_summary: [] }, env)).toBe(true);
+    expect(isClipServable({ source: "mapillary" }, {})).toBe(true);
+  });
+  it("reads process.env by default", () => {
+    process.env[KEY] = "mapillary";
+    expect(isClipServable({ source: "mapillary" })).toBe(false);
+  });
+  it("fails closed on malformed source_summary shapes (even when nothing is disabled)", () => {
+    const bad: unknown[] = [
+      '[{"source":"mapillary"}]', "mapillary", "", 5, true, {}, { source: "rider" },
+      ["mapillary"], [null], [undefined], [{}], [{ sources: "mapillary" }], [{ source: "" }], [{ source: "  " }],
+      [{ source: 5 }], [{ source: null }], [{ source: { a: 1 } }], [[{ source: "rider" }]], [5],
+      [{ source: "rider" }, null],
+    ];
+    for (const b of bad) {
+      expect(isClipServable({ source_summary: b }, env), JSON.stringify(b)).toBe(false);
+      expect(isClipServable({ source_summary: b }, {}), JSON.stringify(b)).toBe(false);
+    }
+  });
+  it("a present-but-wrong-type clip.source is false", () => {
+    expect(isClipServable({ source: 5 as unknown as string }, {})).toBe(false);
+    expect(isClipServable({ source: {} as unknown as string }, env)).toBe(false);
+    expect(isClipServable({ source: "" }, env)).toBe(true);
+  });
+  it("well-formed summaries: servable unless a source is disabled", () => {
+    expect(isClipServable({ source_summary: [{ source: "rider" }, { source: "other" }] }, env)).toBe(true);
+    expect(isClipServable({ source_summary: [{ source: "mapillary" }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: "rider" }, { source: "mapillary" }, { source: "x" }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: " MaPiLLaRy " }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: "mapillary", creators: ["a"] }] }, {})).toBe(true);
+  });
+  it("null/undefined summary is servable (documented legacy), empty array too", () => {
+    expect(isClipServable({}, env)).toBe(true);
+    expect(isClipServable({ source_summary: null }, env)).toBe(true);
+    expect(isClipServable({ source_summary: undefined }, env)).toBe(true);
+    expect(isClipServable({ source_summary: [] }, env)).toBe(true);
+  });
+  it("never throws on weird inputs", () => {
+    const circ: any = { source: "rider" }; circ.source_summary = [circ];
+    const throwingGetter = { get source_summary(): unknown { throw new Error("boom"); } };
+    const throwingEntry = { source_summary: [{ get source(): string { throw new Error("boom"); } }] };
+    const throwingOwn = { get source(): string { throw new Error("boom"); } };
+    const proxy = new Proxy([], { get() { throw new Error("boom"); } });
+    const inputs: unknown[] = [
+      null, undefined, 5, "x", Symbol("s"), circ, throwingGetter, throwingEntry, throwingOwn,
+      { source_summary: proxy }, { source: Symbol("s") }, { source_summary: [Symbol("s")] },
+      { source_summary: [{ source: Symbol("s") }] }, { source_summary: Object.create(null) },
+    ];
+    for (const c of inputs) {
+      expect(() => isClipServable(c as any, env)).not.toThrow();
+      expect(typeof isClipServable(c as any, env)).toBe("boolean");
+    }
+    expect(isClipServable(throwingGetter, env)).toBe(false);
+    expect(isClipServable(throwingEntry, env)).toBe(false);
+    expect(isClipServable(circ, env)).toBe(true); // circular but well-formed: entry has a non-disabled source
+  });
+});
+
+describe("classifier with the kill switch (pure pipeline, synthetic frames)", () => {
+  const sc = straightScene({ bearingDeg: 90, lengthM: 300 });
+  const frames = sc.frames(every(5, 0, 300)).map((f) => ({ ...f, source: "mapillary" }));
+  const modes = (r: ReturnType<typeof classifyFrames>) => r.classification.segments.map((s) => s.mode);
+
+  it("unset: STREET_VIDEO and sourcesExcluded is empty", () => {
+    delete process.env[KEY];
+    const r = classifyFrames(sc.axis, sc.edges, frames);
+    expect(modes(r)).toEqual(["STREET_VIDEO"]);
+    expect(r.sourcesExcluded).toEqual([]);
+  });
+  it("disabled: BIRDS_EYE_3D and sourcesExcluded is [mapillary]", () => {
+    process.env[KEY] = "mapillary";
+    const r = classifyFrames(sc.axis, sc.edges, frames);
+    expect(modes(r)).toEqual(["BIRDS_EYE_3D"]);
+    expect(r.sourcesExcluded).toEqual(["mapillary"]);
+    expect(r.candidateFrames).toBe(0);
+  });
+  it("frames of another source survive; frames without a source are never excluded", () => {
+    process.env[KEY] = "mapillary";
+    const other = frames.map((f) => ({ ...f, source: "rider" }));
+    expect(modes(classifyFrames(sc.axis, sc.edges, other))).toEqual(["STREET_VIDEO"]);
+    const bare = sc.frames(every(5, 0, 300));
+    expect(classifyFrames(sc.axis, sc.edges, bare).sourcesExcluded).toEqual([]);
+  });
+  it("is read at CALL time: flipping the variable between two calls in one process changes the result", () => {
+    delete process.env[KEY];
+    expect(modes(classifyFrames(sc.axis, sc.edges, frames))).toEqual(["STREET_VIDEO"]);
+    process.env[KEY] = "mapillary";
+    expect(modes(classifyFrames(sc.axis, sc.edges, frames))).toEqual(["BIRDS_EYE_3D"]);
+    delete process.env[KEY];
+    expect(modes(classifyFrames(sc.axis, sc.edges, frames))).toEqual(["STREET_VIDEO"]);
+  });
+});
+
+describe("MapillarySource and the ingestion CLI refuse when mapillary is disabled", () => {
+  it("never calls fetch, and honours a flip at call time", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 }));
+    const src = new MapillarySource({ token: "test-token", fetchImpl: fetchImpl as unknown as typeof fetch, sleep: async () => {}, minIntervalMs: 0 });
+    process.env[KEY] = "mapillary";
+    await expect(src.imagesInBBox([-0.21, 5.59, -0.19, 5.61])).rejects.toThrow(SourceDisabledError);
+    await expect(src.imagesNear(-0.2, 5.6, 50)).rejects.toThrow(SourceDisabledError);
+    await expect(src.framesAlong([[5.6, -0.2], [5.61, -0.2]], 20)).rejects.toThrow(SourceDisabledError);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    delete process.env[KEY];
+    await expect(src.imagesNear(-0.2, 5.6, 50)).resolves.toEqual([]);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("the CLI exits 4 with a clear message before any token, network or DB access", () => {
+    const backend = path.resolve(__dirname, "..");
+    const env: NodeJS.ProcessEnv = { ...process.env, [KEY]: "mapillary" };
+    delete env.MAPILLARY_TOKEN;
+    const r = spawnSync(path.join(backend, "node_modules/.bin/tsx"), ["src/ingest/cli.ts", "--bbox", "-0.21,5.59,-0.19,5.61"], {
+      cwd: backend, env, encoding: "utf8",
+    });
+    expect(r.status).toBe(4);
+    expect(r.stderr).toMatch(/"mapillary" is disabled by IMAGERY_SOURCES_DISABLED/);
+    expect(r.stderr).not.toMatch(/MAPILLARY_TOKEN is not set/); // refused before the token check
+    expect(r.stdout).toBe("");
+  });
+});
+
+describe("suspicious IMAGERY_SOURCES_DISABLED entries", () => {
+  const odd: Record<string, string> = {
+    fullwidth: "\uFF2D\uFF21\uFF30\uFF29\uFF2C\uFF2C\uFF21\uFF32\uFF39",
+    zeroWidth: "mapil\u200Blary",
+    semicolon: "mapillary;other",
+    space: "mapillary other",
+    dottedI: "mapil\u0130ary",
+  };
+  it("flags entries that are not plain names, and not plain ones; matching semantics unchanged", () => {
+    for (const [k, v] of Object.entries(odd)) {
+      expect(suspiciousDisabledEntries({ [KEY]: v }), k).toHaveLength(1);
+      expect(isSourceEnabled("mapillary", { [KEY]: v }), k).toBe(true); // still disables nothing
+    }
+    expect(suspiciousDisabledEntries({ [KEY]: "mapillary, Rider-2 ,a_b" })).toEqual([]);
+    expect(suspiciousDisabledEntries({})).toEqual([]);
+    expect(suspiciousDisabledEntries({ [KEY]: "mapillary,mapillary;other" })).toEqual(["mapillary;other"]);
+  });
+  it("warns ONCE per process, names the raw value, escapes non-ASCII, and does nothing for a clean value", () => {
+    resetSuspiciousSourcesWarning();
+    const log = vi.fn();
+    expect(warnOnceIfSuspiciousSources({ [KEY]: "mapillary" }, log)).toBe(false);
+    expect(log).not.toHaveBeenCalled();
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.semicolon }, log)).toBe(true);
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.semicolon }, log)).toBe(false);
+    expect(warnOnceIfSuspiciousSources({ [KEY]: odd.space }, log)).toBe(false);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls[0]![0]).toMatch(/"mapillary;other"/);
+    expect(log.mock.calls[0]![0]).toMatch(/disable NOTHING/);
+    resetSuspiciousSourcesWarning();
+    const log2 = vi.fn();
+    warnOnceIfSuspiciousSources({ [KEY]: odd.zeroWidth }, log2);
+    expect(log2.mock.calls[0]![0]).toContain("mapil\\u{200b}lary");
+    resetSuspiciousSourcesWarning();
+  });
+  it("MapillarySource and the loader warn once per process, not per call", async () => {
+    resetSuspiciousSourcesWarning();
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      process.env[KEY] = "mapillary;other";
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 }));
+      const src = new MapillarySource({ token: "test-token", fetchImpl: fetchImpl as unknown as typeof fetch, sleep: async () => {}, minIntervalMs: 0 });
+      await src.imagesNear(-0.2, 5.6, 50);
+      await src.imagesNear(-0.2, 5.6, 50);
+      await src.imagesInBBox([-0.21, 5.59, -0.19, 5.61]);
+      const sc = straightScene({ bearingDeg: 90, lengthM: 300 });
+      await loadFramesAlongAxisDetailed({ query: async () => ({ rows: [] }) } as any, sc.axis, 30);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(String(spy.mock.calls[0]![0])).toContain("mapillary;other");
+    } finally {
+      spy.mockRestore();
+      resetSuspiciousSourcesWarning();
+    }
+  });
+  it("the CLI prints the warning once on stderr", () => {
+    const backend = path.resolve(__dirname, "..");
+    const env: NodeJS.ProcessEnv = { ...process.env, [KEY]: "mapillary;other" };
+    delete env.MAPILLARY_TOKEN;
+    const r = spawnSync(path.join(backend, "node_modules/.bin/tsx"), ["src/ingest/cli.ts", "--bbox", "-0.21,5.59,-0.19,5.61"], {
+      cwd: backend, env, encoding: "utf8",
+    });
+    expect(r.stderr.match(/will disable NOTHING/g)).toHaveLength(1);
+    expect(r.stderr).toContain('"mapillary;other"');
+    expect(r.status).not.toBe(4); // not disabled: it got past the switch (and stopped at the missing token)
+  });
+});

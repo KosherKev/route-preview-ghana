@@ -1,6 +1,6 @@
 # Route preview validation (Phase 3)
 
-Generated: 2026-11-20T16:59:25.137Z
+Generated: 2026-11-20T19:44:31.533Z
 
 ## Branch status
 
@@ -20,7 +20,8 @@ What the real-route section DOES verify: Valhalla routing, approach extraction (
 - Approach length 500 m along the route; decision windows 80 m.
 - Street run: at least 60 m long and every gap between consecutive usable frames strictly under 15 m (maximum, not average).
 - Two-tier gap rule (confirmed by the owner 2026-11-20): gap under 15 m is RIFE-eligible (AI interpolation is allowed ONLY below this ceiling); 15 m to 30 m, both ends inclusive, between two qualifying runs is a crossfade bridge that merges them into ONE STREET_VIDEO segment and is NEVER RIFE-interpolated; a gap over 30 m, or a run under 60 m that cannot be bridged, hands off to BIRDS_EYE_3D.
-- The rule is applied pairwise: a chain of qualifying runs each joined by a 15-30 m gap is one segment with several bridges.
+- Pairwise chaining is capped: a merged STREET_VIDEO segment holds at most 2 bridges (so at most 3 runs). A chain that would need one more ends the segment at the end of its last allowed run, the extra gap is a BIRDS_EYE_3D handoff, and the next qualifying run starts a new segment.
+- Same-sequence rule: a 15-30 m gap is bridged only when both runs share the same sequence_id; a different or missing sequence_id across the gap is a handoff, never a bridge.
 - Frame filters: lateral tolerance 15 m, more than 3 m left of the centreline dropped (right-hand traffic), heading within +/-25 deg of the local road bearing, quality_score at least 0.5.
 - level_uncertain: sequence jump, heading jump over 30 deg, or road class/use/bridge/tunnel/layer change at an edge transition, padded 20 m each side.
 
@@ -279,7 +280,7 @@ Route 500.0 m, 26 synthetic frames, 26 usable after filtering; dropped: {}.
 
 ### SYNTHETIC: Chain of three runs, two bridges
 
-Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).
+Three 60 m runs separated by gaps of 20 m and 25 m, all one sequence (pairwise rule: each qualifying run joins the previous one, up to the 2-bridge cap).
 
 Expected: ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).
 
@@ -290,4 +291,34 @@ Route 500.0 m, 39 synthetic frames, 39 usable after filtering; dropped: {}.
 | 1 | BIRDS_EYE_3D | 0.0 | 50.0 | 0 | n/a | no | none | no_frames |
 | 2 | STREET_VIDEO | 50.0 | 275.0 | 39 | 25.000 | no | 110.0-130.0 (20.000 m), 190.0-215.0 (25.000 m) | street run |
 | 3 | BIRDS_EYE_3D | 275.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Bridge cap: four runs, three valid gaps
+
+Four 60 m runs, one sequence, separated by gaps of 20 m, 25 m and 22 m. A segment may hold at most 2 bridges.
+
+Expected: STREET_VIDEO 50-275 m with TWO bridges, a BIRDS_EYE_3D handoff over the third gap (275-297 m), then the fourth run (297-357 m) as its own STREET_VIDEO segment with no bridge.
+
+Route 600.0 m, 52 synthetic frames, 52 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 50.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 50.0 | 275.0 | 39 | 25.000 | no | 110.0-130.0 (20.000 m), 190.0-215.0 (25.000 m) | street run |
+| 3 | BIRDS_EYE_3D | 275.0 | 297.0 | 0 | n/a | no | none | no_frames |
+| 4 | STREET_VIDEO | 297.0 | 357.0 | 13 | 5.000 | no | none | street run |
+| 5 | BIRDS_EYE_3D | 357.0 | 600.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Same-sequence rule: 20 m gap, different sequence_id
+
+Two 60 m runs separated by a 20 m gap, but the second run belongs to a different sequence_id.
+
+Expected: No bridge across the sequence change (the matcher keeps one sequence per edge, so the other run is dropped as other_sequence): ONE STREET_VIDEO segment with no bridges, the rest BIRDS_EYE_3D.
+
+Route 500.0 m, 26 synthetic frames, 21 usable after filtering; dropped: {"other_sequence":5}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 100.0 | 160.0 | 13 | 5.000 | no | none | street run |
+| 3 | BIRDS_EYE_3D | 160.0 | 500.0 | 8 | 5.000 | no | none | run_too_short |
 

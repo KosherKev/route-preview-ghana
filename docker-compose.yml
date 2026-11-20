@@ -41,6 +41,21 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Self-hosted Photon geocoder (Ghana-only index). Opt-in: `docker compose --profile geocoder up -d photon`
+  # after scripts/fetch-photon.sh. Loopback only; hard 1.5 GB limit so it fits the 5 GB VM beside PostGIS and Valhalla.
+  photon:
+    profiles: ["geocoder"]
+    image: eclipse-temurin:17-jre
+    working_dir: /photon
+    command: ["java", "-Xms256m", "-Xmx768m", "-jar", "photon-0.7.4.jar", "-data-dir", "/photon", "-listen-ip", "0.0.0.0", "-listen-port", "2322"]
+    volumes:
+      - ./data/photon:/photon
+    ports:
+      - "127.0.0.1:2322:2322"
+    mem_limit: 1536m
+    memswap_limit: 1536m
+    restart: unless-stopped
+
 volumes:
   valhalla_tiles:
     name: route-preview-ghana_valhalla_tiles

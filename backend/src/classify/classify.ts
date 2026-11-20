@@ -9,8 +9,15 @@
 //     listed in the segment's `bridges` (each with rifeEligible: false). Exactly 15 m and exactly 30 m are bridges.
 //  3. HANDOFF tier, g > 30 m: terminates the street segment and hands off to BIRDS_EYE_3D. So does any run shorter
 //     than 60 m that cannot be bridged into a qualifying segment.
-//  The rule is applied PAIRWISE: a chain of qualifying runs each joined by a 15-30 m gap is ONE segment with several
-//  bridges (assumption flagged to the owner); a >30 m gap anywhere in the chain ends the segment there.
+//  The rule is applied PAIRWISE, with two owner-confirmed limits (2026-11-20, follow-up E):
+//   - BRIDGE CAP: a merged STREET_VIDEO segment holds at most cfg.maxBridgesPerSegment bridges (default 2, so at most 3
+//     runs). SPLIT POINT: the segment ends at the last frame of the run that already carries the maximum number of
+//     bridges (it keeps those bridges); the gap that would have been one bridge too many becomes an ordinary
+//     BIRDS_EYE_3D handoff; the next qualifying run starts a NEW segment (which may itself bridge up to the cap again).
+//     A run that does not qualify (< 60 m) is flyover as usual. The cap is an integer compared with integers.
+//   - SAME SEQUENCE: a 15-30 m gap is bridged only when BOTH runs share the same sequence_id. A different sequence_id,
+//     or a missing (null/empty) one on either side, across the gap means handoff, never a bridge.
+//  A >30 m gap anywhere in the chain also ends the segment there.
 //
 // Other rules (thresholds in ClassifyConfig):
 //  a. The gap rule uses the MAXIMUM gap between consecutive usable frames, never an average.
@@ -36,6 +43,8 @@ export interface ClassifyConfig {
   maxGapM: number;
   /** Largest gap that may be bridged by a crossfade inside a street segment, inclusive. Default 30. */
   crossfadeMaxGapM: number;
+  /** Most crossfade bridges in one STREET_VIDEO segment (so at most this + 1 runs). Non-negative INTEGER. Default 2. */
+  maxBridgesPerSegment: number;
   /** Only pairs closer than this are examined for discontinuities. Default 30. */
   discontinuityMaxGapM: number;
   /** Heading-relative-to-road change that counts as a jump, degrees. Default 30. */
@@ -45,7 +54,7 @@ export interface ClassifyConfig {
 }
 
 export const DEFAULT_CLASSIFY_CONFIG: ClassifyConfig = {
-  minRunM: 60, maxGapM: 15, crossfadeMaxGapM: 30, discontinuityMaxGapM: 30, headingJumpDeg: 30, levelPadM: 20,
+  minRunM: 60, maxGapM: 15, crossfadeMaxGapM: 30, maxBridgesPerSegment: 2, discontinuityMaxGapM: 30, headingJumpDeg: 30, levelPadM: 20,
 };
 
 export type GapTier = "rife" | "bridge" | "handoff";
@@ -152,18 +161,28 @@ function maxGap(frames: readonly MatchedFrame[]): number | null {
 export function classifyTimeline(
   routeLengthM: number, edges: readonly EdgeSpan[], usable: readonly MatchedFrame[], cfg: ClassifyConfig = DEFAULT_CLASSIFY_CONFIG,
 ): Classification {
+  if (!Number.isInteger(cfg.maxBridgesPerSegment) || cfg.maxBridgesPerSegment < 0) {
+    throw new RangeError(`maxBridgesPerSegment must be a non-negative integer, got ${cfg.maxBridgesPerSegment}`);
+  }
   // defensive: frames outside the route can never produce a segment beyond [0, routeLengthM]
   const frames = usable.filter((m) => m.offsetM >= 0 && lteMm(m.offsetM, routeLengthM)).sort(byOffset);
   const spans = detectLevelSpans(frames, edges, routeLengthM, cfg);
   const inSpan = (o: number) => spans.some((s) => o >= s.startM && o <= s.endM);
   const spanBetween = (a: number, b: number) => spans.some((s) => s.startM < b && s.endM > a);
 
-  // chains: consecutive candidate frames, split by sequence change, gap > crossfadeMaxGapM, or a flagged span between them
+  // chains: consecutive candidate frames, split by sequence change, gap > crossfadeMaxGapM, or a flagged span between them.
+  // Same-sequence rule: a gap in the bridge tier (>= maxGapM) joins two frames only if BOTH have the same non-missing sequence_id.
+  const sameSeq = (a: MatchedFrame, b: MatchedFrame) => a.frame.sequenceId === b.frame.sequenceId;
+  const bridgeable = (a: MatchedFrame, b: MatchedFrame) => sameSeq(a, b) && !!a.frame.sequenceId;
+  const joinable = (a: MatchedFrame, b: MatchedFrame) => {
+    const tier = classifyGap(b.offsetM - a.offsetM, cfg);
+    return tier === "rife" || (tier === "bridge" && bridgeable(a, b));
+  };
   const chains: MatchedFrame[][] = [];
   for (const f of frames.filter((m) => !inSpan(m.offsetM))) {
     const chain = chains[chains.length - 1];
     const prev = chain?.[chain.length - 1];
-    if (chain && prev && prev.frame.sequenceId === f.frame.sequenceId && classifyGap(f.offsetM - prev.offsetM, cfg) !== "handoff" && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
+    if (chain && prev && sameSeq(prev, f) && joinable(prev, f) && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
     else chains.push([f]);
   }
 
@@ -181,7 +200,7 @@ export function classifyTimeline(
     let prevRun: MatchedFrame[] | null = null;
     for (const r of runs) {
       if (!qualifies(r)) { if (cur) streets.push(cur); cur = null; prevRun = null; continue; }
-      if (cur && prevRun) {
+      if (cur && prevRun && cur.bridges.length < cfg.maxBridgesPerSegment) {
         const a = prevRun[prevRun.length - 1]!.offsetM, b = r[0]!.offsetM;
         cur.bridges.push({ startM: a, endM: b, gapM: b - a, rifeEligible: false });
         cur.frames.push(...r);
