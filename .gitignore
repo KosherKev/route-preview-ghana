@@ -9,3 +9,4 @@ __pycache__/
 *.pmtiles
 *.mp4
 dist/
+!.env.example

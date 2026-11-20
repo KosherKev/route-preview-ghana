@@ -1,0 +1,48 @@
+name: route-preview-ghana
+
+services:
+  valhalla:
+    image: ghcr.io/valhalla/valhalla:3.9.3
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    environment:
+      BUILD_CONCURRENCY: "2"
+      SERVER_THREADS: "2"
+    volumes:
+      - ./docker/valhalla/entrypoint.sh:/entrypoint.sh:ro
+      - ./data:/data:ro
+      - valhalla_tiles:/valhalla
+    ports:
+      - "127.0.0.1:8002:8002"
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8002/status"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 600s
+    restart: unless-stopped
+
+  postgis:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"   # host Postgres already owns 5432
+    mem_limit: 1g
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  valhalla_tiles:
+    name: route-preview-ghana_valhalla_tiles
+  postgis_data:
+    name: route-preview-ghana_postgis_data
