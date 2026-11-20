@@ -69,7 +69,8 @@ this exact prompt before assuming a different failure.
 - Merging a task branch into `main` is allowed ONLY through the orchestrator's conditional
   auto-merge check (the five-condition bar in the pipeline's A6.5, evaluated fresh after review).
   It is never allowed for work touching payments, auth or database migrations, never by
-  force-push, and a branch that fails any condition stays pushed and PR-ready.
+  force-push, and a branch that fails any condition stays pushed and PR-ready. The one other way
+  a merge happens is on Kevin's explicit instruction in chat; the agent never merges on its own.
 - Scoped to this project only: `docker compose up -d` for Valhalla, PostGIS and MinIO bound to
   localhost, and downloading the Geofabrik `ghana-latest.osm.pbf` into the gitignored `data/`
   directory.
