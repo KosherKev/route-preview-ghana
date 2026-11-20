@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-20T16:59:25.137Z",
+  "generatedAt": "2026-11-20T19:44:31.533Z",
   "branchStatus": "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.",
   "liveImageryMeasured": false,
   "mapillaryTokenConfigured": false,
@@ -17,6 +17,7 @@
       "minRunM": 60,
       "maxGapM": 15,
       "crossfadeMaxGapM": 30,
+      "maxBridgesPerSegment": 2,
       "discontinuityMaxGapM": 30,
       "headingJumpDeg": 30,
       "levelPadM": 20
@@ -88,6 +89,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -135,6 +137,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -182,6 +185,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -229,6 +233,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -276,6 +281,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -323,6 +329,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -370,6 +377,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -417,6 +425,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -464,6 +473,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -511,6 +521,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -558,6 +569,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -605,6 +617,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -652,6 +665,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -699,6 +713,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -746,6 +761,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -793,6 +809,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -840,6 +857,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -887,6 +905,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -934,6 +953,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -981,6 +1001,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1028,6 +1049,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1075,6 +1097,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1122,6 +1145,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1169,6 +1193,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1216,6 +1241,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1263,6 +1289,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1310,6 +1337,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1357,6 +1385,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1404,6 +1433,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1451,6 +1481,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1498,6 +1529,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1545,6 +1577,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1592,6 +1625,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1639,6 +1673,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1686,6 +1721,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1733,6 +1769,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1780,6 +1817,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1827,6 +1865,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1874,6 +1913,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1921,6 +1961,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -1968,6 +2009,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2015,6 +2057,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2062,6 +2105,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2109,6 +2153,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2156,6 +2201,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2203,6 +2249,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2250,6 +2297,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2297,6 +2345,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2359,6 +2408,7 @@
         ],
         "usableFrames": 0,
         "candidateFrames": 0,
+        "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
         "streetFraction": 0,
@@ -2461,7 +2511,8 @@
           },
           "candidateFrames": 61,
           "usableFrames": 61,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -2516,7 +2567,8 @@
           },
           "candidateFrames": 11,
           "usableFrames": 11,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -2610,7 +2662,8 @@
           },
           "candidateFrames": 21,
           "usableFrames": 21,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -2665,7 +2718,8 @@
           },
           "candidateFrames": 21,
           "usableFrames": 21,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -2760,7 +2814,8 @@
           "usableFrames": 61,
           "dropped": {
             "left_of_centerline": 167
-          }
+          },
+          "sourcesExcluded": []
         }
       },
       {
@@ -2814,7 +2869,8 @@
           "usableFrames": 0,
           "dropped": {
             "left_of_centerline": 167
-          }
+          },
+          "sourcesExcluded": []
         }
       },
       {
@@ -2918,7 +2974,8 @@
           },
           "candidateFrames": 121,
           "usableFrames": 121,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3023,7 +3080,8 @@
           },
           "candidateFrames": 120,
           "usableFrames": 120,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3130,7 +3188,8 @@
           },
           "candidateFrames": 34,
           "usableFrames": 34,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3224,7 +3283,8 @@
           },
           "candidateFrames": 26,
           "usableFrames": 26,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3331,7 +3391,8 @@
           },
           "candidateFrames": 26,
           "usableFrames": 26,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3438,7 +3499,8 @@
           },
           "candidateFrames": 26,
           "usableFrames": 26,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
@@ -3575,13 +3637,14 @@
           },
           "candidateFrames": 26,
           "usableFrames": 26,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
         }
       },
       {
         "id": "bridge-chain",
         "title": "Chain of three runs, two bridges",
-        "description": "Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).",
+        "description": "Three 60 m runs separated by gaps of 20 m and 25 m, all one sequence (pairwise rule: each qualifying run joins the previous one, up to the 2-bridge cap).",
         "expectation": "ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).",
         "synthetic": true,
         "routeLengthM": 500.00000000003354,
@@ -3694,7 +3757,272 @@
           },
           "candidateFrames": 39,
           "usableFrames": 39,
-          "dropped": {}
+          "dropped": {},
+          "sourcesExcluded": []
+        }
+      },
+      {
+        "id": "bridge-cap",
+        "title": "Bridge cap: four runs, three valid gaps",
+        "description": "Four 60 m runs, one sequence, separated by gaps of 20 m, 25 m and 22 m. A segment may hold at most 2 bridges.",
+        "expectation": "STREET_VIDEO 50-275 m with TWO bridges, a BIRDS_EYE_3D handoff over the third gap (275-297 m), then the fourth run (297-357 m) as its own STREET_VIDEO segment with no bridge.",
+        "synthetic": true,
+        "routeLengthM": 600.0000000000205,
+        "frameCount": 52,
+        "result": {
+          "classification": {
+            "routeLengthM": 600.0000000000205,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 50,
+                "lengthM": 50,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 50,
+                "endM": 275,
+                "lengthM": 225,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 39,
+                "maxGapM": 25,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [
+                  {
+                    "startM": 110,
+                    "endM": 130,
+                    "gapM": 20,
+                    "rifeEligible": false
+                  },
+                  {
+                    "startM": 190,
+                    "endM": 215,
+                    "gapM": 25,
+                    "rifeEligible": false
+                  }
+                ],
+                "crossfades": [
+                  {
+                    "startM": 110,
+                    "endM": 130,
+                    "gapM": 20
+                  },
+                  {
+                    "startM": 190,
+                    "endM": 215,
+                    "gapM": 25
+                  }
+                ],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 275,
+                "endM": 297,
+                "lengthM": 22,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 297,
+                "endM": 357,
+                "lengthM": 60,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1002,
+                  1003
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 13,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 357,
+                "endM": 600.0000000000205,
+                "lengthM": 243.00000000002046,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1003,
+                  1004,
+                  1005
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 285,
+              "birdsEyeM": 315.00000000002046,
+              "streetFraction": 0.4749999999999838,
+              "usableFrameCount": 52,
+              "framesPer100m": 8.666666666666371,
+              "maxGapM": 25,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 52,
+          "usableFrames": 52,
+          "dropped": {},
+          "sourcesExcluded": []
+        }
+      },
+      {
+        "id": "bridge-sequence-change",
+        "title": "Same-sequence rule: 20 m gap, different sequence_id",
+        "description": "Two 60 m runs separated by a 20 m gap, but the second run belongs to a different sequence_id.",
+        "expectation": "No bridge across the sequence change (the matcher keeps one sequence per edge, so the other run is dropped as other_sequence): ONE STREET_VIDEO segment with no bridges, the rest BIRDS_EYE_3D.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 26,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 160,
+                "lengthM": 60,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001
+                ],
+                "sequenceId": "A",
+                "frameCount": 13,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 160,
+                "endM": 500.00000000003354,
+                "lengthM": 340.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1001,
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 8,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "run_too_short"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 60,
+              "birdsEyeM": 440.00000000003354,
+              "streetFraction": 0.11999999999999195,
+              "usableFrameCount": 21,
+              "framesPer100m": 4.199999999999719,
+              "maxGapM": 45,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 26,
+          "usableFrames": 21,
+          "dropped": {
+            "other_sequence": 5
+          },
+          "sourcesExcluded": []
         }
       }
     ]
