@@ -19,6 +19,7 @@
 import { byOffset, type MatchedFrame } from "./match";
 import type { BirdsEyeReason, EdgeSpan, LevelReason, Mode } from "./types";
 import { absAngleDiffDeg } from "../geo/local";
+import { gteMm, gtMm, lteMm, ltMm } from "./mm";
 
 export interface ClassifyConfig {
   /** Minimum street run length, metres, inclusive. Default 60. */
@@ -86,7 +87,7 @@ export function detectLevelSpans(
   const spans: Span[] = [];
   for (let i = 0; i + 1 < frames.length; i++) {
     const a = frames[i]!, b = frames[i + 1]!;
-    if (a.edgeIndex === b.edgeIndex || b.offsetM - a.offsetM > cfg.discontinuityMaxGapM) continue;
+    if (a.edgeIndex === b.edgeIndex || gtMm(b.offsetM - a.offsetM, cfg.discontinuityMaxGapM)) continue;
     const reasons = new Set<LevelReason>();
     const sameSeq = a.frame.sequenceId === b.frame.sequenceId;
     if (!sameSeq) reasons.add("sequence_jump");
@@ -102,7 +103,7 @@ export function detectLevelSpans(
   const merged: Span[] = [];
   for (const s of spans.sort((x, y) => x.startM - y.startM)) {
     const last = merged[merged.length - 1];
-    if (last && s.startM <= last.endM) { last.endM = Math.max(last.endM, s.endM); s.reasons.forEach((r) => last.reasons.add(r)); }
+    if (last && lteMm(s.startM, last.endM)) { last.endM = Math.max(last.endM, s.endM); s.reasons.forEach((r) => last.reasons.add(r)); }
     else merged.push({ ...s, reasons: new Set(s.reasons) });
   }
   return merged;
@@ -122,7 +123,8 @@ function maxGap(frames: readonly MatchedFrame[]): number | null {
 export function classifyTimeline(
   routeLengthM: number, edges: readonly EdgeSpan[], usable: readonly MatchedFrame[], cfg: ClassifyConfig = DEFAULT_CLASSIFY_CONFIG,
 ): Classification {
-  const frames = [...usable].sort(byOffset);
+  // defensive: frames outside the route can never produce a segment beyond [0, routeLengthM]
+  const frames = usable.filter((m) => m.offsetM >= 0 && lteMm(m.offsetM, routeLengthM)).sort(byOffset);
   const spans = detectLevelSpans(frames, edges, routeLengthM, cfg);
   const inSpan = (o: number) => spans.some((s) => o >= s.startM && o <= s.endM);
   const spanBetween = (a: number, b: number) => spans.some((s) => s.startM < b && s.endM > a);
@@ -132,7 +134,7 @@ export function classifyTimeline(
   for (const f of frames.filter((m) => !inSpan(m.offsetM))) {
     const chain = chains[chains.length - 1];
     const prev = chain?.[chain.length - 1];
-    if (chain && prev && prev.frame.sequenceId === f.frame.sequenceId && f.offsetM - prev.offsetM <= cfg.crossfadeMaxGapM && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
+    if (chain && prev && prev.frame.sequenceId === f.frame.sequenceId && lteMm(f.offsetM - prev.offsetM, cfg.crossfadeMaxGapM) && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
     else chains.push([f]);
   }
 
@@ -142,10 +144,10 @@ export function classifyTimeline(
     // good runs: split where gap >= maxGapM (strict < keeps together)
     const runs: MatchedFrame[][] = [[chain[0]!]];
     for (let i = 1; i < chain.length; i++) {
-      if (chain[i]!.offsetM - chain[i - 1]!.offsetM < cfg.maxGapM) runs[runs.length - 1]!.push(chain[i]!);
+      if (ltMm(chain[i]!.offsetM - chain[i - 1]!.offsetM, cfg.maxGapM)) runs[runs.length - 1]!.push(chain[i]!);
       else runs.push([chain[i]!]);
     }
-    const qualifies = (r: MatchedFrame[]) => r[r.length - 1]!.offsetM - r[0]!.offsetM >= cfg.minRunM;
+    const qualifies = (r: MatchedFrame[]) => gteMm(r[r.length - 1]!.offsetM - r[0]!.offsetM, cfg.minRunM);
     let cur: Street | null = null;
     let prevRun: MatchedFrame[] | null = null;
     for (const r of runs) {
@@ -174,7 +176,7 @@ export function classifyTimeline(
     for (const sp of spans) if (sp.startM < e && sp.endM > s) sp.reasons.forEach((r) => reasons.add(r));
     const lu = reasons.size > 0;
     const g = maxGap(inside);
-    const reason: BirdsEyeReason = lu ? "level_uncertain" : inside.length === 0 ? "no_frames" : g !== null && g >= cfg.maxGapM ? "gap_too_large" : "run_too_short";
+    const reason: BirdsEyeReason = lu ? "level_uncertain" : inside.length === 0 ? "no_frames" : g !== null && gteMm(g, cfg.maxGapM) ? "gap_too_large" : "run_too_short";
     segments.push({
       startM: s, endM: e, lengthM: e - s, mode: "BIRDS_EYE_3D", edgeIds: edgesIn(s, e), sequenceId: null, frameCount: inside.length,
       maxGapM: g, capturedAt: minMax(inside.map((m) => m.frame.capturedAt ?? "")), level_uncertain: lu,
