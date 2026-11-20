@@ -59,6 +59,18 @@ Esri tile configuration:
 - `src/render/cesium/mapImagery.js:3-22` (`ArcGisMapServerImageryProvider`, `services.arcgisonline.com` World_Imagery)
 - `src/tools/globePanel.js:33-34` (arcgisonline hosts), `src/stories/thumbs.js:7-16,42`, `src/stories/controller.js:823`
 
+Google access tokens: `src/maps/googleTokens.js:1-7` (short-lived Google tile tokens from `/api/google/tiles-token`).
+
+Cesium ion / Bing imagery stack (needs an ion token):
+- `src/maps/catalog.js:14-29` (`bing-aerial` and `bing-labels` entries, `kind: 'ion'` at `:18,:26`, `requiresIon: true` at `:20,:28`)
+- `src/render/cesium/mapImagery.js:4,28-69` (`createIonImagery`, `createBingIonImagery`, calls `api.cesium.com` with the token). Note this file lives under `src/render/cesium/`, not `src/maps/`.
+
+Hosted keyless terrain: `src/maps/keylessTerrain.js:8-9` (`KEYLESS_TERRAIN_URL`, a third-party hosted quantized-mesh terrain server, `terrain.reearth.land`). Do not depend on it.
+
+OSM tile server: `src/render/cesium/mapImagery.js:11-16` (`createOsmImagery`) points at `https://tile.openstreetmap.org/`. This is tile-provider configuration subject to OSM's tile usage policy (not a general free CDN). Discard; do not carry forward. Our own map tiles are a Phase 2 decision.
+
+Traffic: `src/layers/traffic/` is not Google. It uses a keyed TomTom proxy (`flowSource.js:7`, `source.js:236`, `/api/tomtom/...`). Out of scope for v1 and key-dependent, so also discard. (The only Google mention there is a comment, `viewport.js:64`.)
+
 Satellites: `src/layers/satellites/` (catalog.js, classes.js, orbits.js, motion.js, issStation.js, issModel.js, issArticulation.js, issMounts.js, issTelemetry.js, ...), `src/cockpitOrbitalSatellites.js`, `src/data/satelliteClass.js`, `src/celestialRing.js`, `server/providers/space/` (celestrak.js, issTelemetry.js, launch-library.js), `src/data/local_data/ucs_satellites/`, `src/data/local_data/sky/`, `scripts/build-bright-stars.mjs`, `scripts/build-milky-way.mjs`, `src/render/cesium/starrySky.js` (sky shader, `czm_*`).
 
 Flights / aircraft: `src/layers/flights/`, `src/layers/aircraft/`, `src/layers/localAdsb/`, `server/providers/aircraft/` (adsb-lol.js, opensky.js, tracks.js, enrichment.js), `src/data/aircraftIcons.js`, `src/data/adsbLolFallback.js`, `docs/opensky-auth.md`, `docs/LOCAL-RECEIVERS.md`.
@@ -75,5 +87,7 @@ FLIR / NVG / visual-style shaders (all GLSL post-process fragment shaders):
 - Other GLSL: `src/render/cesium/effects.js` (sharpen/bloom stages; the generic stage plumbing is reusable in principle but not needed), `src/render/cesium/screenModulation.js`, `src/render/cesium/drawFields.js`, `src/render/cesium/drawStreamlines.js`, `src/render/cesium/iconSetPrimitive.js`, `src/render/cesium/drawModels.js`, `src/cockpitCloudEffects.js`, `src/layers/weather/infraredAlpha.js`, `src/app/atmosphereCompat.js`, `src/layers/streetLevel/panorama.js`, `src/render/occlusion/depthProbe.js`
 
 Other out-of-scope surfaces seen: CCTV (`src/layers/cctv/`, `config/cctv_sources.*.json`, `docs/CCTV_INTEGRATION.md`), military installations, ALPR, drone airspace, FIRMS, weather, voice/Gemini/OpenAI providers, MCP server (`server/mcp/`), Pinokio installer (`pinokio/`).
+
+Possible Phase 2 REFERENCE (not a discard item): `src/layers/directions/` (`source.js:8,14`, `index.js:6-8`) is a keyless A-to-B directions layer that calls a local `/api/route` proxy (server side `server/providers/places/routes.js:249-253`), backed by OSRM on the public FOSSGIS servers per the comment at `index.js:6-8`, not Google. Useful as a pattern for route-then-maneuver-dots; the public OSRM demo servers have their own usage limits, so do not copy the endpoint choice.
 
 Related but optional later (Phase 2+ research, not carried now): `server/providers/mapillary.js` and `server/providers/mapillary/tiles.js` (Mapillary tile proxy with a token, rate limiter), `src/layers/streetLevel/`.
