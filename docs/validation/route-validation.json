@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-11-20T16:25:51.024Z",
+  "generatedAt": "2026-11-20T16:33:44.300Z",
+  "branchStatus": "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.",
   "liveImageryMeasured": false,
   "mapillaryTokenConfigured": false,
   "statement": "Live Mapillary coverage was NOT measured: no Mapillary token is configured, no frames were ingested, and this run made no Mapillary call. Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. No coverage figure for real roads exists in this report, and none should be inferred from it.",
@@ -2334,7 +2335,7 @@
       "routeLengthKm": 3.841330123593705,
       "approachLengthM": 500,
       "approachWholeRoute": false,
-      "approachEdgeCount": 6,
+      "approachEdgeCount": 7,
       "routeEdgeCount": 63,
       "unpaved_fallback": true,
       "decisionWindowCount": 10,

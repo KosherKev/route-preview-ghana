@@ -12,6 +12,10 @@ export const NO_IMAGERY_STATEMENT =
   "Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. " +
   "No coverage figure for real roads exists in this report, and none should be inferred from it.";
 
+export const NOT_MERGED_NOTICE =
+  "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, " +
+  "and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.";
+
 export interface RealRow {
   routeId: string;
   label: string;
@@ -42,6 +46,8 @@ export interface RealRow {
 
 export interface ValidationReport {
   generatedAt: string;
+  /** Why this branch is not merged (see NOT_MERGED_NOTICE). */
+  branchStatus: string;
   /** Always false in Phase 3. */
   liveImageryMeasured: false;
   mapillaryTokenConfigured: boolean;
@@ -81,6 +87,7 @@ export function renderMarkdown(r: ValidationReport): string {
   const L: string[] = [];
   L.push("# Route preview validation (Phase 3)", "");
   L.push(`Generated: ${r.generatedAt}`, "");
+  L.push("## Branch status", "", `**${r.branchStatus}**`, "");
   L.push("## Statement: live imagery was NOT measured", "");
   L.push(`**${r.statement}**`, "");
   L.push(`- Mapillary token configured: ${r.mapillaryTokenConfigured ? "yes (never used by this tool)" : "no"}`);

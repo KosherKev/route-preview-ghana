@@ -1,6 +1,10 @@
 # Route preview validation (Phase 3)
 
-Generated: 2026-11-20T16:25:51.024Z
+Generated: 2026-11-20T16:33:44.300Z
+
+## Branch status
+
+**This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.**
 
 ## Statement: live imagery was NOT measured
 
@@ -84,7 +88,7 @@ Each pair is run with both costings. Approach length, edge counts, classifier co
 | r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | motor_scooter | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 94 | false | Kwame Nkrumah Interchange (through, 37 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | auto | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 103 | false | Kwame Nkrumah Interchange (through, 55 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | motor_scooter | 5.60198, -0.22612 | 5.57811, -0.22970 | no route | | | | | error: Valhalla /route -> HTTP 400: {"error_code":442,"error":"No path could be found for input","status_code":400,"status":"Bad Request"} | | | | |
-| r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | auto | 5.60198, -0.22612 | 5.57811, -0.22970 | 3.8 | 500.0 | 6 / 63 | TRUE | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | auto | 5.60198, -0.22612 | 5.57811, -0.22970 | 3.8 | 500.0 | 7 / 63 | TRUE | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 
 Routes attempted: 50; routed: 49; no route/error: 1; unpaved_fallback used: 1; classified STREET_VIDEO anywhere: 0.
 

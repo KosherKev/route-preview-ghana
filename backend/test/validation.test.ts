@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NO_IMAGERY_STATEMENT, renderMarkdown, SYNTHETIC_LABEL, type ValidationReport } from "../src/validation/report";
+import { NOT_MERGED_NOTICE, NO_IMAGERY_STATEMENT, renderMarkdown, SYNTHETIC_LABEL, type ValidationReport } from "../src/validation/report";
 import { NAMED_POINTS, ROUTE_PAIRS } from "../src/validation/routes";
 import { syntheticScenarios } from "../src/validation/synthetic";
 import { DEFAULT_CLASSIFY_CONFIG } from "../src/classify/classify";
@@ -52,7 +52,7 @@ describe("synthetic scenarios produce the documented outcomes", () => {
 
 describe("report rendering", () => {
   const report: ValidationReport = {
-    generatedAt: "2026-01-01T00:00:00Z", liveImageryMeasured: false, mapillaryTokenConfigured: false, statement: NO_IMAGERY_STATEMENT,
+    generatedAt: "2026-01-01T00:00:00Z", branchStatus: NOT_MERGED_NOTICE, liveImageryMeasured: false, mapillaryTokenConfigured: false, statement: NO_IMAGERY_STATEMENT,
     frameRowsInDatabase: 0,
     config: { match: DEFAULT_MATCH_CONFIG, classify: DEFAULT_CLASSIFY_CONFIG, approachLengthM: 500, decisionWindowM: 80 },
     namedPoints: NAMED_POINTS,
@@ -68,6 +68,11 @@ describe("report rendering", () => {
     expect(md).toContain("## SYNTHETIC classifier demonstrations");
     for (const s of report.synthetic.scenarios) expect(md).toContain(`### SYNTHETIC: ${s.title}`);
     expect(md.indexOf("## Real routes")).toBeLessThan(md.indexOf("## SYNTHETIC"));
+  });
+  it("says why the branch is not merged", () => {
+    expect(md).toContain("## Branch status");
+    expect(md).toContain("intentionally NOT merged to main");
+    expect(md).toContain("auto-merge bar permanently excludes work touching migrations");
   });
   it("reports route errors as errors, not coverage", () => {
     expect(md).toContain("no route");

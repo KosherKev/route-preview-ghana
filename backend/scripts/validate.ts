@@ -10,7 +10,7 @@ import { DEFAULT_CLASSIFY_CONFIG } from "../src/classify/classify";
 import { DEFAULT_MATCH_CONFIG } from "../src/classify/match";
 import { DEFAULT_APPROACH_LENGTH_M, DEFAULT_DECISION_WINDOW_M, extractApproach } from "../src/routing/approach";
 import type { Costing } from "../src/routing/valhalla";
-import { NO_IMAGERY_STATEMENT, renderMarkdown, summariseClassification, SYNTHETIC_LABEL, type RealRow, type ValidationReport } from "../src/validation/report";
+import { NOT_MERGED_NOTICE, NO_IMAGERY_STATEMENT, renderMarkdown, summariseClassification, SYNTHETIC_LABEL, type RealRow, type ValidationReport } from "../src/validation/report";
 import { NAMED_POINTS, ROUTE_PAIRS } from "../src/validation/routes";
 import { classifyApproachFromDb, namedProximity } from "../src/validation/run";
 import { syntheticScenarios } from "../src/validation/synthetic";
@@ -45,6 +45,7 @@ try {
   }
   const report: ValidationReport = {
     generatedAt: new Date().toISOString(),
+    branchStatus: NOT_MERGED_NOTICE,
     liveImageryMeasured: false,
     mapillaryTokenConfigured: Boolean(process.env.MAPILLARY_TOKEN),
     statement: NO_IMAGERY_STATEMENT,
