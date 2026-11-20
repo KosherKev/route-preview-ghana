@@ -15,14 +15,20 @@ export const COSTING_OPTIONS: Record<Costing, Record<string, number | boolean>> 
   auto: { exclude_unpaved: true },
 };
 
-export function routeRequest(costing: Costing, from: LatLon, to: LatLon) {
+/** Costing options for a request; `excludeUnpaved` overrides the `auto` default (used by the Phase 3 fallback). */
+export function costingOptionsFor(costing: Costing, excludeUnpaved?: boolean): Record<string, number | boolean> {
+  if (costing === "auto" && excludeUnpaved !== undefined) return { exclude_unpaved: excludeUnpaved };
+  return COSTING_OPTIONS[costing];
+}
+
+export function routeRequest(costing: Costing, from: LatLon, to: LatLon, excludeUnpaved?: boolean) {
   return {
     locations: [
       { lat: from.lat, lon: from.lon },
       { lat: to.lat, lon: to.lon },
     ],
     costing,
-    costing_options: { [costing]: COSTING_OPTIONS[costing] },
+    costing_options: { [costing]: costingOptionsFor(costing, excludeUnpaved) },
     directions_options: { units: "kilometers" },
   };
 }
@@ -76,6 +82,14 @@ export function edgesFromTraceAttributes(resp: { edges?: Record<string, unknown>
 /** Default per-request timeout for Valhalla calls. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
+/** HTTP-level Valhalla failure; `errorCode` is Valhalla's own code (442 = no path could be found). */
+export class ValhallaError extends Error {
+  constructor(message: string, readonly status: number, readonly errorCode?: number) {
+    super(message);
+    this.name = "ValhallaError";
+  }
+}
+
 export async function postJson(
   base: string, path: string, body: unknown, fetchImpl: typeof fetch = fetch, timeoutMs = DEFAULT_TIMEOUT_MS,
 ) {
@@ -92,7 +106,12 @@ export async function postJson(
     if (name === "TimeoutError" || name === "AbortError") throw new Error(`Valhalla ${path} timed out after ${timeoutMs} ms`);
     throw new Error(`Valhalla ${path} request failed: ${name}`);
   }
-  if (!res.ok) throw new Error(`Valhalla ${path} -> HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    const text = await res.text();
+    let errorCode: number | undefined;
+    try { errorCode = (JSON.parse(text) as { error_code?: number }).error_code; } catch { /* not JSON */ }
+    throw new ValhallaError(`Valhalla ${path} -> HTTP ${res.status}: ${text.slice(0, 300)}`, res.status, errorCode);
+  }
   return (await res.json()) as any;
 }
 
