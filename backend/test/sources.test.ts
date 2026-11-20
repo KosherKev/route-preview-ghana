@@ -162,7 +162,7 @@ describe("MapillarySource and the ingestion CLI refuse when mapillary is disable
   it("the CLI exits 4 with a clear message before any token, network or DB access", () => {
     const backend = path.resolve(__dirname, "..");
     const env: NodeJS.ProcessEnv = { ...process.env, [KEY]: "mapillary" };
-    delete env.MAPILLARY_TOKEN;
+    env.MAPILLARY_TOKEN = ""; // set-but-empty: the CLI's loadEnv() never overrides it, so a real .env token cannot trigger a live call
     const r = spawnSync(path.join(backend, "node_modules/.bin/tsx"), ["src/ingest/cli.ts", "--bbox", "-0.21,5.59,-0.19,5.61"], {
       cwd: backend, env, encoding: "utf8",
     });
@@ -229,7 +229,7 @@ describe("suspicious IMAGERY_SOURCES_DISABLED entries", () => {
   it("the CLI prints the warning once on stderr", () => {
     const backend = path.resolve(__dirname, "..");
     const env: NodeJS.ProcessEnv = { ...process.env, [KEY]: "mapillary;other" };
-    delete env.MAPILLARY_TOKEN;
+    env.MAPILLARY_TOKEN = ""; // set-but-empty: the CLI's loadEnv() never overrides it, so a real .env token cannot trigger a live call
     const r = spawnSync(path.join(backend, "node_modules/.bin/tsx"), ["src/ingest/cli.ts", "--bbox", "-0.21,5.59,-0.19,5.61"], {
       cwd: backend, env, encoding: "utf8",
     });
