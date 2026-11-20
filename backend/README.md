@@ -33,6 +33,18 @@ Volumes are `route-preview-ghana_valhalla_tiles` and `route-preview-ghana_postgi
     (speed multipliers paved 1.0, paved_rough 0.9, compacted 0.6, dirt 0.1; gravel, path and impassable surfaces are refused), which is
     always on. Only `top_speed = 45` is sent.
   - Both are set in `src/routing/valhalla.ts` (`COSTING_OPTIONS`).
+  - Evidence (local Valhalla 3.9.3, 1 batch of 60 random pairs inside the `tetteh-quarshie-accra-central` corridor; 2 pairs differed).
+    Pair 5.61753 N, 0.21187 W to 5.60975 N, 0.22380 W (surface per edge from `trace_attributes`):
+    `auto` + `exclude_unpaved: true` = 5.518 km, 33 edges, all paved (0 km dirt); plain `auto` = 4.738 km, 30 edges, with 1.072 km of
+    dirt; `motor_scooter` = 5.479 km, 42 edges, all paved. So `exclude_unpaved` demonstrably re-routes, and the scooter's built-in
+    penalty also avoided that dirt shortcut here. A second pair (5.62049 N, 0.21580 W to 5.63282 N, 0.20257 W) shows start/end tolerance:
+    with `exclude_unpaved` the route is still 2.183 km dirt (unpaved edges at the ends are allowed), 2.849 km vs 3.043 km without it; the
+    scooter took 4.388 km with 0.095 km dirt. This is one pair per behaviour, not a statistical result. Reproduce with
+    `test/valhalla-unpaved.integration.test.ts` (skips when Valhalla is not reachable).
+  - Phase 3 risk: `auto` `exclude_unpaved` is a HARD exclusion, so it may fail to route between points linked only by unpaved
+    roads. Observed: in the same 60-pair batch, 4 pairs returned "No path could be found" with `exclude_unpaved: true` while plain
+    `auto` routed them. Phase 3 must handle that (fall back to plain `auto` or `motor_scooter`) rather than assume a route exists.
+  - Ingest guards: `--max-tiles` raises the per-run tile cap (default 400); antimeridian-crossing bboxes are rejected.
 - Route with edge ids (`/route` for the polyline, then `/trace_attributes` with `shape_match: map_snap` for edge ids):
 
 ```
