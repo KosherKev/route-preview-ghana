@@ -65,6 +65,26 @@ Points used: 5.6361 N, 0.1750 W (Tetteh Quarshie Interchange area) to 5.5502 N, 
 - DB tests (`test/migrations.test.ts`, `test/landmarks.test.ts`, `test/ingest-store.test.ts`) each create and drop their own throwaway
   database on the container, so `docker compose up -d postgis` must be running for `npm test`.
 
+## Landmark search and geocoding
+
+Riders name destinations by landmark ("near the Total station, Madina"), so search runs over the `landmarks` table in PostGIS.
+Migration `006_landmark_search.sql` (additive) enables `pg_trgm` and `unaccent`, adds the IMMUTABLE wrapper `landmarks_norm(text)`
+(lower-case, accent-folded) and a GIN trigram index `landmarks_name_trgm_idx` on it. `npm run serve` starts the loopback-only server
+with the endpoint enabled (needs `.env` for the database).
+
+`GET /landmarks/search?q=<text>&near=<lat>,<lon>&limit=<n>`
+
+- `q` required, trimmed, 1 to 100 characters, no control characters. `near` optional, finite `lat,lon`. `limit` optional integer 1 to 20 (default 5).
+- Ranking: trigram similarity first; among exactly equal scores (for example the many stations just called "Total") nearer to `near` first.
+- Response `200`: `{"query": "...", "results": [{"name", "category", "lat", "lon", "distance_m" (null without near), "score" (0..1)}]}`.
+- Errors are RFC 9457 problem JSON (`application/problem+json`: `type`, `title`, `status`, `detail`): `400` for bad input, `405` for non-GET,
+  `500` generic for database failures (details are logged server-side only). All SQL is parameterised.
+- Example: `curl 'http://127.0.0.1:8787/landmarks/search?q=asilum+down+farmacy&near=5.57,-0.2&limit=3'`
+
+Geocode chain (`src/patterns/geocodeChain.ts`, `buildGeocodeChain`): coordinate parse (no I/O), then the landmark search above, then an
+optional self-hosted geocoder. `httpGeocoder` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
+The self-hosted Photon spike and its measured numbers are in `../docs/validation/geocoder-spike.md`.
+
 ## Mapillary ingestion
 
 `src/ingest/mapillary.ts` implements `StreetImagerySource` (`src/patterns/imagerySource.ts`) for Graph API v4 `graph.mapillary.com/images`:
