@@ -1,12 +1,14 @@
 // Smallest possible HTTP surface for the approach extractor. Node's built-in http only; loopback only.
 //   GET  /health
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
+//   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
 //   POST /approach  {"origin":{"lat":..,"lon":..},"destination":{..},"costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
 import { ArgumentError, extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
 import type { Costing, LatLon } from "./valhalla";
 import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
+import type { GeocodeFn } from "../geo/geocode";
 
 export const MAX_BODY_BYTES = 4096;
 export const REQUEST_DEADLINE_MS = 60_000;
@@ -58,6 +60,8 @@ export interface ServerOptions {
   deadlineMs?: number;
   /** Enables GET /landmarks/search. Injected so the server itself holds no database connection. */
   landmarkSearch?: (p: SearchParams) => Promise<LandmarkMatch[]>;
+  /** Enables GET /geocode (coordinates, landmarks, then Photon). Injected like landmarkSearch. */
+  geocode?: GeocodeFn;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
   onError?: (err: unknown, info: { status: number; path: string }) => void;
 }
@@ -109,6 +113,24 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
         }
         try {
           return send(res, 200, { query: params.q, results: await opts.landmarkSearch(params) });
+        } catch (e) {
+          onError(e, { status: 500, path: url.pathname });
+          return sendProblem(res, 500, "Internal Server Error");
+        }
+      }
+      if (url.pathname === "/geocode" && opts.geocode) {
+        if (req.method !== "GET") return sendProblem(res, 405, "Method Not Allowed", "use GET");
+        let params: SearchParams;
+        try { params = parseSearchParams(url.searchParams); } catch (e) {
+          if (e instanceof SearchInputError) return sendProblem(res, 400, "Invalid request", e.message);
+          throw e;
+        }
+        try {
+          const g = await opts.geocode(params);
+          return send(res, 200, {
+            query: g.query, degraded: g.degraded,
+            candidates: g.candidates.map(({ distance_m, ...c }) => (params.near ? { ...c, distance_m } : c)),
+          });
         } catch (e) {
           onError(e, { status: 500, path: url.pathname });
           return sendProblem(res, 500, "Internal Server Error");
