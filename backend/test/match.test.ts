@@ -135,3 +135,51 @@ describe("one sequence per segment (edge)", () => {
     expect(bySeq("B")).toEqual([2, 2]); // A has no frames on edge 2, so B is chosen
   });
 });
+
+describe("true distance to the route polyline (clamped), not the infinite line", () => {
+  const sc = straightScene({ lengthM: 400 });
+  const kept = (fs: FrameRecord[], s = sc) => matchFrames(s.axis, s.edges, fs).kept.length;
+
+  it("drops frames 300 m beyond the end or before the start on the same line; keeps frames on the route and at the end", () => {
+    expect(kept([sc.frame(700)])).toBe(0);
+    expect(kept([sc.frame(-300)])).toBe(0);
+    expect(reasons(matchFrames(sc.axis, sc.edges, [sc.frame(700), sc.frame(-300)]))).toEqual(["off_route", "off_route"]);
+    expect(kept([sc.frame(0), sc.frame(200), sc.frame(400)])).toBe(3);
+    expect(kept([sc.frame(405), sc.frame(-5)])).toBe(2); // within 15 m of an end
+    expect(kept([sc.frame(416), sc.frame(-16)])).toBe(0);
+  });
+
+  it("drops a frame just beyond an outer bend vertex that is close to the line but far from the polyline", () => {
+    const fr = new LocalFrame({ lat: 5.6, lon: -0.2 });
+    const p = (x: number, y: number): LatLon => fr.toLatLon({ x, y });
+    const axis = buildAxis([p(0, 0), p(0, 100), p(100, 100)]);
+    const edges: EdgeSpan[] = [{ edgeId: 1, startM: 0, endM: axis.lengthM }];
+    const f = (id: string, x: number, y: number): FrameRecord => ({ imageId: id, sequenceId: "s", ...p(x, y), compassAngleDeg: 0, qualityScore: 1, capturedAt: null });
+    // 5 m right of the north leg's line, but 20.6 m past the corner vertex
+    const r = matchFrames(axis, edges, [f("beyond", 5, 120), f("on", 2, 60)]);
+    expect(r.kept.map((m) => m.frame.imageId)).toEqual(["on"]);
+    expect(reasons(r)).toEqual(["off_route"]);
+  });
+});
+
+describe("duplicate images and non-finite quality", () => {
+  const sc = straightScene({ lengthM: 100 });
+  it("NaN / Infinity quality is unscored: dropped by default, kept with allowMissingQuality", () => {
+    const fs = [sc.frame(10, { quality: NaN, id: "nan" }), sc.frame(20, { quality: Infinity, id: "inf" })];
+    const r = matchFrames(sc.axis, sc.edges, fs);
+    expect(r.kept.length).toBe(0);
+    expect(reasons(r)).toEqual(["low_quality", "low_quality"]);
+    expect(matchFrames(sc.axis, sc.edges, fs, { ...DEFAULT_MATCH_CONFIG, allowMissingQuality: true }).kept.length).toBe(2);
+  });
+
+  it("de-duplicates by imageId before selection: latest capturedAt wins, tie keeps the first", () => {
+    const a = sc.frame(10, { id: "dup", capturedAt: "2020-01-01T00:00:00Z" });
+    const b = { ...sc.frame(10, { id: "dup", capturedAt: "2024-01-01T00:00:00Z" }) };
+    const c = sc.frame(30, { id: "tie" }), d = { ...c };
+    const r = matchFrames(sc.axis, sc.edges, [a, b, c, d]);
+    expect(r.kept.map((m) => m.frame)).toEqual([b, c]);
+    expect(r.kept.find((m) => m.frame.imageId === "tie")!.frame).toBe(c);
+    expect(reasons(r)).toEqual(["duplicate_image", "duplicate_image"]);
+    expect(selectSequences(r.kept).selected.length).toBe(2);
+  });
+});

@@ -46,6 +46,8 @@ export interface MatchedFrame {
 
 export interface DroppedFrame { frame: FrameRecord; reason: DropReason }
 
+const ts = (s: string | null) => (s ? Date.parse(s) : Number.NEGATIVE_INFINITY);
+
 export function edgeIndexAt(edges: readonly EdgeSpan[], offsetM: number): number {
   if (edges.length === 0) throw new Error("no edges");
   for (let i = 0; i < edges.length; i++) if (offsetM >= edges[i]!.startM && offsetM < edges[i]!.endM) return i;
@@ -57,15 +59,24 @@ export function matchFrames(
 ): { kept: MatchedFrame[]; dropped: DroppedFrame[] } {
   const kept: MatchedFrame[] = [];
   const dropped: DroppedFrame[] = [];
+  // De-duplicate by imageId (e.g. the same image returned by two corridor/bbox loads). Deterministic rule: keep the copy
+  // with the latest capturedAt; on a tie keep the first one in input order. Others are dropped as `duplicate_image`.
+  const winner = new Map<string, FrameRecord>();
+  for (const f of frames) {
+    const w = winner.get(f.imageId);
+    if (!w || ts(f.capturedAt) > ts(w.capturedAt)) winner.set(f.imageId, f);
+  }
   for (const f of frames) {
     const drop = (reason: DropReason) => dropped.push({ frame: f, reason });
+    if (winner.get(f.imageId) !== f) { drop("duplicate_image"); continue; }
     const pr = projectOntoAxis(axis, { lat: f.lat, lon: f.lon });
-    const lateral = Math.abs(pr.lateralRightM);
-    if (lateral > cfg.lateralToleranceM) { drop("off_route"); continue; }
+    // true clamped distance to the polyline (not the perpendicular distance to the infinite segment line)
+    if (pr.distanceM > cfg.lateralToleranceM) { drop("off_route"); continue; }
     if (pr.lateralRightM < -cfg.maxLeftOffsetM) { drop("left_of_centerline"); continue; }
     if (f.compassAngleDeg === null || !Number.isFinite(f.compassAngleDeg)) { drop("no_heading"); continue; }
     if (absAngleDiffDeg(f.compassAngleDeg, pr.bearingDeg) > cfg.bearingToleranceDeg + ANGLE_EPS_DEG) { drop("bearing_mismatch"); continue; }
-    if (f.qualityScore === null) {
+    // null and non-finite (NaN/Infinity) scores are both "unscored"
+    if (f.qualityScore === null || !Number.isFinite(f.qualityScore)) {
       if (!cfg.allowMissingQuality) { drop("low_quality"); continue; }
     } else if (f.qualityScore < cfg.minQualityScore) { drop("low_quality"); continue; }
     if (!f.sequenceId) { drop("no_sequence"); continue; }
@@ -82,8 +93,6 @@ export function matchFrames(
 export function byOffset(a: MatchedFrame, b: MatchedFrame): number {
   return a.offsetM - b.offsetM || (a.frame.capturedAt ?? "").localeCompare(b.frame.capturedAt ?? "") || a.frame.imageId.localeCompare(b.frame.imageId);
 }
-
-const ts = (s: string | null) => (s ? Date.parse(s) : Number.NEGATIVE_INFINITY);
 
 /**
  * One sequence per edge. Edges are visited in route order. If the sequence chosen for the previous edge also has frames on

@@ -29,7 +29,7 @@ export interface EdgeSpan {
 export type Mode = "STREET_VIDEO" | "BIRDS_EYE_3D";
 
 export type DropReason =
-  | "no_heading" | "no_sequence" | "off_route" | "left_of_centerline" | "bearing_mismatch" | "low_quality" | "other_sequence";
+  | "no_heading" | "no_sequence" | "off_route" | "left_of_centerline" | "bearing_mismatch" | "low_quality" | "other_sequence" | "duplicate_image";
 
 export type LevelReason = "sequence_jump" | "heading_jump" | "level_change";
 
