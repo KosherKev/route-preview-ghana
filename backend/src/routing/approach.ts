@@ -116,7 +116,23 @@ function overlaps(e: { startM: number; endM: number }, s: number, t: number) {
   return e.endM > s && e.startM < t;
 }
 
-/** Edges of the matched shape. `shape` indices refer to the matched shape, which map_snap returns identical to the route shape. */
+/**
+ * The edge offsets are computed from the ROUTE polyline using trace_attributes' shape indices, so the shape that
+ * map_snap matched MUST be the route shape. A different point count would leave offsets in range but wrong, so any
+ * difference fails loudly rather than producing a silently misaligned timeline.
+ */
+export function assertSameShape(routeShape6: string, tracedShape: unknown, routePointCount: number): void {
+  if (typeof tracedShape !== "string") throw new Error("Valhalla /trace_attributes returned no shape; cannot verify it matches the route shape");
+  if (tracedShape === routeShape6) return;
+  let tracedCount = -1;
+  try { tracedCount = decodePolyline6(tracedShape).length; } catch { /* undecodable: reported below */ }
+  throw new Error(
+    `trace_attributes matched shape differs from the route shape (route ${routePointCount} points, matched ${tracedCount >= 0 ? tracedCount : "undecodable"} points); ` +
+    "edge offsets would be wrong, refusing to continue",
+  );
+}
+
+/** Edges of the matched shape. `shape` indices refer to the matched shape, verified identical to the route shape by assertSameShape. */
 export function buildEdges(rawEdges: Record<string, any>[], axis: Axis): ExtractedEdge[] {
   const last = axis.cum.length - 1;
   return rawEdges.map((e) => {
@@ -201,6 +217,7 @@ export async function extractApproach(
 
   const attrs = await postJson(base, "/trace_attributes", traceRequest(costing, polyline6, fallback ? false : undefined), fetchImpl, timeoutMs);
   if (!Array.isArray(attrs?.edges) || attrs.edges.length === 0) throw new Error("Valhalla /trace_attributes returned no edges");
+  assertSameShape(polyline6, attrs.shape, points.length);
   const edges = buildEdges(attrs.edges, axis);
 
   const maneuvers: ExtractedManeuver[] = ((leg.maneuvers ?? []) as Record<string, any>[]).map((m) => ({

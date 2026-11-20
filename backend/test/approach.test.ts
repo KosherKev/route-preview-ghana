@@ -9,7 +9,7 @@ const pt = (x: number, y: number): LatLon => frame.toLatLon({ x, y });
 const O = pt(0, 0), D = pt(0, 2000);
 
 /** Straight 2 km north route, a vertex every 100 m, edge every 250 m. */
-function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number } = {}) {
+function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number; tracedShape?: string | null } = {}) {
   const len = opts.routeLenM ?? 2000;
   const verts: [number, number][] = [];
   for (let m = 0; m <= len; m += 100) { const p = pt(0, m); verts.push([p.lat, p.lon]); }
@@ -37,7 +37,7 @@ function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number }
       const edges = [];
       const last = verts.length - 1;
       for (let b = 0, id = 100; b < last; b += 2, id++) edges.push({ id, way_id: id, begin_shape_index: b, end_shape_index: Math.min(b + 2, last), road_class: "primary", surface: "paved_smooth", bridge: false, tunnel: false, names: ["N"] });
-      return json({ shape, edges });
+      return json({ shape: opts.tracedShape === undefined ? shape : opts.tracedShape ?? undefined, edges });
     }
     return json({}, 404);
   }) as unknown as typeof fetch;
@@ -61,6 +61,16 @@ describe("extractApproach (mocked Valhalla)", () => {
     expect(r.maneuvers.map((m) => m.kind)).toEqual(["other", "turn", "roundabout", "merge", "other"]);
     expect(r.decisionWindows.map((w) => w.kind)).toEqual(["turn", "roundabout", "merge"]);
     for (const w of r.decisionWindows) expect(w.endM - w.startM).toBeLessThanOrEqual(80 + 1e-6);
+  });
+
+  it("fails loudly when trace_attributes returns a different shape (or none) than the route", async () => {
+    const other = encodePolyline6([[5.6, -0.2], [5.601, -0.2], [5.602, -0.2]]); // 3 points vs the route's 21
+    await expect(extractApproach("auto", O, D, { fetchImpl: fakeValhalla({ tracedShape: other }).impl, valhallaUrl: "http://v" }))
+      .rejects.toThrow(/differs from the route shape \(route 21 points, matched 3 points\)/);
+    await expect(extractApproach("auto", O, D, { fetchImpl: fakeValhalla({ tracedShape: null }).impl, valhallaUrl: "http://v" }))
+      .rejects.toThrow(/returned no shape/);
+    await expect(extractApproach("auto", O, D, { fetchImpl: fakeValhalla({ tracedShape: "\u0001" }).impl, valhallaUrl: "http://v" }))
+      .rejects.toThrow(/differs from the route shape/);
   });
 
   it("honours configurable approach length and window size; a short route returns the whole route", async () => {
