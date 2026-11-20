@@ -1,9 +1,10 @@
-#!/bin/sh
-# Runs inside the GDAL container: OSM PBF points -> PostGIS staging table landmarks_stage.
-set -e
+#!/usr/bin/env bash
+# Runs inside the GDAL container (bash: pipefail is not available in dash): OSM PBF points -> PostGIS staging table landmarks_stage.
+set -euo pipefail
 sed '/^\[points\]/,/^\[lines\]/ s/^attributes=.*/attributes=name,highway,amenity,public_transport/' \
   /usr/share/gdal/osmconf.ini > /tmp/osmconf.ini
 export PGPASSWORD="$POSTGRES_PASSWORD"
+# $BBOX below is intentionally unquoted: four space-separated numbers for -spat.
 ogr2ogr -f PostgreSQL "PG:host=postgis port=5432 dbname=$POSTGRES_DB user=$POSTGRES_USER" \
   /data/ghana-latest.osm.pbf -overwrite -nln landmarks_stage -nlt POINT \
   -lco GEOMETRY_NAME=geom -lco FID=fid -t_srs EPSG:4326 \

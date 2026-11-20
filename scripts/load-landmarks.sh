@@ -21,7 +21,7 @@ LANDMARK_SQL="SELECT osm_id, name, amenity, highway, public_transport FROM point
 docker run --rm --network "$NETWORK" --memory 1g --env-file .env \
   -e BBOX="$BBOX" -e LANDMARK_SQL="$LANDMARK_SQL" \
   -v "$PWD/data:/data:ro" -v "$PWD/docker/landmarks/extract.sh:/extract.sh:ro" \
-  "$GDAL_IMAGE" sh /extract.sh
+  "$GDAL_IMAGE" bash /extract.sh
 
 docker compose exec -T postgis sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < docker/landmarks/classify.sql
 docker compose exec -T postgis sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT category, count(*) FROM landmarks GROUP BY 1 ORDER BY 1"'
