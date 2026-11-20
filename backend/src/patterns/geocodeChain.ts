@@ -40,8 +40,11 @@ export function landmarkGeocoder(landmarks: ReadonlyMap<string, Place>): Geocode
   };
 }
 
-/** Minimum trigram similarity for the landmark stage to claim an answer (below this it falls through). */
-export const LANDMARK_MIN_SCORE = 0.3;
+/**
+ * Minimum trigram similarity for the landmark stage to claim an answer (below this it falls through to the geocoder).
+ * At 0.3, "Kotoka International Airport" resolved to "Opportunity International" (0.41); correct matches measured >= 0.52.
+ */
+export const LANDMARK_MIN_SCORE = 0.5;
 
 /** Landmark stage: fuzzy PostGIS search (pg_trgm), best match wins. `near` biases exact ties toward the rider. */
 export function landmarkSearchGeocoder(
@@ -96,6 +99,26 @@ export function httpGeocoder(
       }
     },
   };
+}
+
+export const SELF_HOSTED_PHOTON_URL = "http://127.0.0.1:2322";
+
+/** Second stage: the self-hosted Ghana-only Photon (docker compose --profile geocoder). Loopback only, enforced by httpGeocoder. */
+export function photonGeocoder(baseUrl = SELF_HOSTED_PHOTON_URL, timeoutMs = 3000): Geocoder {
+  return httpGeocoder("photon-local", baseUrl, async (q, signal) => {
+    const u = new URL("/api", baseUrl);
+    u.searchParams.set("q", q);
+    u.searchParams.set("limit", "1");
+    const r = await fetch(u, { signal });
+    if (!r.ok) throw new Error(`photon ${r.status}`);
+    const body = (await r.json()) as { features?: Array<{ geometry?: { coordinates?: unknown[] }; properties?: Record<string, unknown> }> };
+    const f = body.features?.[0];
+    const [lon, lat] = f?.geometry?.coordinates ?? [];
+    if (typeof lat !== "number" || typeof lon !== "number" || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    const p = f!.properties ?? {};
+    const label = [p.name, p.street, p.district ?? p.suburb, p.city].filter((x): x is string => typeof x === "string" && x.length > 0).join(", ");
+    return { lat, lon, label: label || q, source: "photon-local" };
+  }, timeoutMs);
 }
 
 /** The production chain: landmarks first (coordinates are a pure parse and sit ahead of it), then an optional self-hosted geocoder. */

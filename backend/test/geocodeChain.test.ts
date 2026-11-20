@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import http from "node:http";
 import { describe, expect, it } from "vitest";
 import {
-  buildGeocodeChain, coordinateGeocoder, geocodeWithFallback, httpGeocoder, isLoopbackUrl, landmarkSearchGeocoder,
+  buildGeocodeChain, photonGeocoder, coordinateGeocoder, geocodeWithFallback, httpGeocoder, isLoopbackUrl, landmarkSearchGeocoder,
 } from "../src/patterns/geocodeChain";
 import type { Queryable } from "../src/geo/landmarkSearch";
 
@@ -45,7 +46,7 @@ describe("geocodeChain", () => {
   it("falls through to the self-hosted stage when landmarks find nothing or score too low", async () => {
     const hit = { lat: 5.5, lon: -0.2, label: "x", source: "photon-local" };
     const selfHosted = httpGeocoder("photon-local", "http://localhost:2322", async () => hit);
-    for (const rows of [[], [{ ...row, score: 0.1 }]]) {
+    for (const rows of [[], [{ ...row, score: 0.45 }]]) {
       const res = await geocodeWithFallback(buildGeocodeChain({ db: fakeDb(rows), selfHosted }), "zzz");
       expect(res.answeredBy).toBe("photon-local");
     }
@@ -75,5 +76,28 @@ describe("geocodeChain", () => {
   it("source contains no public geocoder hostnames", () => {
     const src = readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/patterns/geocodeChain.ts"), "utf8");
     expect(src).not.toMatch(/komoot|nominatim\.openstreetmap|https?:\/\/(?!127\.0\.0\.1|localhost)/i);
+  });
+
+  it("photon stage parses a Photon GeoJSON answer from a loopback server", async () => {
+    let seen = "";
+    const srv = http.createServer((req, res) => {
+      seen = req.url ?? "";
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ features: [{ geometry: { coordinates: [-0.2151, 5.6697] }, properties: { name: "Kwame Nkrumah Circle", district: "Kokomlemle" } }] }));
+    });
+    await new Promise<void>((r) => srv.listen(0, "127.0.0.1", r));
+    try {
+      const g = photonGeocoder(`http://127.0.0.1:${(srv.address() as { port: number }).port}`);
+      const out = await g.geocode("nkrumah circle");
+      expect(out).toEqual({ answered: true, place: { lat: 5.6697, lon: -0.2151, label: "Kwame Nkrumah Circle, Kokomlemle", source: "photon-local" } });
+      expect(seen).toContain("q=nkrumah+circle");
+    } finally {
+      await new Promise((r) => srv.close(r));
+    }
+  });
+
+  it("photon stage treats an unreachable server as a failure, not a miss", async () => {
+    expect(await photonGeocoder("http://127.0.0.1:1").geocode("x")).toEqual({ answered: false });
+    expect(() => photonGeocoder("https://photon.komoot.io")).toThrow(/loopback/);
   });
 });
