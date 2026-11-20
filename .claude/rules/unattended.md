@@ -66,6 +66,10 @@ this exact prompt before assuming a different failure.
 - Writing NEW files that don't already exist (new tests, new docs, new non-destructive scripts).
 - Additive code changes on a dedicated branch created specifically for that headless run — never
   committing directly to `main`/`master`/`develop` from an unattended run.
+- Merging a task branch into `main` is allowed ONLY through the orchestrator's conditional
+  auto-merge check (the five-condition bar in the pipeline's A6.5, evaluated fresh after review).
+  It is never allowed for work touching payments, auth or database migrations, never by
+  force-push, and a branch that fails any condition stays pushed and PR-ready.
 - Scoped to this project only: `docker compose up -d` for Valhalla, PostGIS and MinIO bound to
   localhost, and downloading the Geofabrik `ghana-latest.osm.pbf` into the gitignored `data/`
   directory.
