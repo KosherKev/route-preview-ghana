@@ -60,6 +60,36 @@ export interface MapillaryOptions {
   pageLimit?: number;
   /** Largest bbox side per request, in degrees (the API caps bbox area). */
   maxBBoxSideDeg?: number;
+  /** Per-request timeout (default DEFAULT_REQUEST_TIMEOUT_MS). A timeout is a retryable failure. */
+  requestTimeoutMs?: number;
+  /** Refuse to ingest a bbox needing more tiles (requests) than this (default DEFAULT_MAX_TILES). */
+  maxTiles?: number;
+}
+
+/** Default per-request timeout for Mapillary calls. */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+/** Upper bound on any Retry-After we honour, so a hostile header cannot stall the process. */
+export const MAX_RETRY_AFTER_MS = 60_000;
+/** Default cap on tiles (one or more requests each) per ingest run; override with --max-tiles. */
+export const DEFAULT_MAX_TILES = 400;
+
+/** Reject bad bboxes: out-of-range, non-finite, min>=max, or crossing the antimeridian (unsupported). */
+export function validateBBox(b: BBox): void {
+  const [w, s, e, n] = b;
+  if (![w, s, e, n].every(Number.isFinite)) throw new Error("bbox values must be finite numbers");
+  if (w < -180 || w > 180 || e < -180 || e > 180) throw new Error("bbox longitude must be within [-180, 180]");
+  if (s < -90 || s > 90 || n < -90 || n > 90) throw new Error("bbox latitude must be within [-90, 90]");
+  if (w > e) {
+    throw new Error("bbox crosses the antimeridian (minLon > maxLon), which is not supported; split it into two bboxes");
+  }
+  if (w === e) throw new Error("bbox must satisfy minLon < maxLon");
+  if (s >= n) throw new Error("bbox must satisfy minLat < maxLat");
+}
+
+/** Number of tiles tileBBox would produce, without building them. */
+export function countTiles(b: BBox, maxSideDeg: number): number {
+  const [w, s, e, n] = b;
+  return Math.max(1, Math.ceil((e - w) / maxSideDeg)) * Math.max(1, Math.ceil((n - s) / maxSideDeg));
 }
 
 export function requireToken(env: NodeJS.ProcessEnv = process.env): string {
@@ -72,28 +102,59 @@ export function requireToken(env: NodeJS.ProcessEnv = process.env): string {
   return t;
 }
 
-export function toFrameRow(img: MapillaryImage): FrameRow | null {
+/** Parse captured_at: epoch-ms number (0 allowed), numeric string, or ISO string. null when invalid. */
+export function parseCapturedAt(cap: number | string): string | null {
+  let ms: number;
+  if (typeof cap === "number") ms = cap;
+  else if (/^\s*-?\d+\s*$/.test(cap)) ms = Number(cap);
+  else ms = Date.parse(cap);
+  if (!Number.isFinite(ms)) return null;
+  const d = new Date(ms);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+export type SkipReason = "no_geometry" | "invalid_captured_at";
+export type RowResult = { row: FrameRow } | { skip: SkipReason };
+
+/** Converts one image; never throws on bad captured_at (reason has no payload and no token). */
+export function convertImage(img: MapillaryImage): RowResult {
   const g = img.computed_geometry ?? img.geometry;
-  if (!g) return null;
+  if (!g) return { skip: "no_geometry" };
   const [lon, lat] = g.coordinates;
   const cap = img.captured_at;
-  const capIso = cap == null ? null : new Date(typeof cap === "number" ? cap : Number(cap) || cap).toISOString();
+  let capIso: string | null = null;
+  if (cap != null) {
+    capIso = parseCapturedAt(cap);
+    if (capIso === null) return { skip: "invalid_captured_at" };
+  }
   return {
-    image_id: String(img.id),
-    sequence_id: img.sequence ?? null,
-    lon,
-    lat,
-    computed_compass_angle: img.computed_compass_angle ?? img.compass_angle ?? null,
-    is_pano: img.is_pano ?? false,
-    camera_type: img.camera_type ?? null,
-    width: img.width ?? null,
-    height: img.height ?? null,
-    quality_score: img.quality_score ?? null,
-    captured_at: capIso,
-    source: "mapillary",
-    creator: img.creator?.username ?? img.creator?.id ?? null,
-    license: MAPILLARY_LICENSE,
+    row: {
+      image_id: String(img.id),
+      sequence_id: img.sequence ?? null,
+      lon,
+      lat,
+      computed_compass_angle: img.computed_compass_angle ?? img.compass_angle ?? null,
+      is_pano: img.is_pano ?? false,
+      camera_type: img.camera_type ?? null,
+      width: img.width ?? null,
+      height: img.height ?? null,
+      quality_score: img.quality_score ?? null,
+      captured_at: capIso,
+      source: "mapillary",
+      creator: img.creator?.username ?? img.creator?.id ?? null,
+      license: MAPILLARY_LICENSE,
+    },
   };
+}
+
+export function toFrameRow(img: MapillaryImage): FrameRow | null {
+  const r = convertImage(img);
+  return "row" in r ? r.row : null;
+}
+
+export interface IngestRows {
+  rows: FrameRow[];
+  skipped: Record<SkipReason, number>;
 }
 
 /** Split a bbox into tiles no larger than maxSideDeg per side. */
@@ -111,12 +172,23 @@ export function tileBBox(b: BBox, maxSideDeg: number): BBox[] {
   return out;
 }
 
-function parseRetryAfterMs(h: string | null, now: number): number | null {
-  if (!h) return null;
+/**
+ * Parse Retry-After (delta-seconds or HTTP-date) to ms, capped at MAX_RETRY_AFTER_MS.
+ * Negative, NaN or unparseable values return null (caller uses its own backoff); a past date means 0.
+ */
+export function parseRetryAfterMs(h: string | null, now: number): number | null {
+  if (!h || !h.trim()) return null;
   const secs = Number(h);
-  if (Number.isFinite(secs)) return Math.max(0, secs * 1000);
-  const at = Date.parse(h);
-  return Number.isNaN(at) ? null : Math.max(0, at - now);
+  let ms: number;
+  if (Number.isFinite(secs)) {
+    if (secs < 0) return null;
+    ms = secs * 1000;
+  } else {
+    const at = Date.parse(h);
+    if (Number.isNaN(at)) return null;
+    ms = Math.max(0, at - now);
+  }
+  return Math.min(MAX_RETRY_AFTER_MS, ms);
 }
 
 export class MapillarySource implements StreetImagerySource {
@@ -137,6 +209,8 @@ export class MapillarySource implements StreetImagerySource {
       maxRetries: opts.maxRetries ?? 5,
       pageLimit: opts.pageLimit ?? 2000,
       maxBBoxSideDeg: opts.maxBBoxSideDeg ?? 0.09,
+      requestTimeoutMs: opts.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS,
+      maxTiles: opts.maxTiles ?? DEFAULT_MAX_TILES,
     };
   }
 
@@ -146,6 +220,11 @@ export class MapillarySource implements StreetImagerySource {
 
   /** Raw images inside a bbox (large boxes are tiled). */
   async imagesInBBox(bbox: BBox): Promise<MapillaryImage[]> {
+    validateBBox(bbox);
+    const tiles = countTiles(bbox, this.o.maxBBoxSideDeg);
+    if (tiles > this.o.maxTiles) {
+      throw new Error(`bbox needs ${tiles} tiles, above the limit of ${this.o.maxTiles}; use a smaller bbox or raise --max-tiles`);
+    }
     const seen = new Map<string, MapillaryImage>();
     for (const tile of tileBBox(bbox, this.o.maxBBoxSideDeg)) {
       for (const img of await this.query({ bbox: tile.join(",") })) seen.set(String(img.id), img);
@@ -158,8 +237,19 @@ export class MapillarySource implements StreetImagerySource {
     return this.query({ closeto: `${lon},${lat}`, radius: String(radiusM) });
   }
 
+  /** Rows plus per-reason skip counts (images without geometry or with an unparseable captured_at). */
+  async frameRowsWithStats(bbox: BBox): Promise<IngestRows> {
+    const out: IngestRows = { rows: [], skipped: { no_geometry: 0, invalid_captured_at: 0 } };
+    for (const img of await this.imagesInBBox(bbox)) {
+      const r = convertImage(img);
+      if ("row" in r) out.rows.push(r.row);
+      else out.skipped[r.skip]++;
+    }
+    return out;
+  }
+
   async frameRowsInBBox(bbox: BBox): Promise<FrameRow[]> {
-    return (await this.imagesInBBox(bbox)).map(toFrameRow).filter((r): r is FrameRow => r !== null);
+    return (await this.frameRowsWithStats(bbox)).rows;
   }
 
   /** StreetImagerySource: frames within bufferM of a [lat, lon] path, ordered along it. */
@@ -233,9 +323,18 @@ export class MapillarySource implements StreetImagerySource {
       await this.throttle();
       let res: Response;
       try {
-        res = await this.o.fetchImpl(url, { headers: { Authorization: `OAuth ${this.token}` } });
+        res = await this.o.fetchImpl(url, {
+          headers: { Authorization: `OAuth ${this.token}` },
+          signal: AbortSignal.timeout(this.o.requestTimeoutMs),
+        });
       } catch (e) {
-        if (attempt >= this.o.maxRetries) throw new Error(`Mapillary request failed: ${(e as Error).name}`);
+        if (attempt >= this.o.maxRetries) {
+          const name = (e as Error).name;
+          const timedOut = name === "TimeoutError" || name === "AbortError";
+          throw new Error(timedOut
+            ? `Mapillary request timed out after ${this.o.requestTimeoutMs} ms (${attempt + 1} attempts)`
+            : `Mapillary request failed: ${name}`);
+        }
         await this.o.sleep(Math.min(30_000, 1000 * 2 ** attempt));
         continue;
       }
