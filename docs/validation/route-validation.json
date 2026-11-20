@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-20T16:33:44.300Z",
+  "generatedAt": "2026-11-20T16:59:25.137Z",
   "branchStatus": "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.",
   "liveImageryMeasured": false,
   "mapillaryTokenConfigured": false,
@@ -2397,6 +2397,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               },
@@ -2419,6 +2422,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               },
@@ -2436,6 +2442,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               }
@@ -2488,6 +2497,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "run_too_short"
               }
@@ -2533,6 +2545,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               },
@@ -2555,6 +2570,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 14,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               },
@@ -2573,6 +2591,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               }
@@ -2625,6 +2646,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "gap_too_large"
               }
@@ -2670,6 +2694,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               },
@@ -2692,6 +2719,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               },
@@ -2709,6 +2739,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               }
@@ -2760,6 +2793,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               }
@@ -2812,6 +2848,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               },
@@ -2835,6 +2874,9 @@
                 "level_uncertain_reasons": [
                   "level_change"
                 ],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "level_uncertain"
               },
@@ -2857,6 +2899,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               }
@@ -2907,6 +2952,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               },
@@ -2931,6 +2979,9 @@
                   "sequence_jump",
                   "heading_jump"
                 ],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "level_uncertain"
               },
@@ -2953,6 +3004,9 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": null
               }
@@ -2974,9 +3028,9 @@
       },
       {
         "id": "crossfade",
-        "title": "Crossfade inside a street run",
-        "description": "Two 80 m runs separated by a 20 m gap (above 15 m, below the 30 m crossfade ceiling).",
-        "expectation": "One STREET_VIDEO segment with the 20 m gap marked for crossfade (not a handoff).",
+        "title": "Bridge: two 80 m runs, 20 m gap",
+        "description": "Two 80 m runs separated by a 20 m gap (15 m to 30 m: a crossfade bridge, never RIFE-interpolated).",
+        "expectation": "One STREET_VIDEO segment with the 20 m gap listed as a bridge (not a handoff).",
         "synthetic": true,
         "routeLengthM": 500.00000000003354,
         "frameCount": 34,
@@ -2998,6 +3052,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               },
@@ -3019,6 +3076,16 @@
                 },
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [
+                  {
+                    "startM": 180,
+                    "endM": 200,
+                    "gapM": 20,
+                    "rifeEligible": false
+                  }
+                ],
                 "crossfades": [
                   {
                     "startM": 180,
@@ -3044,6 +3111,9 @@
                 "capturedAt": null,
                 "level_uncertain": false,
                 "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
                 "crossfades": [],
                 "birdsEyeReason": "no_frames"
               }
@@ -3060,6 +3130,570 @@
           },
           "candidateFrames": 34,
           "usableFrames": 34,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-14999mm",
+        "title": "Gap of 14.999 m between two runs",
+        "description": "Two 60 m runs (a frame every 5 m) joined by a gap of 14.999 m between the last frame of the first and the first frame of the second.",
+        "expectation": "RIFE tier: the two pieces form ONE run (no bridge); the gap is RIFE-eligible.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 26,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 234.999,
+                "lengthM": 134.999,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 26,
+                "maxGapM": 14.998999999999995,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 14.998999999999995,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 234.999,
+                "endM": 500.00000000003354,
+                "lengthM": 265.0010000000335,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 134.999,
+              "birdsEyeM": 365.0010000000335,
+              "streetFraction": 0.26999799999998186,
+              "usableFrameCount": 26,
+              "framesPer100m": 5.199999999999651,
+              "maxGapM": 14.998999999999995,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 26,
+          "usableFrames": 26,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-15000mm",
+        "title": "Gap of exactly 15.000 m between two runs",
+        "description": "Two 60 m runs (a frame every 5 m) joined by a gap of 15.000 m between the last frame of the first and the first frame of the second.",
+        "expectation": "Bridge tier: ONE STREET_VIDEO segment with ONE bridge (crossfade, not RIFE).",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 26,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 235,
+                "lengthM": 135,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 26,
+                "maxGapM": 15,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [
+                  {
+                    "startM": 160,
+                    "endM": 175,
+                    "gapM": 15,
+                    "rifeEligible": false
+                  }
+                ],
+                "crossfades": [
+                  {
+                    "startM": 160,
+                    "endM": 175,
+                    "gapM": 15
+                  }
+                ],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 235,
+                "endM": 500.00000000003354,
+                "lengthM": 265.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 135,
+              "birdsEyeM": 365.00000000003354,
+              "streetFraction": 0.26999999999998187,
+              "usableFrameCount": 26,
+              "framesPer100m": 5.199999999999651,
+              "maxGapM": 15,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 26,
+          "usableFrames": 26,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-30000mm",
+        "title": "Gap of exactly 30.000 m between two runs",
+        "description": "Two 60 m runs (a frame every 5 m) joined by a gap of 30.000 m between the last frame of the first and the first frame of the second.",
+        "expectation": "Bridge tier (ceiling is inclusive): ONE STREET_VIDEO segment with ONE bridge.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 26,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 250,
+                "lengthM": 150,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 26,
+                "maxGapM": 30,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [
+                  {
+                    "startM": 160,
+                    "endM": 190,
+                    "gapM": 30,
+                    "rifeEligible": false
+                  }
+                ],
+                "crossfades": [
+                  {
+                    "startM": 160,
+                    "endM": 190,
+                    "gapM": 30
+                  }
+                ],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 250,
+                "endM": 500.00000000003354,
+                "lengthM": 250.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 150,
+              "birdsEyeM": 350.00000000003354,
+              "streetFraction": 0.2999999999999799,
+              "usableFrameCount": 26,
+              "framesPer100m": 5.199999999999651,
+              "maxGapM": 30,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 26,
+          "usableFrames": 26,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "gap-30001mm",
+        "title": "Gap of 30.001 m between two runs",
+        "description": "Two 60 m runs (a frame every 5 m) joined by a gap of 30.001 m between the last frame of the first and the first frame of the second.",
+        "expectation": "Handoff tier: TWO STREET_VIDEO segments with BIRDS_EYE_3D between, no bridge.",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 26,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 100,
+                "lengthM": 100,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 100,
+                "endM": 160,
+                "lengthM": 60,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 13,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 160,
+                "endM": 190.001,
+                "lengthM": 30.001000000000005,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1001
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 190.001,
+                "endM": 250.001,
+                "lengthM": 60,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 13,
+                "maxGapM": 5,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 250.001,
+                "endM": 500.00000000003354,
+                "lengthM": 249.99900000003353,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 120,
+              "birdsEyeM": 380.00000000003354,
+              "streetFraction": 0.2399999999999839,
+              "usableFrameCount": 26,
+              "framesPer100m": 5.199999999999651,
+              "maxGapM": 30.001000000000005,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 26,
+          "usableFrames": 26,
+          "dropped": {}
+        }
+      },
+      {
+        "id": "bridge-chain",
+        "title": "Chain of three runs, two bridges",
+        "description": "Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).",
+        "expectation": "ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).",
+        "synthetic": true,
+        "routeLengthM": 500.00000000003354,
+        "frameCount": 39,
+        "result": {
+          "classification": {
+            "routeLengthM": 500.00000000003354,
+            "segments": [
+              {
+                "startM": 0,
+                "endM": 50,
+                "lengthM": 50,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1000
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              },
+              {
+                "startM": 50,
+                "endM": 275,
+                "lengthM": 225,
+                "mode": "STREET_VIDEO",
+                "edgeIds": [
+                  1000,
+                  1001,
+                  1002
+                ],
+                "sequenceId": "seqA",
+                "frameCount": 39,
+                "maxGapM": 25,
+                "capturedAt": {
+                  "earliest": "2024-03-01T10:00:00.000Z",
+                  "latest": "2024-03-01T10:00:00.000Z"
+                },
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": 5,
+                "bridges": [
+                  {
+                    "startM": 110,
+                    "endM": 130,
+                    "gapM": 20,
+                    "rifeEligible": false
+                  },
+                  {
+                    "startM": 190,
+                    "endM": 215,
+                    "gapM": 25,
+                    "rifeEligible": false
+                  }
+                ],
+                "crossfades": [
+                  {
+                    "startM": 110,
+                    "endM": 130,
+                    "gapM": 20
+                  },
+                  {
+                    "startM": 190,
+                    "endM": 215,
+                    "gapM": 25
+                  }
+                ],
+                "birdsEyeReason": null
+              },
+              {
+                "startM": 275,
+                "endM": 500.00000000003354,
+                "lengthM": 225.00000000003354,
+                "mode": "BIRDS_EYE_3D",
+                "edgeIds": [
+                  1002,
+                  1003,
+                  1004
+                ],
+                "sequenceId": null,
+                "frameCount": 0,
+                "maxGapM": null,
+                "capturedAt": null,
+                "level_uncertain": false,
+                "level_uncertain_reasons": [],
+                "rifeCeilingM": 15,
+                "internalMaxGapM": null,
+                "bridges": [],
+                "crossfades": [],
+                "birdsEyeReason": "no_frames"
+              }
+            ],
+            "summary": {
+              "streetVideoM": 225,
+              "birdsEyeM": 275.00000000003354,
+              "streetFraction": 0.4499999999999698,
+              "usableFrameCount": 39,
+              "framesPer100m": 7.799999999999477,
+              "maxGapM": 25,
+              "levelUncertainSegments": 0
+            }
+          },
+          "candidateFrames": 39,
+          "usableFrames": 39,
           "dropped": {}
         }
       }

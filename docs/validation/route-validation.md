@@ -1,6 +1,6 @@
 # Route preview validation (Phase 3)
 
-Generated: 2026-11-20T16:33:44.300Z
+Generated: 2026-11-20T16:59:25.137Z
 
 ## Branch status
 
@@ -19,7 +19,8 @@ What the real-route section DOES verify: Valhalla routing, approach extraction (
 
 - Approach length 500 m along the route; decision windows 80 m.
 - Street run: at least 60 m long and every gap between consecutive usable frames strictly under 15 m (maximum, not average).
-- Crossfade inside a street run: gaps from 15 m up to 30 m between qualifying runs; larger gaps hand off to BIRDS_EYE_3D.
+- Two-tier gap rule (confirmed by the owner 2026-11-20): gap under 15 m is RIFE-eligible (AI interpolation is allowed ONLY below this ceiling); 15 m to 30 m, both ends inclusive, between two qualifying runs is a crossfade bridge that merges them into ONE STREET_VIDEO segment and is NEVER RIFE-interpolated; a gap over 30 m, or a run under 60 m that cannot be bridged, hands off to BIRDS_EYE_3D.
+- The rule is applied pairwise: a chain of qualifying runs each joined by a 15-30 m gap is one segment with several bridges.
 - Frame filters: lateral tolerance 15 m, more than 3 m left of the centreline dropped (right-hand traffic), heading within +/-25 deg of the local road bearing, quality_score at least 0.5.
 - level_uncertain: sequence jump, heading jump over 30 deg, or road class/use/bridge/tunnel/layer change at an edge transition, padded 20 m each side.
 
@@ -106,10 +107,10 @@ Expected: One STREET_VIDEO segment 100-400 m, BIRDS_EYE_3D before and after.
 
 Route 500.0 m, 61 synthetic frames, 61 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
 | 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
-| 2 | STREET_VIDEO | 100.0 | 400.0 | 61 | 5.0 | no | none | street run |
+| 2 | STREET_VIDEO | 100.0 | 400.0 | 61 | 5.000 | no | none | street run |
 | 3 | BIRDS_EYE_3D | 400.0 | 500.0 | 0 | n/a | no | none | no_frames |
 
 ### SYNTHETIC: Short run
@@ -120,9 +121,9 @@ Expected: No STREET_VIDEO: the whole route is BIRDS_EYE_3D (run_too_short).
 
 Route 500.0 m, 11 synthetic frames, 11 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
-| 1 | BIRDS_EYE_3D | 0.0 | 500.0 | 11 | 5.0 | no | none | run_too_short |
+| 1 | BIRDS_EYE_3D | 0.0 | 500.0 | 11 | 5.000 | no | none | run_too_short |
 
 ### SYNTHETIC: Gap of 14 m
 
@@ -132,10 +133,10 @@ Expected: Qualifies: one STREET_VIDEO segment.
 
 Route 500.0 m, 21 synthetic frames, 21 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
 | 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
-| 2 | STREET_VIDEO | 100.0 | 380.0 | 21 | 14.0 | no | none | street run |
+| 2 | STREET_VIDEO | 100.0 | 380.0 | 21 | 14.000 | no | none | street run |
 | 3 | BIRDS_EYE_3D | 380.0 | 500.0 | 0 | n/a | no | none | no_frames |
 
 ### SYNTHETIC: Gap of 16 m
@@ -146,9 +147,9 @@ Expected: Does not qualify: BIRDS_EYE_3D (gap_too_large).
 
 Route 500.0 m, 21 synthetic frames, 21 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
-| 1 | BIRDS_EYE_3D | 0.0 | 500.0 | 21 | 16.0 | no | none | gap_too_large |
+| 1 | BIRDS_EYE_3D | 0.0 | 500.0 | 21 | 16.000 | no | none | gap_too_large |
 
 ### SYNTHETIC: Opposite-lane frames
 
@@ -158,10 +159,10 @@ Expected: Opposite-lane frames are all dropped (left_of_centerline); the street 
 
 Route 500.0 m, 228 synthetic frames, 61 usable after filtering; dropped: {"left_of_centerline":167}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
 | 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
-| 2 | STREET_VIDEO | 100.0 | 400.0 | 61 | 5.0 | no | none | street run |
+| 2 | STREET_VIDEO | 100.0 | 400.0 | 61 | 5.000 | no | none | street run |
 | 3 | BIRDS_EYE_3D | 400.0 | 500.0 | 0 | n/a | no | none | no_frames |
 
 ### SYNTHETIC: Opposite-lane frames only
@@ -172,7 +173,7 @@ Expected: No usable frames: the whole route is BIRDS_EYE_3D.
 
 Route 500.0 m, 167 synthetic frames, 0 usable after filtering; dropped: {"left_of_centerline":167}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
 | 1 | BIRDS_EYE_3D | 0.0 | 500.0 | 0 | n/a | no | none | no_frames |
 
@@ -184,11 +185,11 @@ Expected: level_uncertain BIRDS_EYE_3D around 300 m; street video only on either
 
 Route 600.0 m, 121 synthetic frames, 121 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
-| 1 | STREET_VIDEO | 0.0 | 275.0 | 56 | 5.0 | no | none | street run |
-| 2 | BIRDS_EYE_3D | 275.0 | 330.0 | 10 | 5.0 | level_change | none | level_uncertain |
-| 3 | STREET_VIDEO | 330.0 | 600.0 | 55 | 5.0 | no | none | street run |
+| 1 | STREET_VIDEO | 0.0 | 275.0 | 56 | 5.000 | no | none | street run |
+| 2 | BIRDS_EYE_3D | 275.0 | 330.0 | 10 | 5.000 | level_change | none | level_uncertain |
+| 3 | STREET_VIDEO | 330.0 | 600.0 | 55 | 5.000 | no | none | street run |
 
 ### SYNTHETIC: Interchange sequence/heading jump
 
@@ -198,23 +199,95 @@ Expected: level_uncertain BIRDS_EYE_3D across the jump (sequence_jump and headin
 
 Route 600.0 m, 120 synthetic frames, 120 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
-| 1 | STREET_VIDEO | 0.0 | 270.0 | 55 | 5.0 | no | none | street run |
-| 2 | BIRDS_EYE_3D | 270.0 | 330.0 | 10 | 10.0 | sequence_jump+heading_jump | none | level_uncertain |
-| 3 | STREET_VIDEO | 330.0 | 600.0 | 55 | 5.0 | no | none | street run |
+| 1 | STREET_VIDEO | 0.0 | 270.0 | 55 | 5.000 | no | none | street run |
+| 2 | BIRDS_EYE_3D | 270.0 | 330.0 | 10 | 10.000 | sequence_jump+heading_jump | none | level_uncertain |
+| 3 | STREET_VIDEO | 330.0 | 600.0 | 55 | 5.000 | no | none | street run |
 
-### SYNTHETIC: Crossfade inside a street run
+### SYNTHETIC: Bridge: two 80 m runs, 20 m gap
 
-Two 80 m runs separated by a 20 m gap (above 15 m, below the 30 m crossfade ceiling).
+Two 80 m runs separated by a 20 m gap (15 m to 30 m: a crossfade bridge, never RIFE-interpolated).
 
-Expected: One STREET_VIDEO segment with the 20 m gap marked for crossfade (not a handoff).
+Expected: One STREET_VIDEO segment with the 20 m gap listed as a bridge (not a handoff).
 
 Route 500.0 m, 34 synthetic frames, 34 usable after filtering; dropped: {}.
 
-| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
 | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
 | 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
-| 2 | STREET_VIDEO | 100.0 | 280.0 | 34 | 20.0 | no | 180.0-200.0 | street run |
+| 2 | STREET_VIDEO | 100.0 | 280.0 | 34 | 20.000 | no | 180.0-200.0 (20.000 m) | street run |
 | 3 | BIRDS_EYE_3D | 280.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Gap of 14.999 m between two runs
+
+Two 60 m runs (a frame every 5 m) joined by a gap of 14.999 m between the last frame of the first and the first frame of the second.
+
+Expected: RIFE tier: the two pieces form ONE run (no bridge); the gap is RIFE-eligible.
+
+Route 500.0 m, 26 synthetic frames, 26 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 100.0 | 235.0 | 26 | 14.999 | no | none | street run |
+| 3 | BIRDS_EYE_3D | 235.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Gap of exactly 15.000 m between two runs
+
+Two 60 m runs (a frame every 5 m) joined by a gap of 15.000 m between the last frame of the first and the first frame of the second.
+
+Expected: Bridge tier: ONE STREET_VIDEO segment with ONE bridge (crossfade, not RIFE).
+
+Route 500.0 m, 26 synthetic frames, 26 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 100.0 | 235.0 | 26 | 15.000 | no | 160.0-175.0 (15.000 m) | street run |
+| 3 | BIRDS_EYE_3D | 235.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Gap of exactly 30.000 m between two runs
+
+Two 60 m runs (a frame every 5 m) joined by a gap of 30.000 m between the last frame of the first and the first frame of the second.
+
+Expected: Bridge tier (ceiling is inclusive): ONE STREET_VIDEO segment with ONE bridge.
+
+Route 500.0 m, 26 synthetic frames, 26 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 100.0 | 250.0 | 26 | 30.000 | no | 160.0-190.0 (30.000 m) | street run |
+| 3 | BIRDS_EYE_3D | 250.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Gap of 30.001 m between two runs
+
+Two 60 m runs (a frame every 5 m) joined by a gap of 30.001 m between the last frame of the first and the first frame of the second.
+
+Expected: Handoff tier: TWO STREET_VIDEO segments with BIRDS_EYE_3D between, no bridge.
+
+Route 500.0 m, 26 synthetic frames, 26 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 100.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 100.0 | 160.0 | 13 | 5.000 | no | none | street run |
+| 3 | BIRDS_EYE_3D | 160.0 | 190.0 | 0 | n/a | no | none | no_frames |
+| 4 | STREET_VIDEO | 190.0 | 250.0 | 13 | 5.000 | no | none | street run |
+| 5 | BIRDS_EYE_3D | 250.0 | 500.0 | 0 | n/a | no | none | no_frames |
+
+### SYNTHETIC: Chain of three runs, two bridges
+
+Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).
+
+Expected: ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).
+
+Route 500.0 m, 39 synthetic frames, 39 usable after filtering; dropped: {}.
+
+| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |
+| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |
+| 1 | BIRDS_EYE_3D | 0.0 | 50.0 | 0 | n/a | no | none | no_frames |
+| 2 | STREET_VIDEO | 50.0 | 275.0 | 39 | 25.000 | no | 110.0-130.0 (20.000 m), 190.0-215.0 (25.000 m) | street run |
+| 3 | BIRDS_EYE_3D | 275.0 | 500.0 | 0 | n/a | no | none | no_frames |
 
