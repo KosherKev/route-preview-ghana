@@ -57,6 +57,55 @@ describe("isClipServable", () => {
     process.env[KEY] = "mapillary";
     expect(isClipServable({ source: "mapillary" })).toBe(false);
   });
+  it("fails closed on malformed source_summary shapes (even when nothing is disabled)", () => {
+    const bad: unknown[] = [
+      '[{"source":"mapillary"}]', "mapillary", "", 5, true, {}, { source: "rider" },
+      ["mapillary"], [null], [undefined], [{}], [{ sources: "mapillary" }], [{ source: "" }], [{ source: "  " }],
+      [{ source: 5 }], [{ source: null }], [{ source: { a: 1 } }], [[{ source: "rider" }]], [5],
+      [{ source: "rider" }, null],
+    ];
+    for (const b of bad) {
+      expect(isClipServable({ source_summary: b }, env), JSON.stringify(b)).toBe(false);
+      expect(isClipServable({ source_summary: b }, {}), JSON.stringify(b)).toBe(false);
+    }
+  });
+  it("a present-but-wrong-type clip.source is false", () => {
+    expect(isClipServable({ source: 5 as unknown as string }, {})).toBe(false);
+    expect(isClipServable({ source: {} as unknown as string }, env)).toBe(false);
+    expect(isClipServable({ source: "" }, env)).toBe(true);
+  });
+  it("well-formed summaries: servable unless a source is disabled", () => {
+    expect(isClipServable({ source_summary: [{ source: "rider" }, { source: "other" }] }, env)).toBe(true);
+    expect(isClipServable({ source_summary: [{ source: "mapillary" }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: "rider" }, { source: "mapillary" }, { source: "x" }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: " MaPiLLaRy " }] }, env)).toBe(false);
+    expect(isClipServable({ source_summary: [{ source: "mapillary", creators: ["a"] }] }, {})).toBe(true);
+  });
+  it("null/undefined summary is servable (documented legacy), empty array too", () => {
+    expect(isClipServable({}, env)).toBe(true);
+    expect(isClipServable({ source_summary: null }, env)).toBe(true);
+    expect(isClipServable({ source_summary: undefined }, env)).toBe(true);
+    expect(isClipServable({ source_summary: [] }, env)).toBe(true);
+  });
+  it("never throws on weird inputs", () => {
+    const circ: any = { source: "rider" }; circ.source_summary = [circ];
+    const throwingGetter = { get source_summary(): unknown { throw new Error("boom"); } };
+    const throwingEntry = { source_summary: [{ get source(): string { throw new Error("boom"); } }] };
+    const throwingOwn = { get source(): string { throw new Error("boom"); } };
+    const proxy = new Proxy([], { get() { throw new Error("boom"); } });
+    const inputs: unknown[] = [
+      null, undefined, 5, "x", Symbol("s"), circ, throwingGetter, throwingEntry, throwingOwn,
+      { source_summary: proxy }, { source: Symbol("s") }, { source_summary: [Symbol("s")] },
+      { source_summary: [{ source: Symbol("s") }] }, { source_summary: Object.create(null) },
+    ];
+    for (const c of inputs) {
+      expect(() => isClipServable(c as any, env)).not.toThrow();
+      expect(typeof isClipServable(c as any, env)).toBe("boolean");
+    }
+    expect(isClipServable(throwingGetter, env)).toBe(false);
+    expect(isClipServable(throwingEntry, env)).toBe(false);
+    expect(isClipServable(circ, env)).toBe(true); // circular but well-formed: entry has a non-disabled source
+  });
 });
 
 describe("classifier with the kill switch (pure pipeline, synthetic frames)", () => {

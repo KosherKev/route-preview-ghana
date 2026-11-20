@@ -40,16 +40,41 @@ export function assertSourceEnabled(name: string, env: NodeJS.ProcessEnv = proce
 /** The part of a stored clip the servability check needs. `source_summary` is the clips.source_summary jsonb. */
 export interface ClipSourceInfo {
   source?: string | null;
-  source_summary?: ReadonlyArray<{ source?: string | null }> | null;
+  source_summary?: unknown;
 }
 
-/** False when the clip's own source, or ANY source recorded in its source_summary, is disabled. */
+/**
+ * Clip-serving half of the kill switch. FAILS CLOSED: returns true only when ALL hold.
+ *  (a) `source_summary` is undefined/null (legacy row with no summary, treated as "no imagery source recorded")
+ *      or a real Array. Anything else (a JSON string from a mis-parsed jsonb, an object, a number) returns false.
+ *  (b) every summary entry is a plain object with a non-empty string `source`. Any malformed entry returns false.
+ *  (c) neither `clip.source` (when present; a non-string value returns false) nor any entry's source is disabled
+ *      (trimmed, case-insensitive).
+ * Never throws: any error while inspecting the clip returns false.
+ * Limitation: pre-attribution clips default to '[]' (no sources recorded), so they are servable even if built from a
+ * now-disabled source. Phase 4 MUST populate source_summary via toSourceSummary when it writes clips.
+ */
 export function isClipServable(clip: ClipSourceInfo, env: NodeJS.ProcessEnv = process.env): boolean {
-  const disabled = disabledSources(env);
-  if (disabled.length === 0) return true;
-  if (clip.source && disabled.includes(norm(clip.source))) return false;
-  for (const s of clip.source_summary ?? []) {
-    if (s?.source && disabled.includes(norm(s.source))) return false;
+  try {
+    if (clip === null || typeof clip !== "object") return false;
+    const disabled = disabledSources(env);
+    const own = clip.source;
+    if (own !== undefined && own !== null) {
+      if (typeof own !== "string") return false;
+      if (disabled.includes(norm(own))) return false;
+    }
+    const summary = clip.source_summary;
+    if (summary === undefined || summary === null) return true;
+    if (!Array.isArray(summary)) return false;
+    for (let i = 0; i < summary.length; i++) {
+      const entry: unknown = summary[i];
+      if (entry === null || typeof entry !== "object" || Array.isArray(entry)) return false;
+      const s: unknown = (entry as { source?: unknown }).source;
+      if (typeof s !== "string" || s.trim() === "") return false;
+      if (disabled.includes(norm(s))) return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
-  return true;
 }
