@@ -1,0 +1,10 @@
+data/*
+!data/.gitkeep
+reference/gods-eye-view/
+.env*
+node_modules/
+__pycache__/
+.venv/
+*.pbf
+*.pmtiles
+*.mp4
