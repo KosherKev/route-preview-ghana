@@ -72,7 +72,11 @@ export interface ApproachResult {
   warnings: string[];
   origin: LatLon;
   destination: LatLon;
-  route: { lengthM: number; valhallaLengthKm: number; timeSec: number; polyline6: string; pointCount: number };
+  route: {
+    lengthM: number; valhallaLengthKm: number; timeSec: number; polyline6: string; pointCount: number;
+    /** Route vertices map_snap dropped from the matched shape (0/0 when identical); edge offsets are corrected for them. */
+    matchedShapeTrim: { leading: number; trailing: number };
+  };
   edges: ExtractedEdge[];
   maneuvers: ExtractedManeuver[];
   approach: {
@@ -122,27 +126,38 @@ function overlaps(e: { startM: number; endM: number }, s: number, t: number) {
 }
 
 /**
- * The edge offsets are computed from the ROUTE polyline using trace_attributes' shape indices, so the shape that
- * map_snap matched MUST be the route shape. A different point count would leave offsets in range but wrong, so any
- * difference fails loudly rather than producing a silently misaligned timeline.
+ * The edge offsets are computed from the ROUTE polyline using trace_attributes' shape indices, so the matched shape
+ * must line up with the route shape exactly. Live finding (Valhalla 3.9.3, map_snap): the matched shape can DROP the
+ * leading (origin) and/or trailing vertex of the route, which shifts every shape index by one while still being in range.
+ * Accepted: the matched shape is identical to the route shape, or is a contiguous run of route vertices (equal
+ * coordinates) starting at route index `leading`; the indices are then shifted by `leading`. Anything else (different
+ * point count with different vertices, no shape) fails loudly: offsets would be silently wrong.
  */
-export function assertSameShape(routeShape6: string, tracedShape: unknown, routePointCount: number): void {
+export function alignShape(routeShape6: string, tracedShape: unknown, routePoints: readonly LatLon[]): { leading: number; trailing: number } {
   if (typeof tracedShape !== "string") throw new Error("Valhalla /trace_attributes returned no shape; cannot verify it matches the route shape");
-  if (tracedShape === routeShape6) return;
-  let tracedCount = -1;
-  try { tracedCount = decodePolyline6(tracedShape).length; } catch { /* undecodable: reported below */ }
+  if (tracedShape === routeShape6) return { leading: 0, trailing: 0 };
+  let traced: [number, number][] = [];
+  try { traced = decodePolyline6(tracedShape); } catch { /* undecodable: reported below */ }
+  const n = traced.length;
+  if (n >= 2 && n < routePoints.length) {
+    for (let k = 0; k + n <= routePoints.length; k++) {
+      if (traced.every(([la, lo], i) => la === routePoints[k + i]!.lat && lo === routePoints[k + i]!.lon)) {
+        return { leading: k, trailing: routePoints.length - k - n };
+      }
+    }
+  }
   throw new Error(
-    `trace_attributes matched shape differs from the route shape (route ${routePointCount} points, matched ${tracedCount >= 0 ? tracedCount : "undecodable"} points); ` +
-    "edge offsets would be wrong, refusing to continue",
+    `trace_attributes matched shape differs from the route shape (route ${routePoints.length} points, matched ${n > 0 ? n : "undecodable"} points) ` +
+    "and is not a contiguous part of it; edge offsets would be wrong, refusing to continue",
   );
 }
 
-/** Edges of the matched shape. `shape` indices refer to the matched shape, verified identical to the route shape by assertSameShape. */
-export function buildEdges(rawEdges: Record<string, any>[], axis: Axis): ExtractedEdge[] {
+/** Edges of the matched shape. `shape` indices refer to the matched shape, verified (alignShape) identical to, or a contiguous part of, the route shape. */
+export function buildEdges(rawEdges: Record<string, any>[], axis: Axis, indexShift = 0): ExtractedEdge[] {
   const last = axis.cum.length - 1;
   return rawEdges.map((e) => {
-    const b = Number(e.begin_shape_index), t = Number(e.end_shape_index);
-    if (!Number.isInteger(b) || !Number.isInteger(t) || b < 0 || t > last || t < b) {
+    const b = Number(e.begin_shape_index) + indexShift, t = Number(e.end_shape_index) + indexShift;
+    if (!Number.isInteger(b) || !Number.isInteger(t) || b < indexShift || t > last || t < b) {
       throw new Error(`trace_attributes edge ${e.id} has shape indices outside the route shape`);
     }
     return {
@@ -222,8 +237,11 @@ export async function extractApproach(
 
   const attrs = await postJson(base, "/trace_attributes", traceRequest(costing, polyline6, fallback ? false : undefined), fetchImpl, timeoutMs, opts.signal);
   if (!Array.isArray(attrs?.edges) || attrs.edges.length === 0) throw new Error("Valhalla /trace_attributes returned no edges");
-  assertSameShape(polyline6, attrs.shape, points.length);
-  const edges = buildEdges(attrs.edges, axis);
+  const trim = alignShape(polyline6, attrs.shape, points);
+  const edges = buildEdges(attrs.edges, axis, trim.leading);
+  // the dropped sliver (origin/destination snap) belongs to the first/last matched edge
+  if (trim.leading > 0) edges[0]!.startM = 0;
+  if (trim.trailing > 0) edges[edges.length - 1]!.endM = axis.lengthM;
 
   const maneuvers: ExtractedManeuver[] = ((leg.maneuvers ?? []) as Record<string, any>[]).map((m) => ({
     type: m.type as number,
@@ -239,7 +257,7 @@ export async function extractApproach(
     costing, unpaved_fallback: fallback, warnings, origin, destination,
     route: {
       lengthM: axis.lengthM, valhallaLengthKm: route.trip.summary.length as number, timeSec: route.trip.summary.time as number,
-      polyline6, pointCount: points.length,
+      polyline6, pointCount: points.length, matchedShapeTrim: trim,
     },
     edges, maneuvers,
     approach: {

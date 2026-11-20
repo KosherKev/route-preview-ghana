@@ -9,7 +9,7 @@ const pt = (x: number, y: number): LatLon => frame.toLatLon({ x, y });
 const O = pt(0, 0), D = pt(0, 2000);
 
 /** Straight 2 km north route, a vertex every 100 m, edge every 250 m. */
-function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number; tracedShape?: string | null } = {}) {
+function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number; tracedShape?: string | null; dropLeading?: boolean; dropTrailing?: boolean } = {}) {
   const len = opts.routeLenM ?? 2000;
   const verts: [number, number][] = [];
   for (let m = 0; m <= len; m += 100) { const p = pt(0, m); verts.push([p.lat, p.lon]); }
@@ -35,9 +35,10 @@ function fakeValhalla(opts: { failExcludeUnpaved?: boolean; routeLenM?: number; 
     }
     if (path === "/trace_attributes") {
       const edges = [];
-      const last = verts.length - 1;
+      const tv = verts.slice(opts.dropLeading ? 1 : 0, opts.dropTrailing ? -1 : undefined);
+      const last = tv.length - 1;
       for (let b = 0, id = 100; b < last; b += 2, id++) edges.push({ id, way_id: id, begin_shape_index: b, end_shape_index: Math.min(b + 2, last), road_class: "primary", surface: "paved_smooth", bridge: false, tunnel: false, names: ["N"] });
-      return json({ shape: opts.tracedShape === undefined ? shape : opts.tracedShape ?? undefined, edges });
+      return json({ shape: opts.tracedShape === undefined ? encodePolyline6(tv) : opts.tracedShape ?? undefined, edges });
     }
     return json({}, 404);
   }) as unknown as typeof fetch;
@@ -71,6 +72,20 @@ describe("extractApproach (mocked Valhalla)", () => {
       .rejects.toThrow(/returned no shape/);
     await expect(extractApproach("auto", O, D, { fetchImpl: fakeValhalla({ tracedShape: "\u0001" }).impl, valhallaUrl: "http://v" }))
       .rejects.toThrow(/differs from the route shape/);
+  });
+
+  it("map_snap dropping the leading/trailing route vertex: indices are shifted back, offsets stay aligned to the route", async () => {
+    const base = await extractApproach("motor_scooter", O, D, { fetchImpl: fakeValhalla().impl, valhallaUrl: "http://v" });
+    expect(base.route.matchedShapeTrim).toEqual({ leading: 0, trailing: 0 });
+    const lead = await extractApproach("motor_scooter", O, D, { fetchImpl: fakeValhalla({ dropLeading: true }).impl, valhallaUrl: "http://v" });
+    expect(lead.route.matchedShapeTrim).toEqual({ leading: 1, trailing: 0 });
+    // mock edge k spans traced 2k..2k+2 = route 2k+1..2k+3: without the shift they would be 100 m off
+    expect(lead.edges[0]!.startM).toBe(0);
+    expect(lead.edges[0]!.endM).toBeCloseTo(300, 0);
+    expect(lead.edges[1]!.startM).toBeCloseTo(300, 0);
+    const trail = await extractApproach("motor_scooter", O, D, { fetchImpl: fakeValhalla({ dropTrailing: true }).impl, valhallaUrl: "http://v" });
+    expect(trail.route.matchedShapeTrim).toEqual({ leading: 0, trailing: 1 });
+    expect(trail.edges.at(-1)!.endM).toBeCloseTo(trail.route.lengthM, 3);
   });
 
   it("passes the abort signal through to every Valhalla request", async () => {
