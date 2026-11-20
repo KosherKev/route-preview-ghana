@@ -83,7 +83,10 @@ with the endpoint enabled (needs `.env` for the database).
 
 Geocode chain (`src/patterns/geocodeChain.ts`, `buildGeocodeChain`): coordinate parse (no I/O), then the landmark search above, then an
 optional self-hosted geocoder. `httpGeocoder` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
-The self-hosted Photon spike and its measured numbers are in `../docs/validation/geocoder-spike.md`.
+The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonGeocoder`): `scripts/fetch-photon.sh` (checksum-verified downloads into
+`data/photon`), then `docker compose --profile geocoder up -d photon` (127.0.0.1:2322, 1.5 GB limit, about 300 MiB used). The landmark stage only
+claims an answer at similarity >= 0.5, so place names that are not in the landmarks table fall through to Photon.
+Measured numbers and the verdict are in `../docs/validation/geocoder-spike.md`.
 
 ## Mapillary ingestion
 
