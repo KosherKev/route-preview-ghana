@@ -13,6 +13,7 @@ const port = Number(process.env.PORT ?? 8787);
 const server = createApproachServer({
   landmarkSearch: (p) => searchLandmarks(pool, p),
   geocode: createGeocoder({ db: pool, photon: photonClient() }),
+  ...(process.env.GEOCODE_DISAMBIGUATION_MARGIN ? { disambiguationMargin: Number(process.env.GEOCODE_DISAMBIGUATION_MARGIN) } : {}),
 });
 server.on("close", () => void pool.end());
 await listenLoopback(server, port);

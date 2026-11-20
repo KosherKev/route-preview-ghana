@@ -2,13 +2,14 @@
 //   GET  /health
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
-//   POST /approach  {"origin":{"lat":..,"lon":..},"destination":{..},"costing":"motor_scooter"|"auto",
+//   POST /approach  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
 import { ArgumentError, extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
 import type { Costing, LatLon } from "./valhalla";
 import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
-import type { GeocodeFn } from "../geo/geocode";
+import type { Candidate, GeocodeFn } from "../geo/geocode";
+import { DEFAULT_DISAMBIGUATION_MARGIN, resolvePlace } from "./resolve";
 
 export const MAX_BODY_BYTES = 4096;
 export const REQUEST_DEADLINE_MS = 60_000;
@@ -52,6 +53,46 @@ export function parseApproachRequest(body: unknown): ApproachRequest {
   };
 }
 
+const publicCandidate = (c: Candidate) => ({ name: c.name, lat: c.lat, lon: c.lon, source: c.source, score: c.score });
+
+/** Thrown when a typed place cannot be resolved to one point; carries a problem+json body with the candidate list. */
+class Unresolved extends Error {
+  constructor(public status: number, public body: Record<string, unknown>) { super("unresolved place"); }
+}
+
+/** Replaces origin_query / destination_query in the body with a resolved point; returns what was used for each. */
+async function resolveQueries(
+  body: unknown, geocode: GeocodeFn | undefined, margin: number,
+): Promise<{ body: unknown; resolved: Record<string, unknown> }> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return { body, resolved: {} };
+  const b = { ...(body as Record<string, unknown>) };
+  const resolved: Record<string, unknown> = {};
+  for (const end of ["origin", "destination"] as const) {
+    const key = `${end}_query`;
+    if (b[key] === undefined) continue;
+    if (b[end] !== undefined) throw new ValidationError(`give either ${end} or ${key}, not both`);
+    if (typeof b[key] !== "string") throw new ValidationError(`${key} must be a string`);
+    if (!geocode) throw new ValidationError(`${key} is not available: name lookup is not enabled on this server`);
+    let q: string;
+    try { q = parseSearchParams(new URLSearchParams({ q: b[key] as string })).q; } catch (e) {
+      if (e instanceof SearchInputError) throw new ValidationError(`${key}: ${e.message}`);
+      throw e;
+    }
+    const r = await resolvePlace(geocode, q, margin);
+    if (!r.ok) {
+      const title = r.reason === "ambiguous" ? "Ambiguous place" : r.reason === "low_confidence" ? "No confident match" : "Place not found";
+      const detail = r.reason === "ambiguous" ? `"${q}" matches several different places; choose one and send its coordinates as ${end}`
+        : r.reason === "low_confidence" ? `no candidate for "${q}" is confident enough to use; choose one and send its coordinates as ${end}`
+        : `nothing found for "${q}"`;
+      throw new Unresolved(422, { type: "about:blank", title, status: 422, detail, field: key, query: q, degraded: r.degraded, candidates: r.candidates.map(publicCandidate) });
+    }
+    b[end] = { lat: r.candidate.lat, lon: r.candidate.lon };
+    delete b[key];
+    resolved[end] = { query: q, ...publicCandidate(r.candidate), degraded: r.degraded };
+  }
+  return { body: b, resolved };
+}
+
 export type Extractor = (c: Costing, o: LatLon, d: LatLon, opts: ApproachOptions) => Promise<ApproachResult>;
 
 export interface ServerOptions {
@@ -62,6 +103,8 @@ export interface ServerOptions {
   landmarkSearch?: (p: SearchParams) => Promise<LandmarkMatch[]>;
   /** Enables GET /geocode (coordinates, landmarks, then Photon). Injected like landmarkSearch. */
   geocode?: GeocodeFn;
+  /** Name-based routing: top two candidates with scores closer than this (and > 500 m apart) are returned for disambiguation. Default 0.05. */
+  disambiguationMargin?: number;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
   onError?: (err: unknown, info: { status: number; path: string }) => void;
 }
@@ -75,6 +118,13 @@ function sendProblem(res: http.ServerResponse, status: number, title: string, de
   if (res.headersSent) return;
   const text = JSON.stringify({ type: "about:blank", title, status, ...(detail ? { detail } : {}) });
   res.writeHead(status, { "content-type": "application/problem+json", "content-length": Buffer.byteLength(text) });
+  res.end(text);
+}
+
+function sendProblem422(res: http.ServerResponse, body: Record<string, unknown>) {
+  if (res.headersSent) return;
+  const text = JSON.stringify(body);
+  res.writeHead(422, { "content-type": "application/problem+json", "content-length": Buffer.byteLength(text) });
   res.end(text);
 }
 
@@ -99,6 +149,8 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
 export function createApproachServer(opts: ServerOptions = {}): http.Server {
   const extractor = opts.extractor ?? extractApproach;
   const deadline = opts.deadlineMs ?? REQUEST_DEADLINE_MS;
+  const margin = opts.disambiguationMargin ?? DEFAULT_DISAMBIGUATION_MARGIN;
+  if (!Number.isFinite(margin) || margin < 0 || margin > 1) throw new Error("disambiguationMargin must be a number between 0 and 1");
   const onError = opts.onError ?? ((e: unknown, i: { status: number; path: string }) => console.error(`[approach-server] ${i.status} ${i.path}: ${(e as Error)?.message ?? e}`));
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -153,7 +205,8 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
         }
         return send(res, 400, { error: "body is not valid JSON" });
       }
-      const r = parseApproachRequest(parsed);
+      const named = await resolveQueries(parsed, opts.geocode, margin);
+      const r = parseApproachRequest(named.body);
       const ac = new AbortController();
       // abort() also cancels the in-flight Valhalla fetches (signal passed to the extractor)
       const timer = setTimeout(() => ac.abort(), deadline);
@@ -163,12 +216,14 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
         });
         const timeout = new Promise<never>((_, rej) => ac.signal.addEventListener("abort", () => rej(Object.assign(new Error("deadline exceeded"), { status: 504 }))));
         work.catch(() => {}); // an aborted extractor rejects after the race is settled: do not leave it unhandled
-        return send(res, 200, await Promise.race([work, timeout]));
+        const result = await Promise.race([work, timeout]);
+        return send(res, 200, Object.keys(named.resolved).length > 0 ? { ...result, resolved: named.resolved } : result);
       } finally {
         clearTimeout(timer);
       }
     } catch (e) {
       // our own validation messages are safe to echo; everything else is logged server-side and answered generically
+      if (e instanceof Unresolved) return sendProblem422(res, e.body);
       if (e instanceof ValidationError) return send(res, 400, { error: e.message });
       if (e instanceof ArgumentError) { onError(e, { status: 400, path: url.pathname }); return send(res, 400, { error: GENERIC[400] }); }
       const status = (e as { status?: number }).status === 504 ? 504 : 502;
