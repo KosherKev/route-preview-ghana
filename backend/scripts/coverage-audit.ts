@@ -1,6 +1,6 @@
 // Metadata-only real-coverage audit (Phase 3 follow-up D).
 //   npm run audit:coverage -- ingest [--note "text"] [--half-width-m 30] [--interval-ms 500]
-//   npm run audit:coverage -- report [--out <dir>]
+//   npm run audit:coverage -- report [--out <dir>] [--note "text"]
 // ingest: routes the 25 validated pairs (Valhalla), ingests Mapillary IMAGE METADATA ONLY for cells covering a corridor
 //   around those routes into the local PostGIS frames table, and writes aggregate counts to data/coverage-audit/ingest-stats.json.
 // report: classifies every route (whole route and last-500 m approach) from the stored frames and writes
@@ -113,6 +113,7 @@ async function report() {
   const outIdx = argv.indexOf("--out");
   const outDir = outIdx >= 0 ? path.resolve(argv[outIdx + 1]!) : path.join(repoRoot, "docs", "validation");
   const ingestStats: IngestStats | null = existsSync(STATS_FILE) ? (JSON.parse(readFileSync(STATS_FILE, "utf8")) as IngestStats) : null;
+  if (ingestStats) ingestStats.notes.push(...argv.flatMap((a, i) => (a === "--note" && argv[i + 1] ? [argv[i + 1]!] : []))); // run-history notes added at report time
   const client = new pg.Client(dbConfig());
   await client.connect();
   try {
