@@ -126,16 +126,29 @@ Thresholds (all in `DEFAULT_MATCH_CONFIG` / `DEFAULT_CLASSIFY_CONFIG`):
 | Heading | `computed_compass_angle` within +/-25 deg (inclusive) of the segment bearing AT the frame's projected position, wrap-safe at 0/360 |
 | Quality | `quality_score` >= 0.5; unscored frames (null or non-finite, e.g. NaN) are dropped unless `allowMissingQuality` |
 | Sequence | one per route edge: keep the previous edge's sequence if it still has frames, else most frames, then most recent capture, then id |
-| Street run | extent >= 60 m (inclusive) AND the MAXIMUM consecutive gap strictly < 15 m (a gap of exactly 15.0 m does not qualify; 14.999 does) |
-| Crossfade | two qualifying runs of one sequence separated by a gap of 15 m to 30 m (inclusive) become ONE street segment with the gap listed in `crossfades` |
-| Handoff | any larger gap, a non-qualifying run, a sequence change or no frames is BIRDS_EYE_3D |
+| Street run | extent >= 60 m (inclusive) AND every consecutive gap strictly < 15 m (a gap of exactly 15.0 m is not part of a run; 14.999 is) |
+| RIFE tier (gap < 15 m) | AI frame interpolation is permitted ONLY between consecutive frames spaced strictly less than 15 m apart, never across a 15 m or larger gap |
+| Bridge tier (15 m <= gap <= 30 m, both ends inclusive) | two qualifying runs (each >= 60 m, internal gaps < 15 m, headings within +/-25 deg) separated by one such gap are merged into ONE contiguous STREET_VIDEO segment; the gap is a crossfade bridge and is NEVER RIFE-interpolated. Exactly 15 m and exactly 30 m are bridges |
+| Handoff tier (gap > 30 m) | a gap over 30 m, or any run shorter than 60 m that cannot be bridged into a qualifying segment, ends the STREET_VIDEO segment and hands off to BIRDS_EYE_3D (also: a sequence change, no frames) |
 | `level_uncertain` | between consecutive frames closer than 30 m at an edge transition: sequence change, heading-relative-to-road change > 30 deg, or road class / use / bridge / tunnel / layer change while the sequence continues; the span plus 20 m each side is forced to BIRDS_EYE_3D and never merged away |
 
-All distance and threshold comparisons (gap, extent, crossfade ceiling, merge) are done in integer millimetres via `src/classify/mm.ts`, so an exact 15.000 m gap or 60.000 m extent is never decided by float noise. Frames are de-duplicated by `imageId` before sequence selection (latest `capturedAt` kept, ties keep the first; others drop as `duplicate_image`).
+All distance and threshold comparisons (gap tiers, extent, merge) are done in integer millimetres via `src/classify/mm.ts`, so an exact 15.000 m gap or 60.000 m extent is never decided by float noise. Frames are de-duplicated by `imageId` before sequence selection (latest `capturedAt` kept, ties keep the first; others drop as `duplicate_image`).
 
-#### Interpretation notes for the owner
+#### Two-tier gap rule: output fields and notes
 
-- **Crossfade merge.** A STREET_VIDEO segment whose `maxGapM` is >= 15 m contains a crossfade: two qualifying runs of one sequence separated by a 15-30 m gap are merged into ONE segment. The 30 m ceiling (`crossfadeMaxGapM`) and the 3 m left-offset limit (`maxLeftOffsetM`) are builder-chosen, configurable parameters that are not in the spec. The merge itself is the builder's interpretation of the spec's "max gap under 15 m" and "crossfade inside a street run" rules, flagged here for the owner to confirm.
+The two-tier gap rule above was **confirmed by the owner 2026-11-20**. Each STREET_VIDEO segment carries:
+
+- `bridges`: `[{ startM, endM, gapM, rifeEligible: false }]` in route order, one per crossfade bridge. A renderer crossfades across `startM..endM` and must not RIFE-interpolate there.
+- `rifeCeilingM`: the RIFE ceiling (15). A gap between consecutive frames is RIFE-eligible iff it is strictly below it (`isRifeEligible(gapM)` / `classifyGap(gapM)` in `src/classify/classify.ts` return `rife | bridge | handoff`).
+- `internalMaxGapM`: largest frame gap inside the runs, excluding bridges; always < `rifeCeilingM`, so every internal gap is RIFE-eligible and every bridge is not.
+- `crossfades`: compatibility alias of `bridges` (same start/end/gap, no `rifeEligible` flag). Prefer `bridges`.
+
+BIRDS_EYE_3D segments have `bridges: []`, `crossfades: []` and `internalMaxGapM: null`.
+
+**Pairwise-chain assumption (stated explicitly, for the owner to confirm).** The rule is applied pairwise: a chain of qualifying runs, each joined to the next by a single 15-30 m gap, merges into ONE segment with several bridges (three runs and two valid gaps: one segment, two bridges). A gap over 30 m anywhere in the chain ends the segment there, and the next qualifying run starts a new segment after a BIRDS_EYE_3D handoff. A run under 60 m is never bridged, even between two valid runs.
+
+The 3 m left-offset limit (`maxLeftOffsetM`) is a builder-chosen, configurable parameter that is not in the spec.
+
 - **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. It may over-flag on dense real data; no real imagery has been measured yet.
 
 Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunnel`, `use` (ramp) and `road_class` stand in for it

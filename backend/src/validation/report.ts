@@ -81,6 +81,7 @@ export function summariseClassification(p: PipelineResult) {
 }
 
 const f1 = (n: number | null | undefined) => (n === null || n === undefined ? "n/a" : n.toFixed(1));
+const f3 = (n: number | null | undefined) => (n === null || n === undefined ? "n/a" : n.toFixed(3));
 const ll = (p: LatLon) => `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
 
 export function renderMarkdown(r: ValidationReport): string {
@@ -96,7 +97,8 @@ export function renderMarkdown(r: ValidationReport): string {
   L.push("## Thresholds used", "");
   L.push(`- Approach length ${r.config.approachLengthM} m along the route; decision windows ${r.config.decisionWindowM} m.`);
   L.push(`- Street run: at least ${r.config.classify.minRunM} m long and every gap between consecutive usable frames strictly under ${r.config.classify.maxGapM} m (maximum, not average).`);
-  L.push(`- Crossfade inside a street run: gaps from ${r.config.classify.maxGapM} m up to ${r.config.classify.crossfadeMaxGapM} m between qualifying runs; larger gaps hand off to BIRDS_EYE_3D.`);
+  L.push(`- Two-tier gap rule (confirmed by the owner 2026-11-20): gap under ${r.config.classify.maxGapM} m is RIFE-eligible (AI interpolation is allowed ONLY below this ceiling); ${r.config.classify.maxGapM} m to ${r.config.classify.crossfadeMaxGapM} m, both ends inclusive, between two qualifying runs is a crossfade bridge that merges them into ONE STREET_VIDEO segment and is NEVER RIFE-interpolated; a gap over ${r.config.classify.crossfadeMaxGapM} m, or a run under ${r.config.classify.minRunM} m that cannot be bridged, hands off to BIRDS_EYE_3D.`);
+  L.push(`- The rule is applied pairwise: a chain of qualifying runs each joined by a ${r.config.classify.maxGapM}-${r.config.classify.crossfadeMaxGapM} m gap is one segment with several bridges.`);
   L.push(`- Frame filters: lateral tolerance ${r.config.match.lateralToleranceM} m, more than ${r.config.match.maxLeftOffsetM} m left of the centreline dropped (right-hand traffic), heading within +/-${r.config.match.bearingToleranceDeg} deg of the local road bearing, quality_score at least ${r.config.match.minQualityScore}.`);
   L.push(`- level_uncertain: sequence jump, heading jump over ${r.config.classify.headingJumpDeg} deg, or road class/use/bridge/tunnel/layer change at an edge transition, padded ${r.config.classify.levelPadM} m each side.`, "");
   L.push("## Named places (coordinates used)", "");
@@ -131,9 +133,9 @@ export function renderMarkdown(r: ValidationReport): string {
   for (const s of r.synthetic.scenarios) {
     L.push(`### SYNTHETIC: ${s.title}`, "", s.description, "", `Expected: ${s.expectation}`, "");
     L.push(`Route ${f1(s.routeLengthM)} m, ${s.frameCount} synthetic frames, ${s.result.usableFrames} usable after filtering; dropped: ${JSON.stringify(s.result.dropped)}.`, "");
-    L.push("| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Crossfades | Reason |", "| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |");
+    L.push("| Segment | Mode | From m | To m | Frames | Max gap m | level_uncertain | Bridges (crossfade, not RIFE) | Reason |", "| --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- |");
     s.result.classification.segments.forEach((g, i) => {
-      L.push(`| ${i + 1} | ${g.mode} | ${f1(g.startM)} | ${f1(g.endM)} | ${g.frameCount} | ${f1(g.maxGapM)} | ${g.level_uncertain ? g.level_uncertain_reasons.join("+") : "no"} | ${g.crossfades.map((c) => `${f1(c.startM)}-${f1(c.endM)}`).join(", ") || "none"} | ${g.birdsEyeReason ?? "street run"} |`);
+      L.push(`| ${i + 1} | ${g.mode} | ${f1(g.startM)} | ${f1(g.endM)} | ${g.frameCount} | ${f3(g.maxGapM)} | ${g.level_uncertain ? g.level_uncertain_reasons.join("+") : "no"} | ${g.bridges.map((c) => `${f1(c.startM)}-${f1(c.endM)} (${f3(c.gapM)} m)`).join(", ") || "none"} | ${g.birdsEyeReason ?? "street run"} |`);
     });
     L.push("");
   }

@@ -58,8 +58,30 @@ export function syntheticScenarios(): SyntheticScenario[] {
   }
   {
     const sc = straightScene({ bearingDeg: 0, lengthM: 500 });
-    out.push(run("crossfade", "Crossfade inside a street run", "Two 80 m runs separated by a 20 m gap (above 15 m, below the 30 m crossfade ceiling).",
-      "One STREET_VIDEO segment with the 20 m gap marked for crossfade (not a handoff).", sc, [...sc.frames(every(5, 100, 180)), ...sc.frames(every(5, 200, 280))]));
+    out.push(run("crossfade", "Bridge: two 80 m runs, 20 m gap", "Two 80 m runs separated by a 20 m gap (15 m to 30 m: a crossfade bridge, never RIFE-interpolated).",
+      "One STREET_VIDEO segment with the 20 m gap listed as a bridge (not a handoff).", sc, [...sc.frames(every(5, 100, 180)), ...sc.frames(every(5, 200, 280))]));
+  }
+  // exact-threshold demonstrations: two 60 m runs (frames every 5 m) joined by a gap of exactly the stated length, in integer mm
+  const joined = (gapMm: number) => {
+    const sc = straightScene({ bearingDeg: 0, lengthM: 500 });
+    const first = every(5, 100, 160);
+    const second = every(5, 0, 60).map((x) => (Math.round(160 * 1000) + gapMm + Math.round(x * 1000)) / 1000);
+    return { sc, frames: [...sc.frames(first), ...sc.frames(second)] };
+  };
+  for (const [id, gapMm, title, expectation] of [
+    ["gap-14999mm", 14999, "Gap of 14.999 m between two runs", "RIFE tier: the two pieces form ONE run (no bridge); the gap is RIFE-eligible."],
+    ["gap-15000mm", 15000, "Gap of exactly 15.000 m between two runs", "Bridge tier: ONE STREET_VIDEO segment with ONE bridge (crossfade, not RIFE)."],
+    ["gap-30000mm", 30000, "Gap of exactly 30.000 m between two runs", "Bridge tier (ceiling is inclusive): ONE STREET_VIDEO segment with ONE bridge."],
+    ["gap-30001mm", 30001, "Gap of 30.001 m between two runs", "Handoff tier: TWO STREET_VIDEO segments with BIRDS_EYE_3D between, no bridge."],
+  ] as const) {
+    const { sc, frames } = joined(gapMm);
+    out.push(run(id, title, `Two 60 m runs (a frame every 5 m) joined by a gap of ${(gapMm / 1000).toFixed(3)} m between the last frame of the first and the first frame of the second.`, expectation, sc, frames));
+  }
+  {
+    const sc = straightScene({ bearingDeg: 0, lengthM: 500 });
+    out.push(run("bridge-chain", "Chain of three runs, two bridges", "Three 60 m runs separated by gaps of 20 m and 25 m (pairwise rule: each qualifying run joins the previous one).",
+      "ONE STREET_VIDEO segment 50-275 m with TWO bridges (110-130 m and 190-215 m).", sc,
+      [...sc.frames(every(5, 50, 110)), ...sc.frames(every(5, 130, 190)), ...sc.frames(every(5, 215, 275))]));
   }
   return out;
 }

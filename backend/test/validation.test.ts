@@ -45,6 +45,14 @@ describe("synthetic scenarios produce the documented outcomes", () => {
     expect(x.length).toBe(1);
     expect(x[0]!.crossfades.length).toBe(1);
   });
+  it("two-tier gap demonstrations: 14.999 no bridge, 15 and 30 bridge, 30.001 handoff, chain of three has two bridges", () => {
+    const st = (id: string) => scen(id).result.classification.segments.filter((s) => s.mode === "STREET_VIDEO");
+    expect(st("gap-14999mm").map((s) => s.bridges.length)).toEqual([0]);
+    expect(st("gap-15000mm").map((s) => s.bridges.length)).toEqual([1]);
+    expect(st("gap-30000mm").map((s) => s.bridges.length)).toEqual([1]);
+    expect(st("gap-30001mm").map((s) => s.bridges.length)).toEqual([0, 0]);
+    expect(st("bridge-chain").map((s) => s.bridges.length)).toEqual([2]);
+  });
   it("every scenario is flagged synthetic", () => {
     expect(syntheticScenarios().every((s) => s.synthetic === true)).toBe(true);
   });

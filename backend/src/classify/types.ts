@@ -26,6 +26,8 @@ export interface EdgeSpan {
   layer?: number | null;
 }
 
+// Gap rule (owner-confirmed 2026-11-20; see classify.ts): gap < 15 m RIFE-eligible; 15-30 m (inclusive) crossfade bridge
+// inside one STREET_VIDEO segment, never RIFE; > 30 m (or an unbridgeable run < 60 m) hands off to BIRDS_EYE_3D.
 export type Mode = "STREET_VIDEO" | "BIRDS_EYE_3D";
 
 export type DropReason =
