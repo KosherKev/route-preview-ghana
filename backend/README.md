@@ -71,7 +71,7 @@ Points used: 5.6361 N, 0.1750 W (Tetteh Quarshie Interchange area) to 5.5502 N, 
 bbox queries (large boxes are tiled at 0.09 degrees per side), radius queries (`closeto` + `radius`), frame fields
 (`computed_geometry`, `computed_compass_angle`, `captured_at`, `sequence`, `is_pano`, `camera_type`, `width`, `height`, `quality_score`,
 `creator`), 250 ms throttle, and `Retry-After` (seconds or HTTP date) honored on 429/5xx with exponential backoff otherwise.
-Rows are upserted into `frames` with `source = 'mapillary'`.
+Rows are upserted into `frames` with `source = 'mapillary'`, plus attribution fields (see below).
 
 The token comes only from `MAPILLARY_TOKEN` in `.env` and is sent only as an `Authorization` header. If it is unset the command stops
 with a message before any request. Tests use mocked HTTP only.
@@ -89,7 +89,49 @@ Accra corridor boxes (`minLon,minLat,maxLon,maxLat`, in `src/ingest/corridors.ts
 | `accra-core` | `-0.27,5.5,-0.1,5.7` |
 
 No live ingestion has been run. Unverified until a real token exists: the API's bbox area cap (assumed about 0.01 square degrees, hence the
-tiling), the licence string stored per frame (`CC-BY-SA-4.0`; legal review is deferred to Phase 6), and the real response paging shape.
+tiling), the licence stored per frame (the API reports none, so `DEFAULT_MAPILLARY_LICENSE` in `src/ingest/mapillary.ts` is used; legal review is deferred to Phase 6), and the real response paging shape.
+
+## Imagery source kill switch
+
+Set `IMAGERY_SOURCES_DISABLED` to a comma-separated list of source names to switch a street-imagery source off without a code change
+(e.g. `IMAGERY_SOURCES_DISABLED=mapillary`; names are trimmed and case-insensitive, empty entries ignored, unset = nothing disabled).
+The one implementation is `src/imagery/sources.ts` (`disabledSources`, `isSourceEnabled`, `assertSourceEnabled`, `isClipServable`).
+It is read from the environment on every call, never cached at import, so it takes effect on the next call (for a long-running process,
+set it in that process's environment and the next request sees it; there is no admin endpoint).
+
+What it does when a source is disabled:
+
+- `npm run ingest:mapillary` refuses (exit code 4, "imagery source "mapillary" is disabled by IMAGERY_SOURCES_DISABLED") before any token check, network or DB access; `MapillarySource` also refuses every query.
+- The frame loader (`src/classify/load.ts`) drops that source's frames before classification, so affected routes classify `BIRDS_EYE_3D`.
+- The classifier result (`PipelineResult.sourcesExcluded`) and the validation summary report which disabled sources had frames excluded (`[]` when none).
+- `isClipServable(clip)` returns false for a clip whose `source`, or any `source_summary[].source`, is disabled. Anything that serves a stored clip must call it.
+
+What it does NOT do: it does not delete stored frames or clips; it does not recall anything already served, cached or copied elsewhere; it has
+no authentication (whoever controls the process environment controls it); and it is not retroactive for a process that has already read
+the value into its own variables (the helpers re-read on each call, so this only matters for code that copies the result).
+
+## Attribution fields
+
+Migration `migrations/005_attribution_fields.sql` is additive only (`ADD COLUMN IF NOT EXISTS`): `frames.creator_username text NULL`,
+`frames.source_url text NULL`, `clips.source_summary jsonb NOT NULL DEFAULT '[]'`. `frames.source` (NOT NULL, no default), `frames.creator`
+and `frames.license` already existed from migration 002 and are untouched.
+
+- `creator_username` overlaps the pre-existing `creator` column: `creator` falls back to the numeric creator id when no username is returned; `creator_username` is the username only (null otherwise). Prefer `creator_username` for credits.
+- A DEFAULT on `frames.source` would need `ALTER COLUMN`, which is not additive; it needs an interactive migration the owner approves, so it was not done. The ingestion always writes `source` explicitly.
+- Ingestion requests the `creator` field and maps `creator.username` to `creator_username`. `source_url` is the Mapillary image page, `https://www.mapillary.com/app/?pKey=<image_id>`.
+- `license` stores what the source reports; only when the source states none, the single constant `DEFAULT_MAPILLARY_LICENSE` is used.
+- `src/imagery/attribution.ts`: `buildAttribution(frames)` (de-duplicated creators, licences, source URLs, per-source entries, `requiresLogoAndLink: true` for Mapillary) and `toSourceSummary(frames)` (the `clips.source_summary` shape `[{source, creators[], license, sourceUrls[]}]`, one per source).
+
+Apply and re-apply: `npm run db:migrate` applies `005` once; running it again prints "no pending migrations" (the SQL itself is also safe to re-run).
+Live apply on 2026-11-20 against the project PostGIS container: applied, columns verified, second run a no-op (`frames` and `clips` were empty; no ingestion had been run).
+
+Manual rollback (documented only; never run automatically, and `schema_migrations` would also need `DELETE FROM schema_migrations WHERE name = '005_attribution_fields.sql'`):
+
+```sql
+ALTER TABLE frames DROP COLUMN IF EXISTS creator_username;
+ALTER TABLE frames DROP COLUMN IF EXISTS source_url;
+ALTER TABLE clips  DROP COLUMN IF EXISTS source_summary;
+```
 
 ## Phase 3: approach extractor, map-matcher, mode classifier
 

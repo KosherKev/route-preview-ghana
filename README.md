@@ -12,6 +12,13 @@ Pre-trip route preview for Ghana dispatch riders: eye-level street video plus a 
 
 Closed product and architecture decisions (D1 to D6, 2026-11-20) are recorded in [docs/decisions/DECISIONS.md](docs/decisions/DECISIONS.md).
 
+## Imagery source kill switch
+
+`IMAGERY_SOURCES_DISABLED=mapillary` (comma-separated source names, read on every call) stops ingestion from that source, removes its frames
+before route classification (affected routes fall back to `BIRDS_EYE_3D`, reported as `sourcesExcluded`), and makes stored clips derived from it
+not servable (`isClipServable`). It does not delete stored data, recall anything already served elsewhere, or add authentication. Details,
+attribution fields (`creator_username`, `source_url`, `clips.source_summary`) and the migration rollback SQL: [backend/README.md](backend/README.md).
+
 ## Layout
 
 - `backend/` API and pattern stubs
