@@ -1,18 +1,26 @@
 // Task 3.2b: route timeline classifier (STREET_VIDEO vs BIRDS_EYE_3D). Pure: no I/O, no imagery-source imports.
 //
-// Rules (all thresholds are in ClassifyConfig and documented there):
-//  1. Gap rule uses the MAXIMUM gap between consecutive usable frames, never an average.
-//  2. A "good run" is a maximal group of consecutive usable frames of ONE sequence whose every consecutive gap is
-//     STRICTLY < maxGapM (a gap of exactly 15.0 m does not qualify; 14.999 does).
-//  3. A good run qualifies as STREET_VIDEO only if its extent (first to last frame) is >= minRunM (inclusive).
-//  4. CROSSFADE (inside a street run): two qualifying good runs of the same chain separated by a gap g with
-//     maxGapM <= g <= crossfadeMaxGapM merge into ONE street segment; the gap is recorded in `crossfades`.
-//  5. HANDOFF (segment level): anything else (a gap > crossfadeMaxGapM, a non-qualifying run, a sequence change,
-//     no frames) is BIRDS_EYE_3D. Rules 4 and 5 are independent and separately tested.
-//  6. Hysteresis falls out of 3-5: there are no street segments shorter than minRunM, no adjacent segments of the same
-//     mode (except street segments of different sequences, which cannot touch), and gaps up to crossfadeMaxGapM never
-//     split a street segment.
-//  7. level_uncertain: at an edge transition between consecutive usable frames closer than discontinuityMaxGapM, flag
+// THE TWO-TIER GAP RULE (confirmed by the owner 2026-11-20). g is the distance between two CONSECUTIVE usable frames,
+// compared in integer millimetres (see mm.ts):
+//  1. RIFE tier, g < 15 m (strict): AI frame interpolation is permitted ONLY between frames this close. Never across a
+//     gap of 15 m or more. (cfg.maxGapM is this ceiling; exposed on every segment as `rifeCeilingM`.)
+//  2. BRIDGE tier, 15 m <= g <= 30 m (BOTH ends inclusive): two qualifying runs separated by one such gap are merged
+//     into ONE contiguous STREET_VIDEO segment; the gap is bridged by a crossfade and is NEVER RIFE-interpolated. It is
+//     listed in the segment's `bridges` (each with rifeEligible: false). Exactly 15 m and exactly 30 m are bridges.
+//  3. HANDOFF tier, g > 30 m: terminates the street segment and hands off to BIRDS_EYE_3D. So does any run shorter
+//     than 60 m that cannot be bridged into a qualifying segment.
+//  The rule is applied PAIRWISE: a chain of qualifying runs each joined by a 15-30 m gap is ONE segment with several
+//  bridges (assumption flagged to the owner); a >30 m gap anywhere in the chain ends the segment there.
+//
+// Other rules (thresholds in ClassifyConfig):
+//  a. The gap rule uses the MAXIMUM gap between consecutive usable frames, never an average.
+//  b. A "run" is a maximal group of consecutive usable frames of ONE sequence whose every gap is in the RIFE tier
+//     (< 15 m). It qualifies as STREET_VIDEO only if its extent (first to last frame) is >= minRunM (inclusive).
+//  c. `crossfades` is a compatibility view of `bridges` (same start/end/gap, without the rifeEligible flag).
+//  d. Hysteresis falls out of the tiers: no street segments shorter than minRunM, no adjacent segments of the same
+//     mode (except street segments of different sequences, which cannot touch), and gaps up to crossfadeMaxGapM
+//     between qualifying runs never split a street segment.
+//  e. level_uncertain: at an edge transition between consecutive usable frames closer than discontinuityMaxGapM, flag
 //     a sequence jump, a heading jump (change in heading-relative-to-road above headingJumpDeg) or a level change
 //     (road class / use / bridge / tunnel / layer differs on the edges between them while the sequence continues).
 //     The flagged span (frames' extent padded by levelPadM) is forced to BIRDS_EYE_3D and never merged away.
@@ -24,9 +32,9 @@ import { gteMm, gtMm, lteMm, ltMm } from "./mm";
 export interface ClassifyConfig {
   /** Minimum street run length, metres, inclusive. Default 60. */
   minRunM: number;
-  /** Gap limit, metres, STRICT: gap < maxGapM keeps a run together. Default 15. */
+  /** RIFE ceiling, metres, STRICT: a gap < maxGapM is RIFE-eligible and keeps a run together. Default 15. */
   maxGapM: number;
-  /** Largest gap that may be crossfaded inside a street segment, inclusive. Default 30. */
+  /** Largest gap that may be bridged by a crossfade inside a street segment, inclusive. Default 30. */
   crossfadeMaxGapM: number;
   /** Only pairs closer than this are examined for discontinuities. Default 30. */
   discontinuityMaxGapM: number;
@@ -40,6 +48,21 @@ export const DEFAULT_CLASSIFY_CONFIG: ClassifyConfig = {
   minRunM: 60, maxGapM: 15, crossfadeMaxGapM: 30, discontinuityMaxGapM: 30, headingJumpDeg: 30, levelPadM: 20,
 };
 
+export type GapTier = "rife" | "bridge" | "handoff";
+
+/** Which tier a gap between two consecutive frames falls in. Integer-millimetre comparisons. */
+export function classifyGap(gapM: number, cfg: ClassifyConfig = DEFAULT_CLASSIFY_CONFIG): GapTier {
+  if (ltMm(gapM, cfg.maxGapM)) return "rife";
+  return lteMm(gapM, cfg.crossfadeMaxGapM) ? "bridge" : "handoff";
+}
+
+/** True only for a gap strictly below the RIFE ceiling. */
+export const isRifeEligible = (gapM: number, cfg: ClassifyConfig = DEFAULT_CLASSIFY_CONFIG): boolean => classifyGap(gapM, cfg) === "rife";
+
+/** A crossfade bridge between two runs of one STREET_VIDEO segment: offsets along the route, in metres. Never RIFE-eligible. */
+export interface Bridge { startM: number; endM: number; gapM: number; rifeEligible: false }
+
+/** Compat view of a Bridge (the pre-follow-up `crossfades` shape). */
 export interface Crossfade { startM: number; endM: number; gapM: number }
 
 export interface TimelineSegment {
@@ -50,12 +73,18 @@ export interface TimelineSegment {
   edgeIds: number[];
   sequenceId: string | null;
   frameCount: number;
-  /** Largest gap between consecutive usable frames inside the segment (incl. crossfaded gaps); null with < 2 frames. */
+  /** Largest gap between consecutive usable frames inside the segment (incl. bridged gaps); null with < 2 frames. */
   maxGapM: number | null;
+  /** RIFE ceiling in metres (cfg.maxGapM). A frame gap is RIFE-eligible iff it is strictly below this. */
+  rifeCeilingM: number;
+  /** STREET_VIDEO: largest frame gap inside the runs, EXCLUDING bridges; always < rifeCeilingM, so every internal gap is RIFE-eligible. null for BIRDS_EYE_3D or < 2 frames in a run. */
+  internalMaxGapM: number | null;
   capturedAt: { earliest: string; latest: string } | null;
   level_uncertain: boolean;
   level_uncertain_reasons: LevelReason[];
-  /** Gaps > maxGapM inside a STREET_VIDEO segment, to be crossfaded. Always empty for BIRDS_EYE_3D. */
+  /** Crossfade bridges (15-30 m gaps, inclusive) inside a STREET_VIDEO segment, in route order. Never RIFE-interpolated. Always empty for BIRDS_EYE_3D. */
+  bridges: Bridge[];
+  /** Compatibility alias: the same bridges without `rifeEligible`. Prefer `bridges`. */
   crossfades: Crossfade[];
   /** Why a BIRDS_EYE_3D segment is not street video; null for STREET_VIDEO. */
   birdsEyeReason: BirdsEyeReason | null;
@@ -134,17 +163,17 @@ export function classifyTimeline(
   for (const f of frames.filter((m) => !inSpan(m.offsetM))) {
     const chain = chains[chains.length - 1];
     const prev = chain?.[chain.length - 1];
-    if (chain && prev && prev.frame.sequenceId === f.frame.sequenceId && lteMm(f.offsetM - prev.offsetM, cfg.crossfadeMaxGapM) && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
+    if (chain && prev && prev.frame.sequenceId === f.frame.sequenceId && classifyGap(f.offsetM - prev.offsetM, cfg) !== "handoff" && !spanBetween(prev.offsetM, f.offsetM)) chain.push(f);
     else chains.push([f]);
   }
 
-  interface Street { frames: MatchedFrame[]; crossfades: Crossfade[] }
+  interface Street { frames: MatchedFrame[]; bridges: Bridge[]; internalMax: number | null }
   const streets: Street[] = [];
   for (const chain of chains) {
     // good runs: split where gap >= maxGapM (strict < keeps together)
     const runs: MatchedFrame[][] = [[chain[0]!]];
     for (let i = 1; i < chain.length; i++) {
-      if (ltMm(chain[i]!.offsetM - chain[i - 1]!.offsetM, cfg.maxGapM)) runs[runs.length - 1]!.push(chain[i]!);
+      if (isRifeEligible(chain[i]!.offsetM - chain[i - 1]!.offsetM, cfg)) runs[runs.length - 1]!.push(chain[i]!);
       else runs.push([chain[i]!]);
     }
     const qualifies = (r: MatchedFrame[]) => gteMm(r[r.length - 1]!.offsetM - r[0]!.offsetM, cfg.minRunM);
@@ -154,12 +183,14 @@ export function classifyTimeline(
       if (!qualifies(r)) { if (cur) streets.push(cur); cur = null; prevRun = null; continue; }
       if (cur && prevRun) {
         const a = prevRun[prevRun.length - 1]!.offsetM, b = r[0]!.offsetM;
-        cur.crossfades.push({ startM: a, endM: b, gapM: b - a });
+        cur.bridges.push({ startM: a, endM: b, gapM: b - a, rifeEligible: false });
         cur.frames.push(...r);
       } else {
         if (cur) streets.push(cur);
-        cur = { frames: [...r], crossfades: [] };
+        cur = { frames: [...r], bridges: [], internalMax: null };
       }
+      const rg = maxGap(r);
+      if (rg !== null) cur.internalMax = Math.max(cur.internalMax ?? 0, rg);
       prevRun = r;
     }
     if (cur) streets.push(cur);
@@ -180,7 +211,7 @@ export function classifyTimeline(
     segments.push({
       startM: s, endM: e, lengthM: e - s, mode: "BIRDS_EYE_3D", edgeIds: edgesIn(s, e), sequenceId: null, frameCount: inside.length,
       maxGapM: g, capturedAt: minMax(inside.map((m) => m.frame.capturedAt ?? "")), level_uncertain: lu,
-      level_uncertain_reasons: [...reasons], crossfades: [], birdsEyeReason: reason,
+      level_uncertain_reasons: [...reasons], rifeCeilingM: cfg.maxGapM, internalMaxGapM: null, bridges: [], crossfades: [], birdsEyeReason: reason,
     });
   };
   for (const st of streets) {
@@ -189,7 +220,8 @@ export function classifyTimeline(
     segments.push({
       startM: s, endM: e, lengthM: e - s, mode: "STREET_VIDEO", edgeIds: edgesIn(s, e), sequenceId: st.frames[0]!.frame.sequenceId,
       frameCount: st.frames.length, maxGapM: maxGap(st.frames), capturedAt: minMax(st.frames.map((m) => m.frame.capturedAt ?? "")),
-      level_uncertain: false, level_uncertain_reasons: [], crossfades: st.crossfades, birdsEyeReason: null,
+      level_uncertain: false, level_uncertain_reasons: [], rifeCeilingM: cfg.maxGapM, internalMaxGapM: st.internalMax,
+      bridges: st.bridges, crossfades: st.bridges.map(({ startM, endM, gapM }) => ({ startM, endM, gapM })), birdsEyeReason: null,
     });
     cursor = e;
   }
