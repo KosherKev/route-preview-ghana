@@ -3,7 +3,7 @@
 //   POST /approach  {"origin":{"lat":..,"lon":..},"destination":{..},"costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
-import { extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
+import { ArgumentError, extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
 import type { Costing, LatLon } from "./valhalla";
 
 export const MAX_BODY_BYTES = 4096;
@@ -54,7 +54,14 @@ export interface ServerOptions {
   extractor?: Extractor;
   extractOptions?: ApproachOptions;
   deadlineMs?: number;
+  /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
+  onError?: (err: unknown, info: { status: number; path: string }) => void;
 }
+
+/** Client-facing messages: never Valhalla response bodies or internal details. */
+const GENERIC: Record<number, string> = {
+  400: "invalid request", 413: "body too large", 415: 'content-type must be application/json', 502: "upstream routing failure", 504: "deadline exceeded",
+};
 
 function send(res: http.ServerResponse, status: number, obj: unknown) {
   if (res.headersSent) return;
@@ -77,34 +84,49 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
 export function createApproachServer(opts: ServerOptions = {}): http.Server {
   const extractor = opts.extractor ?? extractApproach;
   const deadline = opts.deadlineMs ?? REQUEST_DEADLINE_MS;
+  const onError = opts.onError ?? ((e: unknown, i: { status: number; path: string }) => console.error(`[approach-server] ${i.status} ${i.path}: ${(e as Error)?.message ?? e}`));
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     try {
       if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { ok: true });
       if (url.pathname !== "/approach") return send(res, 404, { error: "not found" });
       if (req.method !== "POST") return send(res, 405, { error: "use POST" });
+      const ct = String(req.headers["content-type"] ?? "").split(";")[0]!.trim().toLowerCase();
+      if (ct !== "application/json") {
+        req.resume(); // discard whatever the client sends; the body is never read
+        return send(res, 415, { error: GENERIC[415] });
+      }
       let parsed: unknown;
       try { parsed = JSON.parse(await readBody(req)); } catch (e) {
-        if ((e as { status?: number }).status === 413) return send(res, 413, { error: "body too large" });
+        if ((e as { status?: number }).status === 413) {
+          // stop the client sending more: answer, close the connection, then destroy the request stream
+          res.setHeader("connection", "close");
+          res.once("finish", () => req.destroy());
+          return send(res, 413, { error: GENERIC[413] });
+        }
         return send(res, 400, { error: "body is not valid JSON" });
       }
       const r = parseApproachRequest(parsed);
       const ac = new AbortController();
+      // abort() also cancels the in-flight Valhalla fetches (signal passed to the extractor)
       const timer = setTimeout(() => ac.abort(), deadline);
       try {
         const work = extractor(r.costing, r.origin, r.destination, {
-          ...opts.extractOptions, approachLengthM: r.approachLengthM, decisionWindowM: r.decisionWindowM,
+          ...opts.extractOptions, signal: ac.signal, approachLengthM: r.approachLengthM, decisionWindowM: r.decisionWindowM,
         });
         const timeout = new Promise<never>((_, rej) => ac.signal.addEventListener("abort", () => rej(Object.assign(new Error("deadline exceeded"), { status: 504 }))));
+        work.catch(() => {}); // an aborted extractor rejects after the race is settled: do not leave it unhandled
         return send(res, 200, await Promise.race([work, timeout]));
       } finally {
         clearTimeout(timer);
       }
     } catch (e) {
+      // our own validation messages are safe to echo; everything else is logged server-side and answered generically
       if (e instanceof ValidationError) return send(res, 400, { error: e.message });
+      if (e instanceof ArgumentError) { onError(e, { status: 400, path: url.pathname }); return send(res, 400, { error: GENERIC[400] }); }
       const status = (e as { status?: number }).status === 504 ? 504 : 502;
-      // Valhalla failures (including "no path") are upstream problems, not client crashes; message carries no secrets.
-      return send(res, status, { error: (e as Error).message });
+      onError(e, { status, path: url.pathname });
+      return send(res, status, { error: GENERIC[status] });
     }
   });
   server.requestTimeout = 15_000;

@@ -73,6 +73,20 @@ describe("extractApproach (mocked Valhalla)", () => {
       .rejects.toThrow(/differs from the route shape/);
   });
 
+  it("passes the abort signal through to every Valhalla request", async () => {
+    const ac = new AbortController();
+    const seen: (AbortSignal | undefined)[] = [];
+    const { impl } = fakeValhalla();
+    const spy = ((u: string, init: any) => { seen.push(init.signal); return (impl as any)(u, init); }) as unknown as typeof fetch;
+    await extractApproach("motor_scooter", O, D, { fetchImpl: spy, valhallaUrl: "http://v", signal: ac.signal });
+    expect(seen.length).toBe(2);
+    ac.abort();
+    expect(seen.every((s) => s !== undefined)).toBe(true);
+    expect(seen[0]!.aborted).toBe(true); // combined signal follows the caller's
+    const honouring = ((u: string, init: any) => init.signal.aborted ? Promise.reject(Object.assign(new Error("x"), { name: "AbortError" })) : (impl as any)(u, init)) as unknown as typeof fetch;
+    await expect(extractApproach("motor_scooter", O, D, { fetchImpl: honouring, valhallaUrl: "http://v", signal: ac.signal })).rejects.toThrow(/timed out|aborted/);
+  });
+
   it("honours configurable approach length and window size; a short route returns the whole route", async () => {
     const { impl } = fakeValhalla({ routeLenM: 800 });
     const r = await extractApproach("motor_scooter", O, pt(0, 800), { fetchImpl: impl, valhallaUrl: "http://v", approachLengthM: 1000, decisionWindowM: 40 });

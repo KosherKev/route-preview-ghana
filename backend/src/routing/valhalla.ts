@@ -91,7 +91,7 @@ export class ValhallaError extends Error {
 }
 
 export async function postJson(
-  base: string, path: string, body: unknown, fetchImpl: typeof fetch = fetch, timeoutMs = DEFAULT_TIMEOUT_MS,
+  base: string, path: string, body: unknown, fetchImpl: typeof fetch = fetch, timeoutMs = DEFAULT_TIMEOUT_MS, signal?: AbortSignal,
 ) {
   let res: Response;
   try {
@@ -99,7 +99,7 @@ export async function postJson(
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: signal ? AbortSignal.any([AbortSignal.timeout(timeoutMs), signal]) : AbortSignal.timeout(timeoutMs),
     });
   } catch (e) {
     const name = (e as Error).name;

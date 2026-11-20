@@ -6,6 +6,9 @@ import {
   costingOptionsFor, decodePolyline6, DEFAULT_TIMEOUT_MS, postJson, routeRequest, ValhallaError, type Costing,
 } from "./valhalla";
 
+/** Bad caller-supplied argument (as opposed to an upstream/Valhalla failure); the HTTP layer maps it to 400. */
+export class ArgumentError extends Error {}
+
 /** Valhalla error code for "No path could be found for input". */
 export const NO_PATH_ERROR_CODE = 442;
 
@@ -17,6 +20,8 @@ export interface ApproachOptions {
   valhallaUrl?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  /** Aborts in-flight Valhalla requests (the HTTP service aborts at its request deadline). */
+  signal?: AbortSignal;
   /** Called for every non-silent condition (the same text is also in result.warnings). Defaults to console.warn. */
   warn?: (msg: string) => void;
 }
@@ -159,8 +164,8 @@ export function buildEdges(rawEdges: Record<string, any>[], axis: Axis): Extract
 export function assembleApproach(
   axis: Axis, edges: ExtractedEdge[], maneuvers: ExtractedManeuver[], approachLengthM: number, decisionWindowM: number,
 ) {
-  if (!(approachLengthM > 0)) throw new Error("approachLengthM must be > 0");
-  if (!(decisionWindowM > 0)) throw new Error("decisionWindowM must be > 0");
+  if (!(approachLengthM > 0)) throw new ArgumentError("approachLengthM must be > 0");
+  if (!(decisionWindowM > 0)) throw new ArgumentError("decisionWindowM must be > 0");
   const total = axis.lengthM;
   const startM = Math.max(0, total - approachLengthM);
   const wholeRoute = total <= approachLengthM;
@@ -196,7 +201,7 @@ export async function extractApproach(
   let fallback = false;
   let route: any;
   try {
-    route = await postJson(base, "/route", routeRequest(costing, origin, destination), fetchImpl, timeoutMs);
+    route = await postJson(base, "/route", routeRequest(costing, origin, destination), fetchImpl, timeoutMs, opts.signal);
   } catch (e) {
     // auto's exclude_unpaved is a hard exclusion (Phase 2 finding): retry once without it, and say so.
     if (costing === "auto" && e instanceof ValhallaError && e.errorCode === NO_PATH_ERROR_CODE) {
@@ -204,7 +209,7 @@ export async function extractApproach(
       warnings.push(msg);
       warn(msg);
       fallback = true;
-      route = await postJson(base, "/route", routeRequest(costing, origin, destination, false), fetchImpl, timeoutMs);
+      route = await postJson(base, "/route", routeRequest(costing, origin, destination, false), fetchImpl, timeoutMs, opts.signal);
     } else {
       throw e;
     }
@@ -215,7 +220,7 @@ export async function extractApproach(
   const points = decodePolyline6(polyline6).map(([lat, lon]): LatLon => ({ lat, lon }));
   const axis = buildAxis(points);
 
-  const attrs = await postJson(base, "/trace_attributes", traceRequest(costing, polyline6, fallback ? false : undefined), fetchImpl, timeoutMs);
+  const attrs = await postJson(base, "/trace_attributes", traceRequest(costing, polyline6, fallback ? false : undefined), fetchImpl, timeoutMs, opts.signal);
   if (!Array.isArray(attrs?.edges) || attrs.edges.length === 0) throw new Error("Valhalla /trace_attributes returned no edges");
   assertSameShape(polyline6, attrs.shape, points.length);
   const edges = buildEdges(attrs.edges, axis);
