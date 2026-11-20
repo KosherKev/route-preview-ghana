@@ -8,6 +8,10 @@ Pre-trip route preview for Ghana dispatch riders: eye-level street video plus a 
 - Live navigation is out of scope.
 - Keep the architecture modular: the street-imagery source (Mapillary now, rider-captured later) and the renderer sit behind swappable interfaces.
 
+## Decisions
+
+Closed product and architecture decisions (D1 to D6, 2026-11-20) are recorded in [docs/decisions/DECISIONS.md](docs/decisions/DECISIONS.md).
+
 ## Layout
 
 - `backend/` API and pattern stubs
