@@ -83,6 +83,8 @@ export interface Projection {
   /** compass bearing of the axis segment that the point projects onto (the LOCAL road bearing) */
   bearingDeg: number;
   segmentIndex: number;
+  /** true distance to the foot point (equals |lateralRightM| except beyond the axis ends, where the foot point is clamped) */
+  distanceM: number;
 }
 
 /** Project onto the nearest axis segment (point-to-segment, clamped). Zero-length segments are skipped. */
@@ -107,6 +109,7 @@ export function projectOntoAxis(axis: Axis, p: LatLon): Projection {
       lateralRightM: -cross,
       bearingDeg: bearingXY(a, b),
       segmentIndex: i,
+      distanceM: d,
     };
   }
   if (!best) throw new Error("axis has no non-zero segment");
