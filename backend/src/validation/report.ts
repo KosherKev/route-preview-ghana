@@ -36,6 +36,7 @@ export interface RealRow {
     modes: string[];
     usableFrames: number;
     candidateFrames: number;
+    sourcesExcluded: string[];
     framesPer100m: number;
     maxGapM: number | null;
     streetFraction: number;
@@ -72,6 +73,7 @@ export function summariseClassification(p: PipelineResult) {
     modes: [...new Set(c.segments.map((s) => s.mode))],
     usableFrames: p.usableFrames,
     candidateFrames: p.candidateFrames,
+    sourcesExcluded: p.sourcesExcluded,
     framesPer100m: c.summary.framesPer100m,
     maxGapM: c.summary.maxGapM,
     streetFraction: c.summary.streetFraction,

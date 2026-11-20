@@ -1,6 +1,7 @@
 // Mapillary Graph API v4 implementation of the StreetImagerySource interface.
 // The token is read by the caller from MAPILLARY_TOKEN and sent only as an Authorization header;
 // it is never put in a URL, an error message or a log line.
+import { assertSourceEnabled } from "../imagery/sources";
 import type { ImageFrame, StreetImagerySource } from "../patterns/imagerySource";
 
 export type BBox = readonly [minLon: number, minLat: number, maxLon: number, maxLat: number];
@@ -220,6 +221,7 @@ export class MapillarySource implements StreetImagerySource {
 
   /** Raw images inside a bbox (large boxes are tiled). */
   async imagesInBBox(bbox: BBox): Promise<MapillaryImage[]> {
+    assertSourceEnabled(this.id);
     validateBBox(bbox);
     const tiles = countTiles(bbox, this.o.maxBBoxSideDeg);
     if (tiles > this.o.maxTiles) {
@@ -291,6 +293,7 @@ export class MapillarySource implements StreetImagerySource {
   }
 
   private async query(params: Record<string, string>): Promise<MapillaryImage[]> {
+    assertSourceEnabled(this.id); // kill switch, read at call time: no request is made when mapillary is disabled
     const url = new URL("/images", this.o.baseUrl);
     url.search = new URLSearchParams({ ...params, fields: FRAME_FIELDS.join(","), limit: String(this.o.pageLimit) }).toString();
     const out: MapillaryImage[] = [];

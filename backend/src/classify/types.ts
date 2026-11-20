@@ -11,6 +11,8 @@ export interface FrameRecord {
   qualityScore: number | null;
   /** ISO 8601 */
   capturedAt: string | null;
+  /** Imagery source name (the `frames.source` column, e.g. "mapillary"). Absent on fixtures; the kill switch only acts on frames that carry one. */
+  source?: string;
 }
 
 /** A route edge with its extent along the route axis (metres) and the attributes used for level-change detection. */

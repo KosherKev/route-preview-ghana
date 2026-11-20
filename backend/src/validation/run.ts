@@ -1,5 +1,5 @@
 import { buildAxis, projectOntoAxis, type LatLon } from "../geo/local";
-import { loadFramesAlongAxis } from "../classify/load";
+import { loadFramesAlongAxisDetailed } from "../classify/load";
 import { DEFAULT_MATCH_CONFIG } from "../classify/match";
 import { classifyFrames, type PipelineResult } from "../classify/pipeline";
 import type { EdgeSpan, FrameRecord } from "../classify/types";
@@ -20,15 +20,15 @@ export function approachInputs(r: ApproachResult) {
   return { axis, edges };
 }
 
-export function classifyApproach(r: ApproachResult, frames: readonly FrameRecord[]): PipelineResult {
+export function classifyApproach(r: ApproachResult, frames: readonly FrameRecord[], alreadyExcluded: readonly string[] = []): PipelineResult {
   const { axis, edges } = approachInputs(r);
-  return classifyFrames(axis, edges, frames);
+  return classifyFrames(axis, edges, frames, undefined, undefined, alreadyExcluded);
 }
 
 export async function classifyApproachFromDb(r: ApproachResult, client: Client): Promise<PipelineResult> {
   const { axis } = approachInputs(r);
-  const frames = await loadFramesAlongAxis(client, axis, DEFAULT_MATCH_CONFIG.lateralToleranceM + 10);
-  return classifyApproach(r, frames);
+  const { frames, sourcesExcluded } = await loadFramesAlongAxisDetailed(client, axis, DEFAULT_MATCH_CONFIG.lateralToleranceM + 10);
+  return classifyApproach(r, frames, sourcesExcluded);
 }
 
 /** Closest approach of the full route to each named place; flags routes that end at or pass through one. */

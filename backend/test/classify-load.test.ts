@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
 import pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { dbConfig, loadEnv } from "../src/config";
 import { applyMigrations } from "../src/db/migrate";
-import { loadFramesAlongAxis } from "../src/classify/load";
+import { loadFramesAlongAxis, loadFramesAlongAxisDetailed } from "../src/classify/load";
 import { classifyFrames } from "../src/classify/pipeline";
 import { every, straightScene } from "../src/classify/synthetic";
 
@@ -54,5 +54,31 @@ describe("loadFramesAlongAxis (throwaway PostGIS database)", () => {
     expect(sample.capturedAt).toBe("2024-03-01T10:00:00.000Z");
     const c = classifyFrames(sc.axis, sc.edges, loaded).classification;
     expect(c.segments.map((s) => s.mode)).toEqual(["STREET_VIDEO"]);
+  });
+});
+
+describe("kill switch through the real loader path", () => {
+  const KEY = "IMAGERY_SOURCES_DISABLED";
+  const saved = process.env[KEY];
+  afterEach(() => { if (saved === undefined) delete process.env[KEY]; else process.env[KEY] = saved; });
+
+  it("a Mapillary route classifies STREET_VIDEO, then BIRDS_EYE_3D with sourcesExcluded when mapillary is disabled", async () => {
+    await db.query("DELETE FROM frames");
+    const sc = straightScene({ bearingDeg: 90, lengthM: 300 });
+    for (const f of sc.frames(every(5, 0, 300))) await insert(f, "mapillary");
+    const run = async () => {
+      const { frames, sourcesExcluded } = await loadFramesAlongAxisDetailed(db, sc.axis, 30);
+      return classifyFrames(sc.axis, sc.edges, frames, undefined, undefined, sourcesExcluded);
+    };
+    delete process.env[KEY];
+    const on = await run();
+    expect(on.classification.segments.map((s) => s.mode)).toEqual(["STREET_VIDEO"]);
+    expect(on.sourcesExcluded).toEqual([]);
+    process.env[KEY] = "mapillary";
+    const off = await run();
+    expect(off.classification.segments.map((s) => s.mode)).toEqual(["BIRDS_EYE_3D"]);
+    expect(off.sourcesExcluded).toEqual(["mapillary"]);
+    expect((await loadFramesAlongAxis(db, sc.axis, 30))).toEqual([]);
+    expect(((await loadFramesAlongAxisDetailed(db, sc.axis, 30, [])).frames[0])?.source).toBe("mapillary");
   });
 });
