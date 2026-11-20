@@ -232,3 +232,11 @@ Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunn
 `npm run validate` runs 25 real Accra pairs with both costings against the live Valhalla and PostGIS and writes
 `../docs/validation/route-validation.{md,json}`. It never calls Mapillary. With the empty `frames` table every routed row is BIRDS_EYE_3D and the
 report says plainly that live coverage was NOT measured. A separate SYNTHETIC section demonstrates each classifier outcome.
+
+### Coverage audit (metadata only)
+
+`npm run audit:coverage -- ingest` routes the 25 pairs (both costings), then ingests Mapillary image metadata (no image files) for the 0.002 degree
+cells that cover a 30 m corridor around those routes, keeping only images inside the corridor; aggregate counts and API call/rate-limit stats go to
+`../data/coverage-audit/ingest-stats.json` (git-ignored). `npm run audit:coverage -- report` classifies each route (whole route and last 500 m) from the
+stored frames and writes `../docs/validation/coverage-audit.{md,json}`. It needs `MAPILLARY_TOKEN` in `.env` for `ingest` only and honours
+`IMAGERY_SOURCES_DISABLED`. It reports measurements only, with no verdict.
