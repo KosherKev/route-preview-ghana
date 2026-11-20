@@ -1,0 +1,4170 @@
+{
+  "generatedAt": "2026-11-20T20:31:34.764Z",
+  "verdict": "none: this report states measurements only",
+  "config": {
+    "match": {
+      "lateralToleranceM": 15,
+      "maxLeftOffsetM": 3,
+      "bearingToleranceDeg": 25,
+      "minQualityScore": 0.5,
+      "allowMissingQuality": false
+    },
+    "classify": {
+      "minRunM": 60,
+      "maxGapM": 15,
+      "crossfadeMaxGapM": 30,
+      "maxBridgesPerSegment": 2,
+      "discontinuityMaxGapM": 30,
+      "headingJumpDeg": 30,
+      "levelPadM": 20
+    },
+    "approachLengthM": 500
+  },
+  "ingest": {
+    "startedAt": "2026-11-20T20:03:57.097Z",
+    "finishedAt": "2026-11-20T20:30:02.000Z",
+    "corridor": {
+      "halfWidthM": 30,
+      "cellDeg": 0.002,
+      "stepM": 10,
+      "cells": 757,
+      "routesUsed": 49,
+      "routesFailed": 1
+    },
+    "minIntervalMs": 500,
+    "cellsRequested": 757,
+    "fetchedUniqueImages": 70207,
+    "storedImages": 47280,
+    "skipped": {
+      "no_geometry": 0,
+      "invalid_captured_at": 0
+    },
+    "fields": {
+      "images": 47280,
+      "qualityScorePresent": 47280,
+      "qualityScoreNull": 0,
+      "qualityScoreBelow05": 9371,
+      "computedGeometryMissing": 0,
+      "computedCompassMissing": 0,
+      "sequenceMissing": 0,
+      "capturedAtMissing": 0,
+      "panoramas": 0,
+      "captureYear": {
+        "pre-2015": 0,
+        "2015-2019": 27947,
+        "2020-2023": 4700,
+        "2024+": 14633,
+        "unknown": 0
+      }
+    },
+    "calls": {
+      "calls": 775,
+      "byStatus": {
+        "200": 757
+      },
+      "networkErrors": 18,
+      "retriedResponses": 0,
+      "rateLimitEvents": [],
+      "backoffWaitMs": 18000
+    },
+    "notes": [
+      "Before this audit started, the CLI test in test/sources.test.ts (since fixed in commit 'Stop sources CLI test reading a real token from .env') ran live twice against the bbox -0.21,5.59,-0.19,5.61 (one tile, up to 2 pages each, so at most 4 calls) because the copied .env supplied a token. Those calls are NOT in the count above; the 3383 images they stored were upserted idempotently and are re-fetched or discarded by the corridor filter.",
+      "Correction to the setup note above: the stray test-run images that fell outside the corridor were NOT discarded; they remain in the local frames table (see 'Frames table at report time'), but frames outside the corridor are never near a route axis so they do not affect classification."
+    ]
+  },
+  "db": {
+    "framesTotal": 50476,
+    "qualityScoreNull": 0,
+    "qualityScoreBelow05": 9579,
+    "bySource": {
+      "mapillary": 50476
+    }
+  },
+  "nullScoreHandling": "frames with a null (or non-finite) quality_score are DROPPED by the matcher with reason low_quality (allowMissingQuality is false), the same reason used for scores below 0.5. The classifier therefore never counts an unscored frame as usable street imagery.",
+  "rows": [
+    {
+      "routeId": "r01",
+      "label": "Accra Central -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 11453.846104415421,
+      "whole": {
+        "lengthM": 11453.846104415421,
+        "streetVideoM": 3205.5379999999996,
+        "birdsEyeM": 8248.30810441542,
+        "streetFraction": 0.2798656425778477,
+        "segments": 41,
+        "streetSegments": 20,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 8632,
+        "usableFrames": 768,
+        "dropped": {
+          "off_route": 2094,
+          "left_of_centerline": 2500,
+          "bearing_mismatch": 486,
+          "low_quality": 925,
+          "other_sequence": 1859
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 194,
+          "2020-2023": 60,
+          "2024+": 227,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "birdsEyeM": 371.19954127184513,
+        "streetFraction": 0.25768782925347306,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 8632,
+        "usableFrames": 36,
+        "dropped": {
+          "off_route": 8113,
+          "low_quality": 69,
+          "left_of_centerline": 149,
+          "bearing_mismatch": 51,
+          "other_sequence": 214
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 14,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2169,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1180,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r01",
+      "label": "Accra Central -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 15372.595831893537,
+      "whole": {
+        "lengthM": 15372.595831893537,
+        "streetVideoM": 1495.0009999999997,
+        "birdsEyeM": 13877.594831893537,
+        "streetFraction": 0.09725104441361296,
+        "segments": 21,
+        "streetSegments": 10,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 3,
+        "levelUncertainSegments": 8,
+        "candidateFrames": 4830,
+        "usableFrames": 578,
+        "dropped": {
+          "left_of_centerline": 1304,
+          "bearing_mismatch": 713,
+          "off_route": 1462,
+          "low_quality": 319,
+          "other_sequence": 454
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 22,
+          "2020-2023": 14,
+          "2024+": 140,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.95828461165536,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 4830,
+        "usableFrames": 21,
+        "dropped": {
+          "off_route": 4581,
+          "left_of_centerline": 52,
+          "bearing_mismatch": 55,
+          "low_quality": 19,
+          "other_sequence": 102
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 17,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3789,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r02",
+      "label": "Tetteh Quarshie Interchange -> Accra Central",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 13051.961006741865,
+      "whole": {
+        "lengthM": 13051.961006741865,
+        "streetVideoM": 3867.0070000000005,
+        "birdsEyeM": 9184.954006741864,
+        "streetFraction": 0.29627785418624336,
+        "segments": 51,
+        "streetSegments": 25,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 5,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 9881,
+        "usableFrames": 1095,
+        "dropped": {
+          "low_quality": 458,
+          "left_of_centerline": 2591,
+          "bearing_mismatch": 1445,
+          "off_route": 2742,
+          "other_sequence": 1550
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 485,
+          "2020-2023": 113,
+          "2024+": 62,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.06199005935525,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 9881,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 9869,
+          "bearing_mismatch": 10,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2169,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r02",
+      "label": "Tetteh Quarshie Interchange -> Accra Central",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14064.412923196656,
+      "whole": {
+        "lengthM": 14064.412923196656,
+        "streetVideoM": 4057.735000000006,
+        "birdsEyeM": 10006.67792319665,
+        "streetFraction": 0.2885107982934375,
+        "segments": 49,
+        "streetSegments": 24,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 11,
+        "candidateFrames": 10467,
+        "usableFrames": 1227,
+        "dropped": {
+          "low_quality": 388,
+          "left_of_centerline": 2740,
+          "bearing_mismatch": 1702,
+          "off_route": 2849,
+          "other_sequence": 1561
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 540,
+          "2020-2023": 113,
+          "2024+": 109,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0802477035482,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 10467,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 10456,
+          "bearing_mismatch": 9,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2158,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r03",
+      "label": "Kwame Nkrumah Interchange -> Airport",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 12011.05558586968,
+      "whole": {
+        "lengthM": 12011.05558586968,
+        "streetVideoM": 3142.1759999999986,
+        "birdsEyeM": 8868.879585869683,
+        "streetFraction": 0.26160698179572067,
+        "segments": 35,
+        "streetSegments": 17,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 8,
+        "candidateFrames": 5216,
+        "usableFrames": 590,
+        "dropped": {
+          "off_route": 1213,
+          "left_of_centerline": 1257,
+          "bearing_mismatch": 501,
+          "low_quality": 592,
+          "other_sequence": 1063
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 170,
+          "2020-2023": 26,
+          "2024+": 174,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0146045442799,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0146045442799,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 5216,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 5216
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 1138,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1164,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r03",
+      "label": "Kwame Nkrumah Interchange -> Airport",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 10713.311952835531,
+      "whole": {
+        "lengthM": 10713.311952835531,
+        "streetVideoM": 2876.473000000002,
+        "birdsEyeM": 7836.838952835529,
+        "streetFraction": 0.268495215360426,
+        "segments": 31,
+        "streetSegments": 15,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 4412,
+        "usableFrames": 530,
+        "dropped": {
+          "off_route": 1040,
+          "left_of_centerline": 1038,
+          "bearing_mismatch": 420,
+          "low_quality": 524,
+          "other_sequence": 860
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 159,
+          "2020-2023": 26,
+          "2024+": 157,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.97817778789755,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.97817778789755,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 4412,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 4412
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 2330,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1164,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r04",
+      "label": "Achimota -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 7268.021410238706,
+      "whole": {
+        "lengthM": 7268.021410238706,
+        "streetVideoM": 1717.9130000000002,
+        "birdsEyeM": 5550.108410238706,
+        "streetFraction": 0.23636597954704955,
+        "segments": 11,
+        "streetSegments": 5,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 1882,
+        "usableFrames": 306,
+        "dropped": {
+          "low_quality": 67,
+          "bearing_mismatch": 179,
+          "left_of_centerline": 431,
+          "off_route": 507,
+          "other_sequence": 392
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 71,
+          "2024+": 133,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1882,
+        "usableFrames": 26,
+        "dropped": {
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "off_route": 1732,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5875,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3808,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r04",
+      "label": "Achimota -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 7446.791648633526,
+      "whole": {
+        "lengthM": 7446.791648633526,
+        "streetVideoM": 2174.1059999999998,
+        "birdsEyeM": 5272.685648633526,
+        "streetFraction": 0.29195203821755167,
+        "segments": 15,
+        "streetSegments": 7,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 2,
+        "candidateFrames": 2316,
+        "usableFrames": 404,
+        "dropped": {
+          "low_quality": 85,
+          "bearing_mismatch": 228,
+          "left_of_centerline": 565,
+          "off_route": 640,
+          "other_sequence": 394
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 53,
+          "2020-2023": 71,
+          "2024+": 133,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 2316,
+        "usableFrames": 26,
+        "dropped": {
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "off_route": 2166,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5875,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3808,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r05",
+      "label": "Kwame Nkrumah Interchange -> Danquah Circle",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4174.273306664336,
+      "whole": {
+        "lengthM": 4174.273306664336,
+        "streetVideoM": 1903.6569999999988,
+        "birdsEyeM": 2270.616306664337,
+        "streetFraction": 0.4560451269352107,
+        "segments": 19,
+        "streetSegments": 9,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 1623,
+        "usableFrames": 324,
+        "dropped": {
+          "off_route": 342,
+          "left_of_centerline": 306,
+          "bearing_mismatch": 264,
+          "low_quality": 111,
+          "other_sequence": 276
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 224,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.9494080454463,
+        "streetVideoM": 164.505,
+        "birdsEyeM": 335.4444080454463,
+        "streetFraction": 0.32904329388674103,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 1623,
+        "usableFrames": 44,
+        "dropped": {
+          "off_route": 1403,
+          "bearing_mismatch": 66,
+          "left_of_centerline": 55,
+          "low_quality": 14,
+          "other_sequence": 41
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 17,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5839,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r05",
+      "label": "Kwame Nkrumah Interchange -> Danquah Circle",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4174.273306664336,
+      "whole": {
+        "lengthM": 4174.273306664336,
+        "streetVideoM": 1903.6569999999988,
+        "birdsEyeM": 2270.616306664337,
+        "streetFraction": 0.4560451269352107,
+        "segments": 19,
+        "streetSegments": 9,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 1623,
+        "usableFrames": 324,
+        "dropped": {
+          "off_route": 342,
+          "left_of_centerline": 306,
+          "bearing_mismatch": 264,
+          "low_quality": 111,
+          "other_sequence": 276
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 224,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.9494080454463,
+        "streetVideoM": 164.505,
+        "birdsEyeM": 335.4444080454463,
+        "streetFraction": 0.32904329388674103,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 1623,
+        "usableFrames": 44,
+        "dropped": {
+          "off_route": 1403,
+          "bearing_mismatch": 66,
+          "left_of_centerline": 55,
+          "low_quality": 14,
+          "other_sequence": 41
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 17,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5839,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r06",
+      "label": "Danquah Circle -> Airport",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 9738.902442334,
+      "whole": {
+        "lengthM": 9738.902442334,
+        "streetVideoM": 2046.4829999999997,
+        "birdsEyeM": 7692.4194423339995,
+        "streetFraction": 0.21013487013733192,
+        "segments": 23,
+        "streetSegments": 11,
+        "bridges": 5,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 2798,
+        "usableFrames": 451,
+        "dropped": {
+          "bearing_mismatch": 832,
+          "left_of_centerline": 559,
+          "off_route": 304,
+          "low_quality": 135,
+          "other_sequence": 517
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 255,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0146045442799,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0146045442799,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 2798,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 2798
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3774,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 1138,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r06",
+      "label": "Danquah Circle -> Airport",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 8953.407029325583,
+      "whole": {
+        "lengthM": 8953.407029325583,
+        "streetVideoM": 2029.3210000000001,
+        "birdsEyeM": 6924.086029325583,
+        "streetFraction": 0.22665349551888508,
+        "segments": 24,
+        "streetSegments": 12,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 3699,
+        "usableFrames": 438,
+        "dropped": {
+          "off_route": 991,
+          "left_of_centerline": 939,
+          "bearing_mismatch": 265,
+          "low_quality": 438,
+          "other_sequence": 628
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 145,
+          "2024+": 140,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.97817778789755,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.97817778789755,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 3699,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 3699
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2788,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 2330,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r07",
+      "label": "Osu -> Danquah Circle",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 1534.5648164545305,
+      "whole": {
+        "lengthM": 1534.5648164545305,
+        "streetVideoM": 1401.548,
+        "birdsEyeM": 133.0168164545305,
+        "streetFraction": 0.9133195189748625,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 977,
+        "usableFrames": 219,
+        "dropped": {
+          "off_route": 115,
+          "bearing_mismatch": 449,
+          "left_of_centerline": 111,
+          "low_quality": 35,
+          "other_sequence": 48
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 204,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0103167945377,
+        "streetVideoM": 380.135,
+        "birdsEyeM": 119.8753167945377,
+        "streetFraction": 0.7602543132249081,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 977,
+        "usableFrames": 77,
+        "dropped": {
+          "off_route": 568,
+          "bearing_mismatch": 219,
+          "left_of_centerline": 62,
+          "low_quality": 24,
+          "other_sequence": 27
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 62,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3787,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 6263,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r07",
+      "label": "Osu -> Danquah Circle",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 1534.5648164545305,
+      "whole": {
+        "lengthM": 1534.5648164545305,
+        "streetVideoM": 1401.548,
+        "birdsEyeM": 133.0168164545305,
+        "streetFraction": 0.9133195189748625,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 977,
+        "usableFrames": 219,
+        "dropped": {
+          "off_route": 115,
+          "bearing_mismatch": 449,
+          "left_of_centerline": 111,
+          "low_quality": 35,
+          "other_sequence": 48
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 204,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0103167945377,
+        "streetVideoM": 380.135,
+        "birdsEyeM": 119.8753167945377,
+        "streetFraction": 0.7602543132249081,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 977,
+        "usableFrames": 77,
+        "dropped": {
+          "off_route": 568,
+          "bearing_mismatch": 219,
+          "left_of_centerline": 62,
+          "low_quality": 24,
+          "other_sequence": 27
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 62,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3787,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 6263,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r08",
+      "label": "Legon -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 6067.006100655541,
+      "whole": {
+        "lengthM": 6067.006100655541,
+        "streetVideoM": 1359.8699999999994,
+        "birdsEyeM": 4707.136100655542,
+        "streetFraction": 0.22414185472024914,
+        "segments": 17,
+        "streetSegments": 8,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 5502,
+        "usableFrames": 446,
+        "dropped": {
+          "bearing_mismatch": 1193,
+          "low_quality": 576,
+          "off_route": 1452,
+          "left_of_centerline": 952,
+          "other_sequence": 883
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 196,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "birdsEyeM": 371.19954127184513,
+        "streetFraction": 0.25768782925347306,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 5502,
+        "usableFrames": 36,
+        "dropped": {
+          "off_route": 4983,
+          "low_quality": 69,
+          "left_of_centerline": 149,
+          "bearing_mismatch": 51,
+          "other_sequence": 214
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 14,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 6659,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 5357,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r08",
+      "label": "Legon -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4866.592948070295,
+      "whole": {
+        "lengthM": 4866.592948070295,
+        "streetVideoM": 1035.3029999999994,
+        "birdsEyeM": 3831.289948070296,
+        "streetFraction": 0.21273671561343926,
+        "segments": 13,
+        "streetSegments": 6,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 4393,
+        "usableFrames": 398,
+        "dropped": {
+          "bearing_mismatch": 998,
+          "low_quality": 418,
+          "off_route": 1513,
+          "left_of_centerline": 743,
+          "other_sequence": 323
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 163,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0095723761194,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0095723761194,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 4393,
+        "usableFrames": 46,
+        "dropped": {
+          "off_route": 4173,
+          "left_of_centerline": 48,
+          "bearing_mismatch": 59,
+          "low_quality": 13,
+          "other_sequence": 54
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 7094,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 6040,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r09",
+      "label": "Madina -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 16688.311994361367,
+      "whole": {
+        "lengthM": 16688.311994361367,
+        "streetVideoM": 2956.988999999997,
+        "birdsEyeM": 13731.32299436137,
+        "streetFraction": 0.17718922087501132,
+        "segments": 39,
+        "streetSegments": 19,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 12133,
+        "usableFrames": 704,
+        "dropped": {
+          "low_quality": 645,
+          "left_of_centerline": 3176,
+          "bearing_mismatch": 1724,
+          "off_route": 4551,
+          "other_sequence": 1333
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 161,
+          "2020-2023": 124,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 12133,
+        "usableFrames": 26,
+        "dropped": {
+          "off_route": 11983,
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1199,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r09",
+      "label": "Madina -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 16672.383959481336,
+      "whole": {
+        "lengthM": 16672.383959481336,
+        "streetVideoM": 2473.489,
+        "birdsEyeM": 14198.894959481337,
+        "streetFraction": 0.14835844747885402,
+        "segments": 35,
+        "streetSegments": 17,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 6,
+        "candidateFrames": 12549,
+        "usableFrames": 677,
+        "dropped": {
+          "low_quality": 686,
+          "left_of_centerline": 3153,
+          "bearing_mismatch": 1661,
+          "off_route": 5009,
+          "other_sequence": 1363
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 113,
+          "2020-2023": 99,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 12549,
+        "usableFrames": 26,
+        "dropped": {
+          "off_route": 12399,
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1199,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r10",
+      "label": "Dzorwulu -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4448.503896604038,
+      "whole": {
+        "lengthM": 4448.503896604038,
+        "streetVideoM": 846.6719999999993,
+        "birdsEyeM": 3601.831896604039,
+        "streetFraction": 0.1903273594177008,
+        "segments": 13,
+        "streetSegments": 6,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 3812,
+        "usableFrames": 403,
+        "dropped": {
+          "off_route": 811,
+          "low_quality": 465,
+          "left_of_centerline": 778,
+          "bearing_mismatch": 320,
+          "other_sequence": 1035
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 229,
+          "2020-2023": 0,
+          "2024+": 43,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "birdsEyeM": 371.19954127184513,
+        "streetFraction": 0.25768782925347306,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 3812,
+        "usableFrames": 36,
+        "dropped": {
+          "off_route": 3293,
+          "low_quality": 69,
+          "left_of_centerline": 149,
+          "bearing_mismatch": 51,
+          "other_sequence": 214
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 14,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 4179,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3934,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r10",
+      "label": "Dzorwulu -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4768.552823802284,
+      "whole": {
+        "lengthM": 4768.552823802284,
+        "streetVideoM": 1890.2390000000005,
+        "birdsEyeM": 2878.313823802284,
+        "streetFraction": 0.39639678322631794,
+        "segments": 15,
+        "streetSegments": 7,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 5,
+        "candidateFrames": 2112,
+        "usableFrames": 306,
+        "dropped": {
+          "off_route": 300,
+          "left_of_centerline": 344,
+          "low_quality": 215,
+          "bearing_mismatch": 612,
+          "other_sequence": 335
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 190,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.95828461165536,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 2112,
+        "usableFrames": 21,
+        "dropped": {
+          "off_route": 1863,
+          "left_of_centerline": 52,
+          "bearing_mismatch": 55,
+          "low_quality": 19,
+          "other_sequence": 102
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 4179,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 4000,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r11",
+      "label": "Kaneshie -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 3133.957256244602,
+      "whole": {
+        "lengthM": 3133.957256244602,
+        "streetVideoM": 944.3879999999995,
+        "birdsEyeM": 2189.5692562446025,
+        "streetFraction": 0.30134042132139754,
+        "segments": 11,
+        "streetSegments": 5,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 1013,
+        "usableFrames": 228,
+        "dropped": {
+          "bearing_mismatch": 142,
+          "left_of_centerline": 267,
+          "off_route": 252,
+          "low_quality": 58,
+          "other_sequence": 66
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 144,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.9605160532376,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.9605160532376,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1013,
+        "usableFrames": 27,
+        "dropped": {
+          "bearing_mismatch": 26,
+          "left_of_centerline": 55,
+          "off_route": 857,
+          "low_quality": 42,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 7407,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3808,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r11",
+      "label": "Kaneshie -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 3133.957256244602,
+      "whole": {
+        "lengthM": 3133.957256244602,
+        "streetVideoM": 944.3879999999995,
+        "birdsEyeM": 2189.5692562446025,
+        "streetFraction": 0.30134042132139754,
+        "segments": 11,
+        "streetSegments": 5,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 1013,
+        "usableFrames": 228,
+        "dropped": {
+          "bearing_mismatch": 142,
+          "left_of_centerline": 267,
+          "off_route": 252,
+          "low_quality": 58,
+          "other_sequence": 66
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 144,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.9605160532376,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.9605160532376,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1013,
+        "usableFrames": 27,
+        "dropped": {
+          "bearing_mismatch": 26,
+          "left_of_centerline": 55,
+          "off_route": 857,
+          "low_quality": 42,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 7407,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3808,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r12",
+      "label": "Labone -> Danquah Circle",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 1200.4227856679756,
+      "whole": {
+        "lengthM": 1200.4227856679756,
+        "streetVideoM": 461.04999999999995,
+        "birdsEyeM": 739.3727856679757,
+        "streetFraction": 0.384073016194414,
+        "segments": 8,
+        "streetSegments": 4,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 436,
+        "usableFrames": 94,
+        "dropped": {
+          "off_route": 73,
+          "left_of_centerline": 59,
+          "bearing_mismatch": 38,
+          "low_quality": 43,
+          "other_sequence": 129
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 21,
+          "2020-2023": 38,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0440925509014,
+        "streetVideoM": 238.451,
+        "birdsEyeM": 261.59309255090136,
+        "streetFraction": 0.47685994805693493,
+        "segments": 5,
+        "streetSegments": 2,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 436,
+        "usableFrames": 50,
+        "dropped": {
+          "off_route": 229,
+          "left_of_centerline": 30,
+          "bearing_mismatch": 13,
+          "low_quality": 28,
+          "other_sequence": 86
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 38,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3813,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 6263,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r12",
+      "label": "Labone -> Danquah Circle",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 1200.4227856679756,
+      "whole": {
+        "lengthM": 1200.4227856679756,
+        "streetVideoM": 461.04999999999995,
+        "birdsEyeM": 739.3727856679757,
+        "streetFraction": 0.384073016194414,
+        "segments": 8,
+        "streetSegments": 4,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 436,
+        "usableFrames": 94,
+        "dropped": {
+          "off_route": 73,
+          "left_of_centerline": 59,
+          "bearing_mismatch": 38,
+          "low_quality": 43,
+          "other_sequence": 129
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 21,
+          "2020-2023": 38,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0440925509014,
+        "streetVideoM": 238.451,
+        "birdsEyeM": 261.59309255090136,
+        "streetFraction": 0.47685994805693493,
+        "segments": 5,
+        "streetSegments": 2,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 436,
+        "usableFrames": 50,
+        "dropped": {
+          "off_route": 229,
+          "left_of_centerline": 30,
+          "bearing_mismatch": 13,
+          "low_quality": 28,
+          "other_sequence": 86
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 38,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3813,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 6263,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r13",
+      "label": "Ridge -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4374.790523512013,
+      "whole": {
+        "lengthM": 4374.790523512013,
+        "streetVideoM": 266.51099999999974,
+        "birdsEyeM": 4108.279523512014,
+        "streetFraction": 0.06091971685676252,
+        "segments": 7,
+        "streetSegments": 3,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 2,
+        "candidateFrames": 1187,
+        "usableFrames": 222,
+        "dropped": {
+          "low_quality": 76,
+          "bearing_mismatch": 222,
+          "left_of_centerline": 325,
+          "off_route": 168,
+          "other_sequence": 174
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 23,
+          "2020-2023": 0,
+          "2024+": 20,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1187,
+        "usableFrames": 26,
+        "dropped": {
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "off_route": 1037,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 7301,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1965,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r13",
+      "label": "Ridge -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 4404.846450788298,
+      "whole": {
+        "lengthM": 4404.846450788298,
+        "streetVideoM": 266.50999999999976,
+        "birdsEyeM": 4138.336450788298,
+        "streetFraction": 0.060503811648713594,
+        "segments": 7,
+        "streetSegments": 3,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 2,
+        "candidateFrames": 1171,
+        "usableFrames": 222,
+        "dropped": {
+          "low_quality": 78,
+          "bearing_mismatch": 215,
+          "left_of_centerline": 323,
+          "off_route": 169,
+          "other_sequence": 164
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 23,
+          "2020-2023": 0,
+          "2024+": 20,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1171,
+        "usableFrames": 26,
+        "dropped": {
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "off_route": 1021,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 7272,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1965,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r14",
+      "label": "Danquah Circle -> Madina",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 13363.358434405007,
+      "whole": {
+        "lengthM": 13363.358434405007,
+        "streetVideoM": 3498.553000000001,
+        "birdsEyeM": 9864.805434405007,
+        "streetFraction": 0.26180192779928013,
+        "segments": 46,
+        "streetSegments": 23,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 10,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 11362,
+        "usableFrames": 806,
+        "dropped": {
+          "off_route": 3317,
+          "left_of_centerline": 2771,
+          "bearing_mismatch": 496,
+          "low_quality": 1473,
+          "other_sequence": 2499
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 51,
+          "2020-2023": 158,
+          "2024+": 258,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.96071678540704,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 11362,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 11362
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2788,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r14",
+      "label": "Danquah Circle -> Madina",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 13366.191098323608,
+      "whole": {
+        "lengthM": 13366.191098323608,
+        "streetVideoM": 3876.8150000000014,
+        "birdsEyeM": 9489.376098323606,
+        "streetFraction": 0.2900463543788651,
+        "segments": 46,
+        "streetSegments": 23,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 7,
+        "levelUncertainSegments": 8,
+        "candidateFrames": 11540,
+        "usableFrames": 859,
+        "dropped": {
+          "off_route": 3357,
+          "left_of_centerline": 2537,
+          "bearing_mismatch": 521,
+          "low_quality": 1538,
+          "other_sequence": 2728
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 51,
+          "2020-2023": 198,
+          "2024+": 258,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.96071678540704,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 11540,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 11540
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2788,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r15",
+      "label": "Achimota -> Osu",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 11658.88749155068,
+      "whole": {
+        "lengthM": 11658.88749155068,
+        "streetVideoM": 5060.886000000003,
+        "birdsEyeM": 6598.001491550677,
+        "streetFraction": 0.43407966700662315,
+        "segments": 37,
+        "streetSegments": 18,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 4486,
+        "usableFrames": 864,
+        "dropped": {
+          "off_route": 1045,
+          "left_of_centerline": 1071,
+          "bearing_mismatch": 651,
+          "low_quality": 187,
+          "other_sequence": 668
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 399,
+          "2020-2023": 120,
+          "2024+": 133,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95939482419806,
+        "streetVideoM": 491.091,
+        "birdsEyeM": 8.868394824198049,
+        "streetFraction": 0.9822617698236945,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 4486,
+        "usableFrames": 66,
+        "dropped": {
+          "off_route": 4311,
+          "left_of_centerline": 17,
+          "bearing_mismatch": 92
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 66,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 20,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5839,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "through",
+          "distanceM": 33,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r15",
+      "label": "Achimota -> Osu",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 11658.706757553104,
+      "whole": {
+        "lengthM": 11658.706757553104,
+        "streetVideoM": 5045.302000000003,
+        "birdsEyeM": 6613.4047575531,
+        "streetFraction": 0.4327497127184711,
+        "segments": 37,
+        "streetSegments": 18,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 8,
+        "candidateFrames": 4489,
+        "usableFrames": 883,
+        "dropped": {
+          "off_route": 1012,
+          "left_of_centerline": 1036,
+          "bearing_mismatch": 689,
+          "low_quality": 197,
+          "other_sequence": 672
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 412,
+          "2020-2023": 109,
+          "2024+": 133,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95939482419806,
+        "streetVideoM": 491.091,
+        "birdsEyeM": 8.868394824198049,
+        "streetFraction": 0.9822617698236945,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 4489,
+        "usableFrames": 66,
+        "dropped": {
+          "off_route": 4314,
+          "left_of_centerline": 17,
+          "bearing_mismatch": 92
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 66,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 20,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5839,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "through",
+          "distanceM": 33,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r16",
+      "label": "Accra Central -> Madina",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 17652.579697598816,
+      "whole": {
+        "lengthM": 17652.579697598816,
+        "streetVideoM": 3621.101999999999,
+        "birdsEyeM": 14031.477697598817,
+        "streetFraction": 0.20513160467376662,
+        "segments": 51,
+        "streetSegments": 25,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 7,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 13062,
+        "usableFrames": 963,
+        "dropped": {
+          "off_route": 3562,
+          "left_of_centerline": 3591,
+          "bearing_mismatch": 655,
+          "low_quality": 1466,
+          "other_sequence": 2825
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 208,
+          "2020-2023": 73,
+          "2024+": 251,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.96071678540704,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 13062,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 13062
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2169,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1180,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r16",
+      "label": "Accra Central -> Madina",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 17692.94159009419,
+      "whole": {
+        "lengthM": 17692.94159009419,
+        "streetVideoM": 3999.3650000000016,
+        "birdsEyeM": 13693.576590094188,
+        "streetFraction": 0.22604296632274762,
+        "segments": 51,
+        "streetSegments": 25,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 8,
+        "candidateFrames": 13240,
+        "usableFrames": 1016,
+        "dropped": {
+          "off_route": 3602,
+          "left_of_centerline": 3357,
+          "bearing_mismatch": 680,
+          "low_quality": 1531,
+          "other_sequence": 3054
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 208,
+          "2020-2023": 113,
+          "2024+": 251,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.96071678540704,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 13240,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 13240
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2158,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1180,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r17",
+      "label": "East Legon -> Kwame Nkrumah Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 13499.481428075806,
+      "whole": {
+        "lengthM": 13499.481428075806,
+        "streetVideoM": 1280.0800000000027,
+        "birdsEyeM": 12219.401428075802,
+        "streetFraction": 0.09482438320465642,
+        "segments": 19,
+        "streetSegments": 9,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 5,
+        "candidateFrames": 6628,
+        "usableFrames": 407,
+        "dropped": {
+          "low_quality": 441,
+          "left_of_centerline": 2385,
+          "bearing_mismatch": 1017,
+          "off_route": 1787,
+          "other_sequence": 591
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 96,
+          "2024+": 36,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 6628,
+        "usableFrames": 26,
+        "dropped": {
+          "off_route": 6478,
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 406,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1199,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r17",
+      "label": "East Legon -> Kwame Nkrumah Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14339.209360534725,
+      "whole": {
+        "lengthM": 14339.209360534725,
+        "streetVideoM": 2398.6330000000016,
+        "birdsEyeM": 11940.576360534724,
+        "streetFraction": 0.1672779118911305,
+        "segments": 33,
+        "streetSegments": 16,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 6,
+        "candidateFrames": 9273,
+        "usableFrames": 567,
+        "dropped": {
+          "low_quality": 425,
+          "left_of_centerline": 2662,
+          "bearing_mismatch": 1426,
+          "off_route": 3185,
+          "other_sequence": 1008
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 111,
+          "2020-2023": 99,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.99980548542936,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 9273,
+        "usableFrames": 26,
+        "dropped": {
+          "off_route": 9123,
+          "low_quality": 36,
+          "bearing_mismatch": 25,
+          "left_of_centerline": 57,
+          "other_sequence": 6
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "ends_at",
+          "distanceM": 2,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1199,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r18",
+      "label": "Tetteh Quarshie Interchange -> Osu",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 10323.494433962862,
+      "whole": {
+        "lengthM": 10323.494433962862,
+        "streetVideoM": 3535.7989999999963,
+        "birdsEyeM": 6787.6954339628655,
+        "streetFraction": 0.3425002088796318,
+        "segments": 35,
+        "streetSegments": 17,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 5,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 8877,
+        "usableFrames": 706,
+        "dropped": {
+          "low_quality": 532,
+          "left_of_centerline": 2466,
+          "bearing_mismatch": 1472,
+          "off_route": 2568,
+          "other_sequence": 1133
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 312,
+          "2020-2023": 73,
+          "2024+": 62,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95939482419806,
+        "streetVideoM": 491.091,
+        "birdsEyeM": 8.868394824198049,
+        "streetFraction": 0.9822617698236945,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 8877,
+        "usableFrames": 66,
+        "dropped": {
+          "off_route": 8702,
+          "left_of_centerline": 17,
+          "bearing_mismatch": 92
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 66,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2746,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "through",
+          "distanceM": 33,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r18",
+      "label": "Tetteh Quarshie Interchange -> Osu",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 10378.629184879659,
+      "whole": {
+        "lengthM": 10378.629184879659,
+        "streetVideoM": 3562.9119999999984,
+        "birdsEyeM": 6815.717184879661,
+        "streetFraction": 0.34329312055880246,
+        "segments": 31,
+        "streetSegments": 15,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 3,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 8653,
+        "usableFrames": 765,
+        "dropped": {
+          "low_quality": 449,
+          "left_of_centerline": 2382,
+          "bearing_mismatch": 1453,
+          "off_route": 2573,
+          "other_sequence": 1031
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 373,
+          "2020-2023": 73,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95939482419806,
+        "streetVideoM": 491.091,
+        "birdsEyeM": 8.868394824198049,
+        "streetFraction": 0.9822617698236945,
+        "segments": 2,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 8653,
+        "usableFrames": 66,
+        "dropped": {
+          "off_route": 8478,
+          "left_of_centerline": 17,
+          "bearing_mismatch": 92
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 66,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2746,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "through",
+          "distanceM": 33,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r19",
+      "label": "Airport -> Accra Central",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14528.822538291406,
+      "whole": {
+        "lengthM": 14528.822538291406,
+        "streetVideoM": 3305.2970000000014,
+        "birdsEyeM": 11223.525538291404,
+        "streetFraction": 0.22749930293998244,
+        "segments": 43,
+        "streetSegments": 21,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 6476,
+        "usableFrames": 979,
+        "dropped": {
+          "low_quality": 245,
+          "left_of_centerline": 1654,
+          "bearing_mismatch": 1083,
+          "off_route": 1637,
+          "other_sequence": 878
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 454,
+          "2020-2023": 110,
+          "2024+": 36,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.06199005935525,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 6476,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 6464,
+          "bearing_mismatch": 10,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2169,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 1138,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r19",
+      "label": "Airport -> Accra Central",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14184.33430353351,
+      "whole": {
+        "lengthM": 14184.33430353351,
+        "streetVideoM": 3087.083999999996,
+        "birdsEyeM": 11097.250303533514,
+        "streetFraction": 0.2176403864953297,
+        "segments": 39,
+        "streetSegments": 19,
+        "bridges": 4,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 6441,
+        "usableFrames": 940,
+        "dropped": {
+          "low_quality": 213,
+          "bearing_mismatch": 1223,
+          "left_of_centerline": 1643,
+          "off_route": 1477,
+          "other_sequence": 945
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 431,
+          "2020-2023": 87,
+          "2024+": 93,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0802477035482,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 6441,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 6430,
+          "bearing_mismatch": 9,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2158,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 2330,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r20",
+      "label": "Spintex -> Danquah Circle",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 15261.504236831805,
+      "whole": {
+        "lengthM": 15261.504236831805,
+        "streetVideoM": 2533.9250000000025,
+        "birdsEyeM": 12727.579236831802,
+        "streetFraction": 0.16603376447550167,
+        "segments": 21,
+        "streetSegments": 10,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 5,
+        "candidateFrames": 5918,
+        "usableFrames": 695,
+        "dropped": {
+          "left_of_centerline": 1378,
+          "low_quality": 114,
+          "bearing_mismatch": 2215,
+          "off_route": 593,
+          "other_sequence": 923
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 192,
+          "2020-2023": 0,
+          "2024+": 160,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.98355478980085,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.98355478980085,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 5918,
+        "usableFrames": 34,
+        "dropped": {
+          "off_route": 5691,
+          "bearing_mismatch": 108,
+          "left_of_centerline": 35,
+          "low_quality": 22,
+          "other_sequence": 28
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3773,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 2153,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r20",
+      "label": "Spintex -> Danquah Circle",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 17127.60329122179,
+      "whole": {
+        "lengthM": 17127.60329122179,
+        "streetVideoM": 2832.620999999999,
+        "birdsEyeM": 14294.98229122179,
+        "streetFraction": 0.16538338446055495,
+        "segments": 29,
+        "streetSegments": 14,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 4906,
+        "usableFrames": 590,
+        "dropped": {
+          "low_quality": 394,
+          "bearing_mismatch": 1089,
+          "left_of_centerline": 1053,
+          "off_route": 1285,
+          "other_sequence": 495
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 204,
+          "2020-2023": 38,
+          "2024+": 82,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0440925509014,
+        "streetVideoM": 238.451,
+        "birdsEyeM": 261.59309255090136,
+        "streetFraction": 0.47685994805693493,
+        "segments": 5,
+        "streetSegments": 2,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 4906,
+        "usableFrames": 50,
+        "dropped": {
+          "off_route": 4699,
+          "left_of_centerline": 30,
+          "bearing_mismatch": 13,
+          "low_quality": 28,
+          "other_sequence": 86
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 38,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 3813,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5054,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r21",
+      "label": "Kaneshie -> Tetteh Quarshie Interchange",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 12058.552462055475,
+      "whole": {
+        "lengthM": 12058.552462055475,
+        "streetVideoM": 4874.590000000001,
+        "birdsEyeM": 7183.962462055474,
+        "streetFraction": 0.4042433795713726,
+        "segments": 53,
+        "streetSegments": 26,
+        "bridges": 6,
+        "segmentsAtBridgeCap": 2,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 8623,
+        "usableFrames": 929,
+        "dropped": {
+          "off_route": 2119,
+          "left_of_centerline": 2044,
+          "bearing_mismatch": 623,
+          "low_quality": 1075,
+          "other_sequence": 1833
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 196,
+          "2020-2023": 26,
+          "2024+": 395,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "birdsEyeM": 371.19954127184513,
+        "streetFraction": 0.25768782925347306,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 8623,
+        "usableFrames": 36,
+        "dropped": {
+          "off_route": 8104,
+          "low_quality": 69,
+          "left_of_centerline": 149,
+          "bearing_mismatch": 51,
+          "other_sequence": 214
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 14,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 2,
+          "levelUncertainSegments": 2
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 90,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1164,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r21",
+      "label": "Kaneshie -> Tetteh Quarshie Interchange",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14159.604039881273,
+      "whole": {
+        "lengthM": 14159.604039881273,
+        "streetVideoM": 1865.5350000000021,
+        "birdsEyeM": 12294.069039881271,
+        "streetFraction": 0.1317505062108816,
+        "segments": 25,
+        "streetSegments": 12,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 4,
+        "levelUncertainSegments": 9,
+        "candidateFrames": 4810,
+        "usableFrames": 623,
+        "dropped": {
+          "left_of_centerline": 1261,
+          "bearing_mismatch": 589,
+          "off_route": 1513,
+          "low_quality": 322,
+          "other_sequence": 502
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 22,
+          "2020-2023": 14,
+          "2024+": 216,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.95828461165536,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 4810,
+        "usableFrames": 21,
+        "dropped": {
+          "off_route": 4561,
+          "left_of_centerline": 52,
+          "bearing_mismatch": 55,
+          "low_quality": 19,
+          "other_sequence": 102
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 17,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "ends_at",
+          "distanceM": 0,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 3789,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r22",
+      "label": "Legon -> Danquah Circle",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 11464.510748685187,
+      "whole": {
+        "lengthM": 11464.510748685187,
+        "streetVideoM": 3154.8209999999963,
+        "birdsEyeM": 8309.68974868519,
+        "streetFraction": 0.2751814769210111,
+        "segments": 41,
+        "streetSegments": 20,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 5,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 10876,
+        "usableFrames": 779,
+        "dropped": {
+          "bearing_mismatch": 1947,
+          "low_quality": 692,
+          "left_of_centerline": 2578,
+          "off_route": 3796,
+          "other_sequence": 1084
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 275,
+          "2020-2023": 73,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0044520872604,
+        "streetVideoM": 164.505,
+        "birdsEyeM": 335.4994520872604,
+        "streetFraction": 0.329007070463626,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 10876,
+        "usableFrames": 44,
+        "dropped": {
+          "off_route": 10656,
+          "bearing_mismatch": 66,
+          "left_of_centerline": 55,
+          "low_quality": 14,
+          "other_sequence": 41
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 17,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2746,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r22",
+      "label": "Legon -> Danquah Circle",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 11464.510748685187,
+      "whole": {
+        "lengthM": 11464.510748685187,
+        "streetVideoM": 3154.8209999999963,
+        "birdsEyeM": 8309.68974868519,
+        "streetFraction": 0.2751814769210111,
+        "segments": 41,
+        "streetSegments": 20,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 5,
+        "levelUncertainSegments": 7,
+        "candidateFrames": 10876,
+        "usableFrames": 779,
+        "dropped": {
+          "bearing_mismatch": 1947,
+          "low_quality": 692,
+          "left_of_centerline": 2578,
+          "off_route": 3796,
+          "other_sequence": 1084
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 275,
+          "2020-2023": 73,
+          "2024+": 52,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0044520872604,
+        "streetVideoM": 164.505,
+        "birdsEyeM": 335.4994520872604,
+        "streetFraction": 0.329007070463626,
+        "segments": 3,
+        "streetSegments": 1,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 1,
+        "candidateFrames": 10876,
+        "usableFrames": 44,
+        "dropped": {
+          "off_route": 10656,
+          "bearing_mismatch": 66,
+          "left_of_centerline": 55,
+          "low_quality": 14,
+          "other_sequence": 41
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 17,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2746,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "ends_at",
+          "distanceM": 21,
+          "levelUncertainSegments": 1
+        }
+      }
+    },
+    {
+      "routeId": "r23",
+      "label": "East Legon -> Accra Central",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 14522.079348833822,
+      "whole": {
+        "lengthM": 14522.079348833822,
+        "streetVideoM": 3167.118000000002,
+        "birdsEyeM": 11354.96134883382,
+        "streetFraction": 0.21808984264049858,
+        "segments": 41,
+        "streetSegments": 20,
+        "bridges": 3,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 10,
+        "candidateFrames": 7812,
+        "usableFrames": 1008,
+        "dropped": {
+          "low_quality": 372,
+          "left_of_centerline": 2379,
+          "bearing_mismatch": 1234,
+          "off_route": 1769,
+          "other_sequence": 1050
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 437,
+          "2020-2023": 110,
+          "2024+": 36,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.06199005935525,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 7812,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 7800,
+          "bearing_mismatch": 10,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2169,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 406,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r23",
+      "label": "East Legon -> Accra Central",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 16319.160670409372,
+      "whole": {
+        "lengthM": 16319.160670409372,
+        "streetVideoM": 4449.315999999998,
+        "birdsEyeM": 11869.844670409373,
+        "streetFraction": 0.2726436787933399,
+        "segments": 57,
+        "streetSegments": 28,
+        "bridges": 5,
+        "segmentsAtBridgeCap": 1,
+        "refusedSequenceGaps": 2,
+        "levelUncertainSegments": 12,
+        "candidateFrames": 11267,
+        "usableFrames": 1241,
+        "dropped": {
+          "low_quality": 369,
+          "left_of_centerline": 2889,
+          "bearing_mismatch": 1919,
+          "off_route": 3269,
+          "other_sequence": 1580
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 542,
+          "2020-2023": 113,
+          "2024+": 109,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.0802477035482,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 11267,
+        "usableFrames": 0,
+        "dropped": {
+          "off_route": 11256,
+          "bearing_mismatch": 9,
+          "left_of_centerline": 2
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 2158,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "through",
+          "distanceM": 110,
+          "levelUncertainSegments": 1
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 1192,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r24",
+      "label": "Abeka -> Adabraka (through Kwame Nkrumah Interchange area)",
+      "costing": "motor_scooter",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 5764.548477926675,
+      "whole": {
+        "lengthM": 5764.548477926675,
+        "streetVideoM": 1322.0609999999988,
+        "birdsEyeM": 4442.487477926677,
+        "streetFraction": 0.22934337443120992,
+        "segments": 15,
+        "streetSegments": 7,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 4,
+        "candidateFrames": 1756,
+        "usableFrames": 317,
+        "dropped": {
+          "bearing_mismatch": 192,
+          "left_of_centerline": 500,
+          "off_route": 435,
+          "low_quality": 37,
+          "other_sequence": 275
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 75,
+          "2020-2023": 89,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.98148332913456,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.98148332913456,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1756,
+        "usableFrames": 12,
+        "dropped": {
+          "off_route": 1721,
+          "bearing_mismatch": 18,
+          "left_of_centerline": 5
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 37,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5995,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 2958,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r24",
+      "label": "Abeka -> Adabraka (through Kwame Nkrumah Interchange area)",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": false,
+      "routeLengthM": 5776.918631601651,
+      "whole": {
+        "lengthM": 5776.918631601651,
+        "streetVideoM": 1509.5059999999994,
+        "birdsEyeM": 4267.412631601652,
+        "streetFraction": 0.26129950865890744,
+        "segments": 11,
+        "streetSegments": 5,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 3,
+        "candidateFrames": 1741,
+        "usableFrames": 323,
+        "dropped": {
+          "off_route": 415,
+          "bearing_mismatch": 184,
+          "left_of_centerline": 501,
+          "low_quality": 38,
+          "other_sequence": 280
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 97,
+          "2020-2023": 89,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 499.98148332913456,
+        "streetVideoM": 0,
+        "birdsEyeM": 499.98148332913456,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1741,
+        "usableFrames": 12,
+        "dropped": {
+          "off_route": 1706,
+          "bearing_mismatch": 18,
+          "left_of_centerline": 5
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "through",
+          "distanceM": 55,
+          "levelUncertainSegments": 1
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 5995,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 2958,
+          "levelUncertainSegments": 0
+        }
+      }
+    },
+    {
+      "routeId": "r25",
+      "label": "Phase 2 failing pair (corridor tetteh-quarshie-accra-central)",
+      "costing": "motor_scooter",
+      "status": "error",
+      "error": "Valhalla /route -> HTTP 400: {\"error_code\":442,\"error\":\"No path could be found for input\",\"status_code\":400,\"status\":\"Bad Request\"}"
+    },
+    {
+      "routeId": "r25",
+      "label": "Phase 2 failing pair (corridor tetteh-quarshie-accra-central)",
+      "costing": "auto",
+      "status": "ok",
+      "unpaved_fallback": true,
+      "routeLengthM": 3841.330123593705,
+      "whole": {
+        "lengthM": 3841.330123593705,
+        "streetVideoM": 750.7859999999997,
+        "birdsEyeM": 3090.5441235937055,
+        "streetFraction": 0.19544948646527988,
+        "segments": 9,
+        "streetSegments": 4,
+        "bridges": 1,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 2,
+        "candidateFrames": 1098,
+        "usableFrames": 243,
+        "dropped": {
+          "off_route": 112,
+          "left_of_centerline": 374,
+          "bearing_mismatch": 344,
+          "other_sequence": 25
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 168,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 500.06413946702185,
+        "streetVideoM": 0,
+        "birdsEyeM": 500.06413946702185,
+        "streetFraction": 0,
+        "segments": 1,
+        "streetSegments": 0,
+        "bridges": 0,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 0,
+        "candidateFrames": 1098,
+        "usableFrames": 6,
+        "dropped": {
+          "off_route": 1019,
+          "left_of_centerline": 73
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 0,
+          "2020-2023": 0,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "relation": "no",
+          "distanceM": 1849,
+          "levelUncertainSegments": 0
+        },
+        "tettehQuarshieInterchange": {
+          "relation": "no",
+          "distanceM": 6007,
+          "levelUncertainSegments": 0
+        },
+        "danquahCircle": {
+          "relation": "no",
+          "distanceM": 5454,
+          "levelUncertainSegments": 0
+        }
+      }
+    }
+  ],
+  "totals": {
+    "motor_scooter": {
+      "routesOk": 24,
+      "routesFailed": 1,
+      "whole": {
+        "lengthM": 235243.43652798157,
+        "streetVideoM": 59474.034,
+        "birdsEyeM": 175769.40252798164,
+        "streetFraction": 0.25281910040846445,
+        "segments": 680,
+        "streetSegments": 329,
+        "bridges": 50,
+        "segmentsAtBridgeCap": 7,
+        "refusedSequenceGaps": 66,
+        "levelUncertainSegments": 145,
+        "candidateFrames": 140968,
+        "usableFrames": 14303,
+        "dropped": {
+          "off_route": 37252,
+          "left_of_centerline": 36129,
+          "bearing_mismatch": 19380,
+          "low_quality": 10820,
+          "other_sequence": 23084
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 4761,
+          "2020-2023": 1360,
+          "2024+": 2274,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 12000.222613165251,
+        "streetVideoM": 2445.214,
+        "birdsEyeM": 9555.008613165253,
+        "streetFraction": 0.20376405328659444,
+        "segments": 43,
+        "streetSegments": 11,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 1,
+        "levelUncertainSegments": 5,
+        "candidateFrames": 140968,
+        "usableFrames": 668,
+        "dropped": {
+          "off_route": 136432,
+          "low_quality": 564,
+          "left_of_centerline": 1161,
+          "bearing_mismatch": 1034,
+          "other_sequence": 1109
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 228,
+          "2020-2023": 38,
+          "2024+": 56,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "routesNear": 10,
+          "levelUncertainSegments": 11,
+          "routesWithAny": 10
+        },
+        "tettehQuarshieInterchange": {
+          "routesNear": 10,
+          "levelUncertainSegments": 0,
+          "routesWithAny": 0
+        },
+        "danquahCircle": {
+          "routesNear": 9,
+          "levelUncertainSegments": 8,
+          "routesWithAny": 8
+        }
+      }
+    },
+    "auto": {
+      "routesOk": 25,
+      "routesFailed": 0,
+      "whole": {
+        "lengthM": 247615.2535333702,
+        "streetVideoM": 59541.516,
+        "birdsEyeM": 188073.73753337027,
+        "streetFraction": 0.2404598066975539,
+        "segments": 660,
+        "streetSegments": 319,
+        "bridges": 51,
+        "segmentsAtBridgeCap": 10,
+        "refusedSequenceGaps": 55,
+        "levelUncertainSegments": 147,
+        "candidateFrames": 138332,
+        "usableFrames": 14474,
+        "dropped": {
+          "left_of_centerline": 34165,
+          "bearing_mismatch": 19771,
+          "off_route": 40351,
+          "low_quality": 9566,
+          "other_sequence": 20005
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 4248,
+          "2020-2023": 1512,
+          "2024+": 2551,
+          "unknown": 0
+        }
+      },
+      "approach": {
+        "lengthM": 12499.979470936894,
+        "streetVideoM": 2168.2290000000003,
+        "birdsEyeM": 10331.750470936895,
+        "streetFraction": 0.17345860487541168,
+        "segments": 40,
+        "streetSegments": 9,
+        "bridges": 2,
+        "segmentsAtBridgeCap": 0,
+        "refusedSequenceGaps": 0,
+        "levelUncertainSegments": 9,
+        "candidateFrames": 138332,
+        "usableFrames": 655,
+        "dropped": {
+          "off_route": 134849,
+          "left_of_centerline": 837,
+          "bearing_mismatch": 956,
+          "low_quality": 364,
+          "other_sequence": 671
+        },
+        "ageBuckets": {
+          "pre-2015": 0,
+          "2015-2019": 228,
+          "2020-2023": 76,
+          "2024+": 0,
+          "unknown": 0
+        }
+      },
+      "interchanges": {
+        "kwameNkrumahInterchange": {
+          "routesNear": 11,
+          "levelUncertainSegments": 11,
+          "routesWithAny": 11
+        },
+        "tettehQuarshieInterchange": {
+          "routesNear": 12,
+          "levelUncertainSegments": 8,
+          "routesWithAny": 8
+        },
+        "danquahCircle": {
+          "routesNear": 9,
+          "levelUncertainSegments": 7,
+          "routesWithAny": 7
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Mapillary image metadata only. No image, thumbnail or pixel data was fetched, so nothing here says whether a frame is sharp, usable, correctly exposed, free of obstruction, or shows what the metadata claims.",
+    "quality_score is Mapillary's own number; it is used as reported. There is no independent image-quality check.",
+    "Thresholds (60 m minimum run, 15 m RIFE ceiling, 30 m bridge ceiling, 2 bridges per segment, 25 degree heading tolerance, 0.5 quality, 15 m lateral) are the Phase 3 defaults and are untuned against this data.",
+    "A 'street' share is a geometric statement about usable frame spacing along a Valhalla route, not a statement that a rider-facing preview would look acceptable.",
+    "Capture-age buckets describe the frames inside STREET_VIDEO segments. Old imagery may show a road that has since changed; no age filter is applied and none is recommended or rejected here.",
+    "Only a 30 m corridor around the 25 validated pairs (both costings) was ingested. Coverage elsewhere in Accra is not measured, and 25 pairs are a sample of trips, not of the road network.",
+    "Last-500 m approach figures use the existing approach window; very short routes use the whole route as the approach.",
+    "Frames are matched with one sequence per edge (the Phase 3 rule); a corridor with several overlapping sequences is reduced to one, so frame counts are lower than raw image counts.",
+    "Where a route-costing pair failed to route, it contributes nothing to totals (see the Routes column of the totals table).",
+    "The existing docs/validation/route-validation.md is the earlier no-imagery run (empty frames table) and is left unchanged; its 'not measured' statement predates this audit."
+  ]
+}
