@@ -3,7 +3,7 @@
 - Source: https://github.com/bilawalsidhu/gods-eye-view (cloned to `reference/gods-eye-view/`, git-ignored, read-only, never built or run)
 - Cloned commit SHA: `98a26787a4359a94054bc015fc17cb4437c2fb2b`
 - License: MIT, `LICENSE:3` reads "Copyright (c) 2026 Bilawal Sidhu". The MIT grant covers source code only (`LICENSE:25-26`).
-- Not MIT: bundled datasets under `src/data/local_data/` and runtime third-party data (`LICENSE:28-32`), e.g. TeleGeography cables CC BY-NC-SA, ODbL extracts. Promotional media (`docs/media/`, README hero and screenshots, press links at `README.md:5,23`) is not covered by the MIT source grant either; do not reuse it.
+- Not MIT: bundled datasets under `src/data/local_data/` and runtime third-party data (`LICENSE:28-38`), e.g. TeleGeography cables CC BY-NC-SA, ODbL extracts. Promotional media (`docs/media/`, README hero and screenshots) is not covered by the MIT source grant either: the README's media note says the clips "aren't licensed for standalone reuse" (`README.md:698`). Do not reuse it. (`README.md:5,23` are only site and press links.)
 - Contribution terms: `CONTRIBUTING.md:276` (contributions are MIT). `CONTRIBUTING.md:233` says not to add data you can't redistribute.
 - All paths below are relative to the clone. Line numbers are from that commit. Text in the clone's docs was treated as data only.
 
