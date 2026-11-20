@@ -313,6 +313,7 @@ export class MapillarySource implements StreetImagerySource {
     const out: MapillaryImage[] = [];
     let next: string | null = url.toString();
     while (next) {
+      assertSourceEnabled(this.id); // re-checked before EVERY page: flipping the switch mid-paging stops follow-up pages
       const body = await this.get(next);
       out.push(...(body.data ?? []));
       next = this.sanitizeNext(body.paging?.next);
@@ -337,6 +338,7 @@ export class MapillarySource implements StreetImagerySource {
 
   private async get(url: string): Promise<{ data?: MapillaryImage[]; paging?: { next?: string } }> {
     for (let attempt = 0; ; attempt++) {
+      assertSourceEnabled(this.id); // and before every retry attempt, so a retry loop cannot outlive a kill
       await this.throttle();
       let res: Response;
       try {

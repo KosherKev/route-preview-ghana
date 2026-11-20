@@ -101,7 +101,7 @@ set it in that process's environment and the next request sees it; there is no a
 
 What it does when a source is disabled:
 
-- `npm run ingest:mapillary` refuses (exit code 4, "imagery source "mapillary" is disabled by IMAGERY_SOURCES_DISABLED") before any token check, network or DB access; `MapillarySource` also refuses every query.
+- `npm run ingest:mapillary` refuses (exit code 4, "imagery source "mapillary" is disabled by IMAGERY_SOURCES_DISABLED") before any token check, network or DB access; `MapillarySource` also refuses every query, and re-checks the switch before every page fetch and every retry attempt, so an in-flight ingestion stops at its next request (with the same error) when the variable is set mid-run.
 - The frame loader (`src/classify/load.ts`) drops that source's frames before classification, so affected routes classify `BIRDS_EYE_3D`.
 - The classifier result (`PipelineResult.sourcesExcluded`) and the validation summary report which disabled sources had frames excluded (`[]` when none).
 - `isClipServable(clip)` FAILS CLOSED and never throws. It returns true only if (a) `source_summary` is undefined/null (a legacy row with no summary, treated as "no imagery source recorded") or a real Array, (b) every entry is a plain object with a non-empty string `source`, and (c) neither `clip.source` (if present, it must be a string) nor any entry's source is disabled. Any non-array value (e.g. a JSON string from a mis-parsed jsonb), any malformed entry, or any error while inspecting returns false. Limitation: pre-attribution clips default to `'[]'` (no sources recorded) and so stay servable; Phase 4 MUST populate `source_summary` via `toSourceSummary` when it writes clips. Anything that serves a stored clip must call it.
