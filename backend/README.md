@@ -93,6 +93,8 @@ tiling), the licence string stored per frame (`CC-BY-SA-4.0`; legal review is de
 
 ## Phase 3: approach extractor, map-matcher, mode classifier
 
+**Branch status.** This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.
+
 Pre-trip preview only: origin and destination are fixed inputs; nothing follows a live position or gives turn-by-turn guidance.
 Imagery stays behind `StreetImagerySource`: `src/classify/*` reads plain `FrameRecord`s (from the `frames` table via `load.ts`, or fixtures)
 and imports no Mapillary code. Coordinates are always named `{lat, lon}` objects; local metres are `{x: east, y: north}`.
@@ -100,7 +102,7 @@ and imports no Mapillary code. Coordinates are always named `{lat, lon}` objects
 ### Extractor (`src/routing/approach.ts`, `server.ts`)
 
 `extractApproach(costing, origin, destination, opts)` returns the polyline, ordered Valhalla edge ids (`trace_attributes`, `map_snap` of the
-route shape; its shape is identical to the route's, so edge shape indices are route indices), maneuvers, the final approach (default 500 m
+route shape). The matched shape is verified against the route shape: identical, or the same vertices with the leading/trailing vertex dropped by `map_snap` (observed live; `route.matchedShapeTrim` reports it and the indices are shifted back); any other difference is an error, never silently misaligned offsets, maneuvers, the final approach (default 500 m
 measured ALONG the route, cut exactly; routes no longer than that return the whole route) and decision windows (default 80 m total width,
 centred on the maneuver point, for turns, roundabouts, merges and ramps/exits/forks).
 
@@ -110,7 +112,7 @@ centred on the maneuver point, for turns, roundabouts, merges and ramps/exits/fo
   NO scooter route (e.g. the regression pair in `test/approach.integration.test.ts`); that is reported, not hidden.
 - HTTP: `npm run serve` (127.0.0.1 only, `PORT` default 8787). `POST /approach` with
   `{"origin":{"lat":5.6361,"lon":-0.175},"destination":{"lat":5.5502,"lon":-0.2174},"costing":"auto","approach_length_m":500,"decision_window_m":80}`;
-  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), 4 KB body cap, 60 s deadline (504), Valhalla calls have their own 30 s timeout.
+  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), requires `Content-Type: application/json` (415), 4 KB body cap (413, connection closed), 60 s deadline (504; the in-flight Valhalla fetches are aborted), Valhalla calls have their own 30 s timeout. Client errors are generic (`upstream routing failure`, `invalid request`); details go only to the server-side `onError` log.
 
 ### Matcher and classifier (`src/classify/`)
 
@@ -119,15 +121,22 @@ Thresholds (all in `DEFAULT_MATCH_CONFIG` / `DEFAULT_CLASSIFY_CONFIG`):
 | Rule | Value |
 | --- | --- |
 | Projection | each frame is projected onto the nearest route segment in a local equirectangular frame (error well under 0.1% at Accra); offsets rounded to 1 mm |
-| Lateral tolerance | 15 m from the centreline, else dropped (`off_route`) |
+| Lateral tolerance | true (clamped) distance to the route polyline at most 15 m, else dropped (`off_route`); frames beyond the route ends or past an outer bend vertex are measured to the end/vertex, not to the infinite line |
 | Right-hand lane | more than 3 m LEFT of the centreline (in the direction of travel) is dropped (`left_of_centerline`); the right side is kept out to 15 m |
 | Heading | `computed_compass_angle` within +/-25 deg (inclusive) of the segment bearing AT the frame's projected position, wrap-safe at 0/360 |
-| Quality | `quality_score` >= 0.5; unscored frames are dropped unless `allowMissingQuality` |
+| Quality | `quality_score` >= 0.5; unscored frames (null or non-finite, e.g. NaN) are dropped unless `allowMissingQuality` |
 | Sequence | one per route edge: keep the previous edge's sequence if it still has frames, else most frames, then most recent capture, then id |
 | Street run | extent >= 60 m (inclusive) AND the MAXIMUM consecutive gap strictly < 15 m (a gap of exactly 15.0 m does not qualify; 14.999 does) |
 | Crossfade | two qualifying runs of one sequence separated by a gap of 15 m to 30 m (inclusive) become ONE street segment with the gap listed in `crossfades` |
 | Handoff | any larger gap, a non-qualifying run, a sequence change or no frames is BIRDS_EYE_3D |
 | `level_uncertain` | between consecutive frames closer than 30 m at an edge transition: sequence change, heading-relative-to-road change > 30 deg, or road class / use / bridge / tunnel / layer change while the sequence continues; the span plus 20 m each side is forced to BIRDS_EYE_3D and never merged away |
+
+All distance and threshold comparisons (gap, extent, crossfade ceiling, merge) are done in integer millimetres via `src/classify/mm.ts`, so an exact 15.000 m gap or 60.000 m extent is never decided by float noise. Frames are de-duplicated by `imageId` before sequence selection (latest `capturedAt` kept, ties keep the first; others drop as `duplicate_image`).
+
+#### Interpretation notes for the owner
+
+- **Crossfade merge.** A STREET_VIDEO segment whose `maxGapM` is >= 15 m contains a crossfade: two qualifying runs of one sequence separated by a 15-30 m gap are merged into ONE segment. The 30 m ceiling (`crossfadeMaxGapM`) and the 3 m left-offset limit (`maxLeftOffsetM`) are builder-chosen, configurable parameters that are not in the spec. The merge itself is the builder's interpretation of the spec's "max gap under 15 m" and "crossfade inside a street run" rules, flagged here for the owner to confirm.
+- **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. It may over-flag on dense real data; no real imagery has been measured yet.
 
 Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunnel`, `use` (ramp) and `road_class` stand in for it
 (`EdgeSpan.layer` is honoured when a source provides it).
