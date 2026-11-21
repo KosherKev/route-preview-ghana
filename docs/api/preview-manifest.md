@@ -8,6 +8,8 @@ The JSON Schema is [preview-manifest.schema.json](preview-manifest.schema.json) 
 `additionalProperties: false`, so a client can reject anything it does not know. Tests validate real builder output against it and prove
 malformed manifests fail (`backend/test/preview-schema.test.ts`).
 
+**Versioning rule:** additive, optional-field changes do not bump `manifestVersion`; removing or changing a field does.
+
 ## Product boundary (enforced in code and tests)
 
 Pre-trip preview only. The manifest is a function of a fixed origin and destination. **No endpoint, parameter or field accepts or stores a
