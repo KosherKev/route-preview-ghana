@@ -9,7 +9,7 @@ services:
       SERVER_THREADS: "2"
     volumes:
       - ./docker/valhalla/entrypoint.sh:/entrypoint.sh:ro
-      - ./data:/data:ro
+      - ./data/valhalla:/data:ro
       - valhalla_tiles:/valhalla
     ports:
       - "127.0.0.1:8002:8002"
