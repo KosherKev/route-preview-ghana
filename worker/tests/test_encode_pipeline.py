@@ -147,3 +147,40 @@ def test_end_to_end_encode_probe_and_cache(tmp_path):
     assert info["fps"] == 10.0 and info["faststart"] is True
     again = build_clip(plan, st, None, HoldInterpolator(), FFMPEG, frames_cache, ClipConfig(), tmp_path)
     assert again.reused is True
+
+
+# --- ffprobe check: present (fake binary) and absent ------------------------------------------------------------------
+
+def _fake_ffprobe(tmp_path, codec="h264", w=1280, h=720):
+    f = tmp_path / "ffprobe"
+    payload = json.dumps({"streams": [{"codec_type": "video", "codec_name": codec, "width": w, "height": h}]})
+    f.write_text(f"#!/bin/sh\ncat <<'EOF'\n{payload}\nEOF\n")
+    f.chmod(0o755)
+    return f
+
+
+def _mp4(tmp_path, order=("ftyp", "moov", "mdat")):
+    import struct
+    p = tmp_path / "c.mp4"
+    p.write_bytes(b"".join(struct.pack(">I4s", 8, n.encode()) for n in order))
+    return p
+
+
+def test_ffprobe_check_passes_with_a_fake_binary_configured_via_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("RPG_FFPROBE", str(_fake_ffprobe(tmp_path)))
+    r = ff.ffprobe_check(_mp4(tmp_path))
+    assert r["status"] == "pass" and r["info"] == {"codec": "h264", "width": 1280, "height": 720, "faststart": True}
+
+
+def test_ffprobe_check_fails_on_wrong_codec_size_or_moov_after_mdat(tmp_path, monkeypatch):
+    monkeypatch.setenv("RPG_FFPROBE", str(_fake_ffprobe(tmp_path, codec="hevc", w=640, h=360)))
+    r = ff.ffprobe_check(_mp4(tmp_path, ("ftyp", "mdat", "moov")))
+    assert r["status"] == "fail" and len(r["failures"]) == 3
+
+
+def test_ffprobe_check_reports_skipped_explicitly_when_no_ffprobe(tmp_path, monkeypatch):
+    monkeypatch.delenv("RPG_FFPROBE", raising=False)
+    monkeypatch.setenv("PATH", str(tmp_path))  # an empty dir: no ffprobe anywhere on PATH
+    monkeypatch.setattr(ff, "WORKER_BIN", tmp_path / "nobin")
+    r = ff.ffprobe_check(_mp4(tmp_path))
+    assert r == {"status": "skipped", "reason": "ffprobe not available, skipped"}

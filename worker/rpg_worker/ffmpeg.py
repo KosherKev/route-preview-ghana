@@ -120,3 +120,32 @@ def stream_info(ffmpeg: str, path: Path) -> dict:
         raise RuntimeError("could not read stream info from ffmpeg -i output")
     return {"codec": v.group(1), "pix_fmt": v.group(2).split("(")[0], "width": int(v.group(3)), "height": int(v.group(4)), "fps": float(v.group(5)),
             "duration_s": int(d.group(1)) * 3600 + int(d.group(2)) * 60 + float(d.group(3)), "faststart": faststart(path)}
+
+
+FFPROBE_SKIPPED = "ffprobe not available, skipped"
+
+
+def ffprobe_check(path: Path, ffprobe: str | None = None) -> dict:
+    """Verify one output mp4 with a real ffprobe: codec h264, 1280x720, faststart (moov before mdat, from the box walk).
+
+    Runs only when an ffprobe is configured (RPG_FFPROBE) or on PATH; otherwise returns status "skipped" with an explicit
+    reason, never a silent pass. Returns {"status": "pass"|"fail"|"skipped", "reason"/"failures": ..., "info": ...}."""
+    if ffprobe is None:
+        try:
+            ffprobe = find_tool("ffprobe", "RPG_FFPROBE")
+        except ToolMissing:
+            return {"status": "skipped", "reason": FFPROBE_SKIPPED}
+    data = probe(ffprobe, path)
+    vs = [x for x in data.get("streams", []) if x.get("codec_type") == "video"]
+    if not vs:
+        return {"status": "fail", "failures": ["no video stream"], "info": {}}
+    v = vs[0]
+    info = {"codec": v.get("codec_name"), "width": v.get("width"), "height": v.get("height"), "faststart": faststart(path)}
+    failures = []
+    if info["codec"] != "h264":
+        failures.append(f"codec {info['codec']} != h264")
+    if (info["width"], info["height"]) != (1280, 720):
+        failures.append(f"size {info['width']}x{info['height']} != 1280x720")
+    if not info["faststart"]:
+        failures.append("moov does not precede mdat (not faststart)")
+    return {"status": "fail" if failures else "pass", "failures": failures, "info": info}

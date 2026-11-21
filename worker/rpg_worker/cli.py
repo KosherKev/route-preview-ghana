@@ -36,7 +36,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rife-model", default="rife-v4.6")
     ap.add_argument("--speed", type=float, default=10.0)
     ap.add_argument("--prefetch-only", action="store_true", help="download and cache the plans' frames, nothing else (needs no ffmpeg)")
+    ap.add_argument("--verify", action="store_true", help="ffprobe-check every cached clip (h264, 1280x720, faststart); needs no token or network")
     a = ap.parse_args(argv)
+    if a.verify:
+        storage = LocalClipStorage(paths.CLIPS_CACHE)
+        bad = 0
+        for pf in sorted(a.plans.glob("*.json")):
+            plan = json.loads(pf.read_text())["plan"]
+            r = ff.ffprobe_check(storage.path(plan["edge_id"], plan["direction"]))
+            bad += r["status"] == "fail"
+            print(f"{pf.name}: {r['status']}" + (f" ({r['reason']})" if r["status"] == "skipped" else f" {r.get('failures') or ''}"))
+        return 1 if bad else 0
     if a.prefetch_only:
         budget = Budget(paths.BUDGET_FILE)
         fetcher = MapillaryFetcher(read_token(), budget)
