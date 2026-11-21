@@ -5,7 +5,9 @@ Pre-trip route preview for Ghana dispatch riders: eye-level street video plus a 
 ## Product boundary
 
 - Pre-trip preview only. It is never synced to live GPS.
-- Live navigation is out of scope.
+- Live navigation is out of scope. No endpoint, parameter or field accepts or stores a live, device or "current" position, and turn and
+  landmark overlays are static data keyed by distance along the route. The Flutter app must not request location permission.
+  Enforced by `backend/test/product-boundary.test.ts`; details in [docs/api/preview-manifest.md](docs/api/preview-manifest.md).
 - Keep the architecture modular: the street-imagery source (Mapillary now, rider-captured later) and the renderer sit behind swappable interfaces.
 
 ## Decisions
@@ -27,6 +29,14 @@ attribution fields (`creator_username`, `source_url`, `clips.source_summary`) an
   PATH has an ffprobe, and otherwise prints "ffprobe not available, skipped".
 - The D9 coverage gate reads stored frames and makes zero Mapillary API calls, so it has no skip flag.
 - Per-clip numbers: [docs/validation/phase4-clips.md](docs/validation/phase4-clips.md), regenerated with `npm run clips:report` in `backend/`.
+
+## Preview API (Phase 5A)
+
+`POST /preview` (same server, loopback only) returns a versioned timeline manifest: route, approach window, ordered street-clip and 3D
+flyover segments with camera keyframes, turn markers, landmark callouts, capture years and attribution. `POST /preview/bundle` packages one
+preview for offline use on a simulator or emulator. Schema and rules: [docs/api/preview-manifest.md](docs/api/preview-manifest.md). A
+local-development door, off by default, lets an app on the same machine play a prototype clip: [docs/api/dev-clip-serving.md](docs/api/dev-clip-serving.md)
+(`PROTOTYPE_CLIP_SERVING=1`, loopback only; it is not a serving feature and does not change `isClipServable`).
 
 ## Layout
 
