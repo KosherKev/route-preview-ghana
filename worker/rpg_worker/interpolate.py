@@ -44,6 +44,7 @@ class MinterpolateInterpolator:
             d = Path(d)
             cv2.imwrite(str(d / "in1.png"), a)
             cv2.imwrite(str(d / "in2.png"), b)
+            cv2.imwrite(str(d / "in3.png"), b)  # minterpolate emits nothing from only 2 frames; a repeated b gives a..b in n + 2 frames
             ff.run(ff.minterpolate_cmd(self.ffmpeg, d / "in%d.png", d / "o%03d.png", n))
             outs = [cv2.imread(str(d / f"o{i:03d}.png")) for i in range(2, n + 2)]  # o001 is frame a itself
         if any(o is None for o in outs):

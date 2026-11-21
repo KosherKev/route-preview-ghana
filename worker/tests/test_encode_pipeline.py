@@ -12,15 +12,17 @@ from rpg_worker.interpolate import HoldInterpolator, MinterpolateInterpolator
 from rpg_worker.pipeline import ClipConfig, build_clip, build_keyframes, hold_durations, write_concat_list
 from rpg_worker.storage import LocalClipStorage, clip_key
 
-FFMPEG = shutil.which("ffmpeg") or (str(ff.WORKER_BIN / "ffmpeg") if (ff.WORKER_BIN / "ffmpeg").exists() else None)
-FFPROBE = shutil.which("ffprobe") or (str(ff.WORKER_BIN / "ffprobe") if (ff.WORKER_BIN / "ffprobe").exists() else None)
-needs_ffmpeg = pytest.mark.skipif(not FFMPEG or not FFPROBE, reason="ffmpeg/ffprobe not installed")
+try:
+    FFMPEG = ff.find_tool("ffmpeg", "RPG_FFMPEG")
+except ff.ToolMissing:
+    FFMPEG = None
+needs_ffmpeg = pytest.mark.skipif(not FFMPEG, reason="ffmpeg not installed")
 
 
 def test_encode_command_parameters():
     cmd = ff.encode_cmd("ffmpeg", Path("l.txt"), Path("o.mp4"))
     joined = " ".join(cmd)
-    for needle in ["libx264", "-crf 27", "+faststart", "scale=1280:720", "yuv420p", "-fps_mode cfr", "-r 10", "-an"]:
+    for needle in ["libx264", "-crf 27", "+faststart", "scale=1280:720", "format=yuv420p", "-fps_mode cfr", "-r 10", "-an"]:
         assert needle in joined
     assert "drawtext" not in joined and "overlay" not in joined  # no burned-in overlays
     assert "-crf 26" in " ".join(ff.encode_cmd("f", Path("l"), Path("o"), crf=26))
@@ -111,6 +113,7 @@ def test_keyframes_use_interpolator_only_for_small_gaps_and_xfade_for_bridge(tmp
     imgs = [_img(v) for v in (30, 90, 150, 210)]
     if not FFMPEG:
         pytest.skip("ffmpeg not installed (bridge path needs xfade)")
+    assert FFMPEG
     keys = build_keyframes(plan, imgs, Spy(), FFMPEG, ClipConfig())
     kinds = [k.kind for k in keys]
     assert kinds.count("bridge") >= 1 and kinds.count("source") == 4
@@ -138,11 +141,9 @@ def test_end_to_end_encode_probe_and_cache(tmp_path):
     st = LocalClipStorage(tmp_path / "clips")
     res = build_clip(plan, st, Fetch(), MinterpolateInterpolator(FFMPEG), FFMPEG, frames_cache, ClipConfig(), tmp_path)
     assert res.bridges_used == 1 and res.bridge_frames >= 1 and res.reused is False
-    info = ff.probe(FFPROBE, st.path(99, "forward"))
-    v = next(s for s in info["streams"] if s["codec_type"] == "video")
-    assert (v["codec_name"], v["width"], v["height"], v["pix_fmt"]) == ("h264", 1280, 720, "yuv420p")
-    assert float(info["format"]["duration"]) == pytest.approx(3.8, abs=0.3)
-    assert v["r_frame_rate"] == "10/1"
-    assert ff.faststart(st.path(99, "forward"))
+    info = ff.stream_info(FFMPEG, st.path(99, "forward"))
+    assert (info["codec"], info["width"], info["height"], info["pix_fmt"]) == ("h264", 1280, 720, "yuv420p")
+    assert info["duration_s"] == pytest.approx(3.8, abs=0.3)
+    assert info["fps"] == 10.0 and info["faststart"] is True
     again = build_clip(plan, st, None, HoldInterpolator(), FFMPEG, frames_cache, ClipConfig(), tmp_path)
     assert again.reused is True
