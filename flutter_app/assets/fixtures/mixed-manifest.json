@@ -1,0 +1,431 @@
+{
+ "manifestVersion": 1,
+ "prototype": true,
+ "degraded": false,
+ "costing": "motor_scooter",
+ "unpavedFallback": false,
+ "warnings": [
+  "SYNTHETIC mixed manifest: invented clips, overlays and attribution on the real Accra route geometry."
+ ],
+ "origin": {
+  "lat": 5.6037,
+  "lon": -0.187
+ },
+ "destination": {
+  "lat": 5.56,
+  "lon": -0.2057
+ },
+ "route": {
+  "lengthM": 5727.4711430089255,
+  "timeSec": 498.228,
+  "polyline6": "_x_uItnlJfC\\r[bEjIfB`g@xHrg@pHtMlCzPrCd_@rEvANxJ|@rCPlDDdt@T`RFtJBrC@jTTxFFfA@nTBzBTjLfApMlBtK`CrG~CpHvD~JjHfOxLlA~CxAxDzBhIIPOt@?|@Rz@`@r@n@f@x@V|@D|@MvBf@rTtChWvA`DZ`FPzMp@bZ~@tFPvOLbOr@~VdBbDTnYzDhRfD|XrG|JnDnVzIjHlD|s@tb@|dA|f@vh@`Vpo@hY~EtBrE`BpNzDdN~DfRtDhYbFfSnElRfFx_@~MzwAhj@lb@nPflAd_@h[rJd]zKtdBjj@lcBll@`|@n^l|@d`@l\\jNrm@hWxSvIv_@|NncB~j@lGzAhGlAdIpAz]zEtN~B|KtCxKrDdCx@rLbFjLdFdPfHldAhd@xi@xVfWzLjZbNvQnIl_@pP|JnExKdDvNzCrMfAdLTvHSxDKvUgDxQmFdVeKxO}FbFgAnBc@zL{A~JCdEb@`GhB|GxCl@v@xA`B~DpA~BVnCObBWvAa@jAu@rA_H`D{Oh@kDvCw@nA]\\Ep@?r@@jCLxWt[`r@xu@|FnGwe@xa@mH|EuCrCSxAj@~BxCfExt@b{@vY|\\dRpUdBpB|ExFd@l@"
+ },
+ "approach": {
+  "requestedLengthM": 500,
+  "lengthM": 500,
+  "startM": 5227.47,
+  "endM": 5727.4711430089255,
+  "wholeRoute": false
+ },
+ "timeline": {
+  "startM": 4800.0,
+  "endM": 5727.47,
+  "lengthM": 927.47
+ },
+ "nominal": {
+  "streetSpeedMps": 10,
+  "flyoverSpeedMps": 30,
+  "note": "synthetic"
+ },
+ "segments": [
+  {
+   "index": 0,
+   "mode": "STREET_VIDEO",
+   "startM": 4800.0,
+   "endM": 5100.0,
+   "lengthM": 300.0,
+   "polyline6": "",
+   "playback": "clip",
+   "playbackReason": "clip_ready",
+   "nominalDurationSec": 8.0,
+   "nominalSpeedMps": 10,
+   "status": "ready",
+   "clipRef": {
+    "edge_id": 900001,
+    "direction": "forward",
+    "key": "900001/forward.mp4"
+   },
+   "clip": {
+    "edge_id": 900001,
+    "direction": "forward",
+    "key": "900001/forward.mp4",
+    "status": "ready",
+    "durationSec": 8.0,
+    "fps": 24,
+    "speedMps": 37.5,
+    "bytes": 381093,
+    "lengthM": 300.0,
+    "servePath": "/clips/900001/forward.mp4",
+    "startPose": {},
+    "endPose": {}
+   },
+   "bridges": [],
+   "captureYears": {
+    "min": 2024,
+    "max": 2024
+   },
+   "flyover": null
+  },
+  {
+   "index": 1,
+   "mode": "BIRDS_EYE_3D",
+   "startM": 5100.0,
+   "endM": 5400.0,
+   "lengthM": 300.0,
+   "polyline6": "",
+   "playback": "flyover",
+   "playbackReason": "no_frames",
+   "nominalDurationSec": 10.0,
+   "nominalSpeedMps": 10,
+   "status": null,
+   "clipRef": null,
+   "clip": null,
+   "bridges": [],
+   "captureYears": null,
+   "flyover": {
+    "durationSec": 10.0,
+    "nominalSpeedMps": 30.0,
+    "keyframes": [
+     {
+      "t": 0.0,
+      "offsetM": 5100.0,
+      "lat": 5.562151,
+      "lon": -0.201591,
+      "bearingDeg": 227.78,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "linear"
+     },
+     {
+      "t": 1.25,
+      "offsetM": 5137.5,
+      "lat": 5.561926,
+      "lon": -0.201844,
+      "bearingDeg": 226.89,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 2.5,
+      "offsetM": 5175.0,
+      "lat": 5.561696,
+      "lon": -0.202092,
+      "bearingDeg": 226.89,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 3.75,
+      "offsetM": 5212.5,
+      "lat": 5.561465,
+      "lon": -0.202339,
+      "bearingDeg": 226.88,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 5.0,
+      "offsetM": 5250.0,
+      "lat": 5.561235,
+      "lon": -0.202586,
+      "bearingDeg": 246.88,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 6.25,
+      "offsetM": 5287.5,
+      "lat": 5.561119,
+      "lon": -0.202829,
+      "bearingDeg": 266.88,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 7.5,
+      "offsetM": 5325.0,
+      "lat": 5.56137,
+      "lon": -0.203054,
+      "bearingDeg": 286.88,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 8.75,
+      "offsetM": 5362.5,
+      "lat": 5.561621,
+      "lon": -0.20328,
+      "bearingDeg": 301.32,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 10.0,
+      "offsetM": 5400.0,
+      "lat": 5.561882,
+      "lon": -0.203494,
+      "bearingDeg": 281.32,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     }
+    ]
+   }
+  },
+  {
+   "index": 2,
+   "mode": "STREET_VIDEO",
+   "startM": 5400.0,
+   "endM": 5550.0,
+   "lengthM": 150.0,
+   "polyline6": "",
+   "playback": "flyover",
+   "playbackReason": "clip_not_rendered",
+   "nominalDurationSec": 6.0,
+   "nominalSpeedMps": 10,
+   "status": "not_rendered",
+   "clipRef": {
+    "edge_id": 900003,
+    "direction": "forward",
+    "key": "900003/forward.mp4"
+   },
+   "clip": null,
+   "bridges": [],
+   "captureYears": {
+    "min": 2024,
+    "max": 2024
+   },
+   "flyover": {
+    "durationSec": 6.0,
+    "nominalSpeedMps": 25.0,
+    "keyframes": [
+     {
+      "t": 0.0,
+      "offsetM": 5400.0,
+      "lat": 5.561882,
+      "lon": -0.203494,
+      "bearingDeg": 240.29,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "linear"
+     },
+     {
+      "t": 1.5,
+      "offsetM": 5437.5,
+      "lat": 5.561772,
+      "lon": -0.203775,
+      "bearingDeg": 228.04,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 3.0,
+      "offsetM": 5475.0,
+      "lat": 5.561546,
+      "lon": -0.204027,
+      "bearingDeg": 228.04,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 4.5,
+      "offsetM": 5512.5,
+      "lat": 5.561321,
+      "lon": -0.204279,
+      "bearingDeg": 228.04,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 6.0,
+      "offsetM": 5550.0,
+      "lat": 5.561095,
+      "lon": -0.204531,
+      "bearingDeg": 228.07,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     }
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "mode": "STREET_VIDEO",
+   "startM": 5550.0,
+   "endM": 5727.4711430089255,
+   "lengthM": 177.47,
+   "polyline6": "",
+   "playback": "clip",
+   "playbackReason": "clip_ready",
+   "nominalDurationSec": 9.0,
+   "nominalSpeedMps": 10,
+   "status": "ready",
+   "clipRef": {
+    "edge_id": 900002,
+    "direction": "forward",
+    "key": "900002/forward.mp4"
+   },
+   "clip": {
+    "edge_id": 900002,
+    "direction": "forward",
+    "key": "900002/forward.mp4",
+    "status": "ready",
+    "durationSec": 9.0,
+    "fps": 24,
+    "speedMps": 19.72,
+    "bytes": 200000,
+    "lengthM": 177.47114300892554,
+    "servePath": "/clips/900002/forward.mp4",
+    "startPose": {},
+    "endPose": {}
+   },
+   "bridges": [],
+   "captureYears": {
+    "min": 2024,
+    "max": 2024
+   },
+   "flyover": null
+  }
+ ],
+ "overlays": {
+  "turns": [
+   {
+    "offsetM": 5000.0,
+    "maneuver": "left",
+    "direction": "left",
+    "kind": "turn",
+    "streetName": "Synthetic Street",
+    "window": {
+     "startM": 4920.0,
+     "endM": 5000.0
+    }
+   },
+   {
+    "offsetM": 5450.0,
+    "maneuver": "slight_right",
+    "direction": "right",
+    "kind": "turn",
+    "streetName": null,
+    "window": {
+     "startM": 5370.0,
+     "endM": 5450.0
+    }
+   },
+   {
+    "offsetM": 5650.0,
+    "maneuver": "roundabout_enter",
+    "direction": "straight",
+    "kind": "roundabout",
+    "streetName": "Test Roundabout",
+    "window": {
+     "startM": 5570.0,
+     "endM": 5650.0
+    }
+   }
+  ],
+  "landmarks": [
+   {
+    "offsetM": 4850.0,
+    "name": "Synthetic Cafe",
+    "category": "amenity",
+    "kind": "cafe",
+    "side": "left",
+    "distanceM": 12.0,
+    "lat": 5.563797,
+    "lon": -0.20163,
+    "osm": "node/1"
+   },
+   {
+    "offsetM": 5200.0,
+    "name": "Test Pharmacy",
+    "category": "amenity",
+    "kind": "pharmacy",
+    "side": "right",
+    "distanceM": 18.5,
+    "lat": 5.561542,
+    "lon": -0.202257,
+    "osm": "node/2"
+   },
+   {
+    "offsetM": 5460.0,
+    "name": "Sample Market",
+    "category": "shop",
+    "kind": "marketplace",
+    "side": "left",
+    "distanceM": 25.0,
+    "lat": 5.561637,
+    "lon": -0.203926,
+    "osm": "way/3"
+   },
+   {
+    "offsetM": 5700.0,
+    "name": "Demo Fuel Station",
+    "category": "amenity",
+    "kind": "fuel",
+    "side": "right",
+    "distanceM": 9.0,
+    "lat": 5.560203,
+    "lon": -0.205547,
+    "osm": "node/4"
+   }
+  ],
+  "turnWindowM": 80,
+  "landmarkOptions": {
+   "maxDistanceM": 40,
+   "maxPer100m": 3,
+   "dedupeWithinM": 100
+  }
+ },
+ "captureYears": {
+  "min": 2024,
+  "max": 2024
+ },
+ "attribution": {
+  "bySource": [
+   {
+    "source": "synthetic-test",
+    "creators": [
+     "Test pattern generator"
+    ],
+    "licenses": [
+     "CC0-1.0"
+    ],
+    "sourceUrls": [],
+    "requiresLogoAndLink": false
+   }
+  ],
+  "sources": [
+   "synthetic-test"
+  ],
+  "creators": [
+   "Test pattern generator"
+  ],
+  "licenses": [
+   "CC0-1.0"
+  ],
+  "sourceUrls": [],
+  "requiresLogoAndLink": false
+ },
+ "sourcesExcluded": []
+}

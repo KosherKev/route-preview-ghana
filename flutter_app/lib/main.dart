@@ -1,43 +1,69 @@
 import 'package:flutter/material.dart';
 
-import 'flyover_screen.dart';
-import 'scene/scene.dart';
+import 'api/preview_api.dart';
+import 'flyover/manifest.dart';
+import 'request/request_screen.dart';
+import 'request/settings_store.dart';
 import 'scene/scene_loader.dart';
 
 /// Dev switches for evidence runs, set at build time with `--dart-define=NAME=value`:
 ///
-///   AUTOPLAY=true          start the flyover on launch
+///   AUTOPLAY=true          start the flyover as soon as a preview opens
 ///   AUTOPLAY_DELAY_SEC=n   wait n seconds (paused at the start) before autoplay begins
 ///   PLAYBACK_SPEED=0.5|1|2 starting playback speed (default 1)
 ///   HILLSHADE=off          hide the terrain hillshade
-///   PROBE_UNSUPPORTED=true try the 3D terrain and sky calls (unsupported on iOS) and show the result
+///   API_BASE_URL=url       override the stored API address for this run
+///   PRESET=0|1|2           start with this preset filled in
+///   AUTO_PREVIEW_SEC=n     press Preview n seconds after launch (hands-free evidence runs)
 const bool _autoplay = bool.fromEnvironment('AUTOPLAY');
 const int _autoplayDelaySec = int.fromEnvironment('AUTOPLAY_DELAY_SEC');
 const String _playbackSpeed = String.fromEnvironment('PLAYBACK_SPEED', defaultValue: '1');
 const String _hillshade = String.fromEnvironment('HILLSHADE', defaultValue: 'on');
-const bool _probeUnsupported = bool.fromEnvironment('PROBE_UNSUPPORTED');
+const String _apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+const int _preset = int.fromEnvironment('PRESET');
+const int _autoPreviewSec = int.fromEnvironment('AUTO_PREVIEW_SEC', defaultValue: -1);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final scene = await loadScene(hillshade: _hillshade != 'off', probeUnsupported: _probeUnsupported);
-  runApp(RoutePreviewApp(scene: scene));
+  final settings = await SettingsStore.open();
+  if (_apiBaseUrl.isNotEmpty) await settings.setBaseUrl(_apiBaseUrl);
+  runApp(RoutePreviewApp(settings: settings));
 }
 
 class RoutePreviewApp extends StatelessWidget {
-  final Scene scene;
-  const RoutePreviewApp({super.key, required this.scene});
+  final SettingsStore settings;
+  final ApiFactory apiFactory;
+  final SceneForManifest? sceneForManifestOverride;
+  final BundledScene? bundledSceneOverride;
+
+  const RoutePreviewApp({
+    super.key,
+    required this.settings,
+    this.apiFactory = _defaultApi,
+    this.sceneForManifestOverride,
+    this.bundledSceneOverride,
+  });
+
+  static PreviewApi _defaultApi(String baseUrl) => PreviewApi(baseUrl);
 
   @override
   Widget build(BuildContext context) {
+    final hill = _hillshade != 'off';
     return MaterialApp(
       title: 'Route preview',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: const Color(0xFFD6336C), useMaterial3: true),
-      home: FlyoverScreen(
-        scene: scene,
+      home: RequestScreen(
+        settings: settings,
+        apiFactory: apiFactory,
+        sceneForManifest: sceneForManifestOverride ??
+            (PreviewManifest m, String label) => sceneForManifest(m, sourceLabel: label, hillshade: hill),
+        bundledScene: bundledSceneOverride ?? () => loadScene(hillshade: hill),
         autoplay: _autoplay,
         autoplayDelay: const Duration(seconds: _autoplayDelaySec),
         initialSpeed: double.parse(_playbackSpeed),
+        initialPreset: _preset,
+        autoPreviewDelay: _autoPreviewSec >= 0 ? const Duration(seconds: _autoPreviewSec) : null,
       ),
     );
   }

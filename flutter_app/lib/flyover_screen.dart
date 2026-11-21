@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
+import 'clips/clip_player.dart';
+import 'clips/clip_view.dart';
 import 'flyover_map.dart';
 import 'flyover/player_controller.dart';
 import 'flyover/timeline.dart';
 import 'info_panel.dart';
+import 'overlays/overlay_stack.dart';
 import 'player_controls.dart';
+import 'prototype_badge.dart';
 import 'scene/scene.dart';
+import 'segment_strip.dart';
 
 /// Plays a [Scene]'s flyover on a MapLibre Native map: the camera is driven by the manifest's keyframes. Pre-trip
 /// preview only: no location is requested, shown or used.
@@ -18,12 +23,20 @@ class FlyoverScreen extends StatefulWidget {
 
   /// Starting playback speed, one of [kPlaybackSpeeds] (the on-screen speed control changes it).
   final double initialSpeed;
+
+  /// Builds the player for a street-video clip (tests pass a fake; the app plays local files with `video_player`).
+  final ClipPlayerFactory clipPlayerFactory;
+
+  /// Shown as a back button when set (the request screen closes this screen).
+  final VoidCallback? onClose;
   const FlyoverScreen({
     super.key,
     required this.scene,
     this.autoplay = false,
     this.autoplayDelay = Duration.zero,
     this.initialSpeed = 1.0,
+    this.clipPlayerFactory = defaultClipPlayer,
+    this.onClose,
   });
 
   @override
@@ -43,7 +56,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(_scene.manifest))
+    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(_scene.manifest, availableClips: _scene.availableClips))
       ..setSpeed(widget.initialSpeed)
       ..addListener(_onPlayer);
     _ticker = createTicker((elapsed) {
@@ -112,6 +125,9 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
     final first = _player.timeline.cameraAt(0);
     final horizon = _scene.horizonColor;
     final msg = _scene.fallbackMessage;
+    final seg = _player.timeline.segmentAt(_player.positionSec);
+    final clipFile = seg.source == SegmentSource.streetVideo ? _scene.clipStore?.fileFor(seg.clipKey!) : null;
+    final cam = _player.camera;
     return Scaffold(
       body: Stack(
         children: [
@@ -126,18 +142,29 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
             onMapCreated: (c) => _map = c,
             onStyleLoadedCallback: _onStyleLoaded,
           ),
+          // Street video covers the map for its section; the clock stays the master.
+          if (clipFile != null)
+            Positioned.fill(
+              child: ClipView(
+                key: ValueKey(seg.clipKey),
+                file: clipFile,
+                localSec: _player.timeline.localSec(_player.positionSec),
+                playing: _player.playing,
+                speed: _player.speed,
+                factory: widget.clipPlayerFactory,
+              ),
+            ),
           // MapLibre Native on iOS has no fog or sky (see the D3 note): a soft fade at the top of the screen stands in
           // for the horizon haze at high pitch.
-          if (horizon != null)
+          if (horizon != null && clipFile == null)
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               height: 170,
               child: IgnorePointer(
-                // Only needed when the camera is tilted far enough to show the horizon.
                 child: Opacity(
-                  opacity: ((_player.camera.pitchDeg - 50) / 20).clamp(0.0, 1.0),
+                  opacity: ((cam.pitchDeg - 50) / 20).clamp(0.0, 1.0),
                   child: DecoratedBox(
                     key: const Key('horizon-fade'),
                     decoration: BoxDecoration(
@@ -151,17 +178,29 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
                 ),
               ),
             ),
+          if (seg.source == SegmentSource.noPreview)
+            Align(
+              alignment: const Alignment(0, -0.2),
+              child: Container(
+                key: const Key('no-preview'),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(12)),
+                child: const Text('No preview for this section\nThe route continues below.',
+                    textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+            ),
           SafeArea(
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
                 key: const Key('banner'),
-                margin: const EdgeInsets.fromLTRB(12, 12, 60, 12),
+                margin: EdgeInsets.fromLTRB(widget.onClose == null ? 12 : 56, 12, 60, 12),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(10)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (_scene.manifest.prototype) const PrototypeBadge(key: Key('prototype-badge')),
                     Text(_scene.bannerTitle,
                         textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                     Text(_scene.bannerNote, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
@@ -178,6 +217,21 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
               ),
             ),
           ),
+          if (widget.onClose != null)
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12, left: 8),
+                  child: IconButton.filledTonal(
+                    key: const Key('close-button'),
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: 'Back to the route request',
+                    onPressed: widget.onClose,
+                  ),
+                ),
+              ),
+            ),
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
@@ -192,13 +246,33 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
               ),
             ),
           ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 0,
+            child: SafeArea(
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 246),
+                  child: OverlayStack(overlays: _scene.manifest.overlays, offsetM: cam.offsetM),
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter,
-              child: PlayerControls(
-                controller: _player,
-                timelineStartM: _scene.manifest.timelineStartM,
-                timelineEndM: _scene.manifest.timelineEndM,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SegmentStrip(controller: _player),
+                  PlayerControls(
+                    controller: _player,
+                    timelineStartM: _scene.manifest.timelineStartM,
+                    timelineEndM: _scene.manifest.timelineEndM,
+                  ),
+                ],
               ),
             ),
           ),

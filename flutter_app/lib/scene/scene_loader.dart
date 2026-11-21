@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import 'package:path_provider/path_provider.dart';
 
+import '../clips/clip_store.dart';
 import '../fixture.dart';
 import '../flyover/manifest.dart';
 import '../style/route_preview_style.dart';
@@ -19,7 +20,51 @@ Future<Directory> sandboxTilesDir() async {
   return Directory('${docs.path}/tiles');
 }
 
-/// Picks the scene: the real tiles when both files are in [tilesDir], else the 5B-1 fixture with a message saying why.
+/// `Documents/clips` inside the app sandbox.
+Future<Directory> sandboxClipsDir() async {
+  final docs = await getApplicationDocumentsDirectory();
+  return Directory('${docs.path}/clips');
+}
+
+/// A scene for [manifest] (from the live API or any other source): the real tiles when both files are in [tilesDir],
+/// else the route on a plain background with a message. Clips found in [clipsDir] play; nothing is ever downloaded.
+Future<Scene> sceneForManifest(
+  PreviewManifest manifest, {
+  required String sourceLabel,
+  Directory? tilesDir,
+  Directory? clipsDir,
+  AssetBundle? bundle,
+  bool hillshade = true,
+}) async {
+  final b = bundle ?? rootBundle;
+  final clips = ClipStore(clipsDir ?? await sandboxClipsDir());
+  final available = await clips.available(manifest);
+  final tiles = await loadDevTiles(tilesDir ?? await sandboxTilesDir());
+  if (tiles.usable) {
+    try {
+      return TileScene.create(
+        manifest: manifest,
+        styleTemplate: await b.loadString(RoutePreviewStyle.asset),
+        tiles: tiles,
+        hillshade: hillshade,
+        availableClips: available,
+        clipStore: clips,
+        sourceLabel: sourceLabel,
+      );
+    } on Object catch (e) {
+      debugPrint('[flyover] tile scene failed: $e');
+    }
+  }
+  return RouteOnlyScene.create(
+    manifest: manifest,
+    message: tiles.usable ? 'Could not build the map style. Showing the route only.' : (tiles.message ?? 'Map tiles not available.'),
+    availableClips: available,
+    clipStore: clips,
+    sourceLabel: sourceLabel,
+  );
+}
+
+/// Picks the scene for the BUNDLED fixture route: the real tiles when both files are in [tilesDir], else the 5B-1 fixture with a message saying why.
 /// Never returns a blank map and never throws for missing or broken tiles.
 Future<Scene> loadScene({
   Directory? tilesDir,
