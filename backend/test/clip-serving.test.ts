@@ -192,6 +192,36 @@ describe("loopback binding", () => {
   });
 });
 
+describe("proxy / tailnet headers (tailscale serve makes every caller look like loopback)", () => {
+  const cases: Array<[string, string]> = [
+    ["X-Forwarded-For", "100.64.0.9"], ["x-forwarded-for", "100.64.0.9"], ["X-FORWARDED-FOR", "100.64.0.9"],
+    ["X-Forwarded-Host", "servermac.tail607401.ts.net"], ["X-Forwarded-Proto", "https"],
+    ["Forwarded", "for=100.64.0.9;proto=https"], ["Via", "1.1 tailscale"],
+    ["Tailscale-User-Login", "someone@example.invalid"], ["tailscale-user-name", "x"], ["Tailscale-Headers-Info", "x"],
+  ];
+  for (const flag of [undefined, "1"]) {
+    for (const [name, value] of cases) {
+      it(`${name} is refused with problem JSON (flag ${flag ?? "unset"})`, async () => {
+        if (flag) process.env.PROTOTYPE_CLIP_SERVING = flag;
+        const r = await raw("/clips/111/forward.mp4", "GET", { [name]: value });
+        expect(r.status).toBe(403);
+        expect(r.headers["content-type"]).toBe("application/problem+json");
+        expect(lookups).toEqual([]);
+        expect(r.body.toString()).not.toMatch(/127\.0\.0\.1|loopback|PROTOTYPE|\/tmp|rpg-clips/);
+      });
+    }
+  }
+  it("also refuses HEAD and malformed paths that carry such a header", async () => {
+    process.env.PROTOTYPE_CLIP_SERVING = "1";
+    expect((await raw("/clips/111/forward.mp4", "HEAD", { Via: "1.1 x" })).status).toBe(403);
+    expect((await raw("/clips/../x", "GET", { "X-Forwarded-For": "1.2.3.4" })).status).toBe(403);
+  });
+  it("a request without those headers still works with the flag on", async () => {
+    process.env.PROTOTYPE_CLIP_SERVING = "1";
+    expect((await raw("/clips/111/forward.mp4")).status).toBe(200);
+  });
+});
+
 describe("parseRange", () => {
   it("handles the edge cases", () => {
     expect(parseRange(undefined, 100)).toBeNull();
