@@ -1,10 +1,9 @@
 {
-  "generatedAt": "2026-11-20T19:44:31.533Z",
+  "generatedAt": "2026-11-21T05:33:49.050Z",
   "branchStatus": "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.",
-  "liveImageryMeasured": false,
-  "mapillaryTokenConfigured": false,
-  "statement": "Live Mapillary coverage was NOT measured: no Mapillary token is configured, no frames were ingested, and this run made no Mapillary call. Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. No coverage figure for real roads exists in this report, and none should be inferred from it.",
-  "frameRowsInDatabase": 0,
+  "mapillaryTokenConfigured": true,
+  "statement": "This run classified against the 50476 frames then in the `frames` table (the coverage-audit data); no Mapillary call was made. Rows below describe the last-500 m approach only. Real coverage was measured separately: see docs/validation/coverage-audit.md (Mapillary image metadata, no image files, for a 30 m corridor around these same 25 pairs under both costings, ingested 2026-11-20).",
+  "frameRowsInDatabase": 50476,
   "config": {
     "match": {
       "lateralToleranceM": 15,
@@ -85,16 +84,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 36,
+        "candidateFrames": 842,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 7.199157104373794,
+        "maxGapM": 68.191,
+        "streetFraction": 0.25768782925347306,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 3
       }
     },
     {
@@ -135,13 +135,13 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 21,
+        "candidateFrames": 381,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 4.200350438499451,
+        "maxGapM": 38.65199999999999,
         "streetFraction": 0,
-        "levelUncertainSegments": 0,
+        "levelUncertainSegments": 1,
         "segmentCount": 1
       }
     },
@@ -184,7 +184,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 16,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -232,7 +232,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 14,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -375,11 +375,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -423,11 +423,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -469,16 +469,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 44,
+        "candidateFrames": 299,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 8.800890508505276,
+        "maxGapM": 78.49099999999999,
+        "streetFraction": 0.32904329388674103,
+        "levelUncertainSegments": 1,
+        "segmentCount": 3
       }
     },
     {
@@ -517,16 +518,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 44,
+        "candidateFrames": 299,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 8.800890508505276,
+        "maxGapM": 78.49099999999999,
+        "streetFraction": 0.32904329388674103,
+        "levelUncertainSegments": 1,
+        "segmentCount": 3
       }
     },
     {
@@ -661,16 +663,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 77,
+        "candidateFrames": 479,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 15.399682249284577,
+        "maxGapM": 46.565,
+        "streetFraction": 0.7602543132249081,
+        "levelUncertainSegments": 1,
+        "segmentCount": 2
       }
     },
     {
@@ -709,16 +712,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 77,
+        "candidateFrames": 479,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 15.399682249284577,
+        "maxGapM": 46.565,
+        "streetFraction": 0.7602543132249081,
+        "levelUncertainSegments": 1,
+        "segmentCount": 2
       }
     },
     {
@@ -757,16 +761,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 36,
+        "candidateFrames": 842,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 7.199157104373794,
+        "maxGapM": 68.191,
+        "streetFraction": 0.25768782925347306,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 3
       }
     },
     {
@@ -807,13 +812,13 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 46,
+        "candidateFrames": 334,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 9.199823871651336,
+        "maxGapM": 61.14699999999999,
         "streetFraction": 0,
-        "levelUncertainSegments": 0,
+        "levelUncertainSegments": 1,
         "segmentCount": 1
       }
     },
@@ -855,11 +860,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -903,11 +908,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -949,16 +954,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 36,
+        "candidateFrames": 842,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 7.199157104373794,
+        "maxGapM": 68.191,
+        "streetFraction": 0.25768782925347306,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 3
       }
     },
     {
@@ -999,13 +1005,13 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 21,
+        "candidateFrames": 381,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 4.200350438499451,
+        "maxGapM": 38.65199999999999,
         "streetFraction": 0,
-        "levelUncertainSegments": 0,
+        "levelUncertainSegments": 1,
         "segmentCount": 1
       }
     },
@@ -1047,11 +1053,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 27,
+        "candidateFrames": 210,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.400426460301706,
+        "maxGapM": 195.51199999999997,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1095,11 +1101,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 27,
+        "candidateFrames": 210,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.400426460301706,
+        "maxGapM": 195.51199999999997,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1141,16 +1147,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 50,
+        "candidateFrames": 237,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 9.999118226741237,
+        "maxGapM": 88.952,
+        "streetFraction": 0.47685994805693493,
+        "levelUncertainSegments": 1,
+        "segmentCount": 5
       }
     },
     {
@@ -1189,16 +1196,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 50,
+        "candidateFrames": 237,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 9.999118226741237,
+        "maxGapM": 88.952,
+        "streetFraction": 0.47685994805693493,
+        "levelUncertainSegments": 1,
+        "segmentCount": 5
       }
     },
     {
@@ -1239,11 +1247,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1287,11 +1295,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1429,16 +1437,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 66,
+        "candidateFrames": 198,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 13.201072063703842,
+        "maxGapM": 13.47199999999998,
+        "streetFraction": 0.9822617698236945,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 2
       }
     },
     {
@@ -1477,16 +1486,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 66,
+        "candidateFrames": 198,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 13.201072063703842,
+        "maxGapM": 13.47199999999998,
+        "streetFraction": 0.9822617698236945,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 2
       }
     },
     {
@@ -1623,11 +1633,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1671,11 +1681,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 26,
+        "candidateFrames": 209,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 5.200002022952321,
+        "maxGapM": 195.51200000000003,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -1717,16 +1727,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 66,
+        "candidateFrames": 198,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 13.201072063703842,
+        "maxGapM": 13.47199999999998,
+        "streetFraction": 0.9822617698236945,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 2
       }
     },
     {
@@ -1765,16 +1776,17 @@
       },
       "classification": {
         "modes": [
+          "STREET_VIDEO",
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 66,
+        "candidateFrames": 198,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 13.201072063703842,
+        "maxGapM": 13.47199999999998,
+        "streetFraction": 0.9822617698236945,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 2
       }
     },
     {
@@ -1816,7 +1828,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 16,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -1864,7 +1876,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 14,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -1911,13 +1923,13 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 34,
+        "candidateFrames": 254,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 6.800223662215053,
+        "maxGapM": 193.167,
         "streetFraction": 0,
-        "levelUncertainSegments": 0,
+        "levelUncertainSegments": 1,
         "segmentCount": 1
       }
     },
@@ -1957,16 +1969,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 50,
+        "candidateFrames": 237,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 9.999118226741237,
+        "maxGapM": 88.952,
+        "streetFraction": 0.47685994805693493,
+        "levelUncertainSegments": 1,
+        "segmentCount": 5
       }
     },
     {
@@ -2005,16 +2018,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 36,
+        "candidateFrames": 842,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
+        "framesPer100m": 7.199157104373794,
+        "maxGapM": 68.191,
+        "streetFraction": 0.25768782925347306,
         "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "segmentCount": 3
       }
     },
     {
@@ -2055,13 +2069,13 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 21,
+        "candidateFrames": 381,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 4.200350438499451,
+        "maxGapM": 38.65199999999999,
         "streetFraction": 0,
-        "levelUncertainSegments": 0,
+        "levelUncertainSegments": 1,
         "segmentCount": 1
       }
     },
@@ -2101,16 +2115,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 44,
+        "candidateFrames": 299,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 8.799921643961913,
+        "maxGapM": 78.49099999999999,
+        "streetFraction": 0.329007070463626,
+        "levelUncertainSegments": 1,
+        "segmentCount": 3
       }
     },
     {
@@ -2149,16 +2164,17 @@
       },
       "classification": {
         "modes": [
-          "BIRDS_EYE_3D"
+          "BIRDS_EYE_3D",
+          "STREET_VIDEO"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 44,
+        "candidateFrames": 299,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
-        "streetFraction": 0,
-        "levelUncertainSegments": 0,
-        "segmentCount": 1
+        "framesPer100m": 8.799921643961913,
+        "maxGapM": 78.49099999999999,
+        "streetFraction": 0.329007070463626,
+        "levelUncertainSegments": 1,
+        "segmentCount": 3
       }
     },
     {
@@ -2200,7 +2216,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 16,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -2248,7 +2264,7 @@
           "BIRDS_EYE_3D"
         ],
         "usableFrames": 0,
-        "candidateFrames": 0,
+        "candidateFrames": 14,
         "sourcesExcluded": [],
         "framesPer100m": 0,
         "maxGapM": null,
@@ -2295,11 +2311,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 12,
+        "candidateFrames": 41,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 2.4000888833118004,
+        "maxGapM": 27.816999999999993,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -2343,11 +2359,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 12,
+        "candidateFrames": 41,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 2.4000888833118004,
+        "maxGapM": 27.816999999999993,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1
@@ -2406,11 +2422,11 @@
         "modes": [
           "BIRDS_EYE_3D"
         ],
-        "usableFrames": 0,
-        "candidateFrames": 0,
+        "usableFrames": 6,
+        "candidateFrames": 85,
         "sourcesExcluded": [],
-        "framesPer100m": 0,
-        "maxGapM": null,
+        "framesPer100m": 1.1998460850231967,
+        "maxGapM": 101.378,
         "streetFraction": 0,
         "levelUncertainSegments": 0,
         "segmentCount": 1

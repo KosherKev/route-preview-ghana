@@ -1,17 +1,17 @@
 # Route preview validation (Phase 3)
 
-Generated: 2026-11-20T19:44:31.533Z
+Generated: 2026-11-21T05:33:49.050Z
 
 ## Branch status
 
 **This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, and the auto-merge bar permanently excludes work touching migrations; it is pushed and PR-ready for human review.**
 
-## Statement: live imagery was NOT measured
+## Imagery coverage
 
-**Live Mapillary coverage was NOT measured: no Mapillary token is configured, no frames were ingested, and this run made no Mapillary call. Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. No coverage figure for real roads exists in this report, and none should be inferred from it.**
+**This run classified against the 50476 frames then in the `frames` table (the coverage-audit data); no Mapillary call was made. Rows below describe the last-500 m approach only. Real coverage was measured separately: see docs/validation/coverage-audit.md (Mapillary image metadata, no image files, for a 30 m corridor around these same 25 pairs under both costings, ingested 2026-11-20).**
 
-- Mapillary token configured: no
-- Rows in the `frames` table at run time: 0
+- Mapillary token configured: yes (never used by this tool)
+- Rows in the `frames` table at run time: 50476
 
 What the real-route section DOES verify: Valhalla routing, approach extraction (about 500 m along the route), edge ids, the `unpaved_fallback` handling, and that the classifier degrades safely to BIRDS_EYE_3D when there is no imagery.
 
@@ -41,58 +41,58 @@ Each pair is run with both costings. Approach length, edge counts, classifier co
 
 | Route | Costing | Origin | Destination | Route km | Approach m | Edges (approach / route) | unpaved_fallback | Named places | Classifier | Frames used | Frames/100 m | Max gap m | level_uncertain |
 | --- | --- | --- | --- | ---: | ---: | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
-| r01 Accra Central -> Tetteh Quarshie Interchange | motor_scooter | 5.55020, -0.21740 | 5.62326, -0.17552 | 11.5 | 500.0 | 5 / 141 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r01 Accra Central -> Tetteh Quarshie Interchange | auto | 5.55020, -0.21740 | 5.62326, -0.17552 | 15.4 | 500.0 | 5 / 174 | false | Kwame Nkrumah Interchange (through, 17 m); Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r01 Accra Central -> Tetteh Quarshie Interchange | motor_scooter | 5.55020, -0.21740 | 5.62326, -0.17552 | 11.5 | 500.0 | 5 / 141 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D, STREET_VIDEO | 36 | 7.2 | 68.2 | 0 |
+| r01 Accra Central -> Tetteh Quarshie Interchange | auto | 5.55020, -0.21740 | 5.62326, -0.17552 | 15.4 | 500.0 | 5 / 174 | false | Kwame Nkrumah Interchange (through, 17 m); Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 21 | 4.2 | 38.7 | 1 |
 | r02 Tetteh Quarshie Interchange -> Accra Central | motor_scooter | 5.62326, -0.17552 | 5.55020, -0.21740 | 13.1 | 500.0 | 14 / 175 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r02 Tetteh Quarshie Interchange -> Accra Central | auto | 5.62326, -0.17552 | 5.55020, -0.21740 | 14.1 | 500.0 | 13 / 195 | false | Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r03 Kwame Nkrumah Interchange -> Airport | motor_scooter | 5.56960, -0.21520 | 5.60520, -0.16680 | 12.0 | 500.0 | 2 / 109 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r03 Kwame Nkrumah Interchange -> Airport | auto | 5.56960, -0.21520 | 5.60520, -0.16680 | 10.7 | 500.0 | 1 / 79 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r04 Achimota -> Kwame Nkrumah Interchange | motor_scooter | 5.61500, -0.23300 | 5.56960, -0.21520 | 7.3 | 500.0 | 7 / 84 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r04 Achimota -> Kwame Nkrumah Interchange | auto | 5.61500, -0.23300 | 5.56960, -0.21520 | 7.4 | 500.0 | 7 / 116 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r05 Kwame Nkrumah Interchange -> Danquah Circle | motor_scooter | 5.56960, -0.21520 | 5.56700, -0.18090 | 4.2 | 500.0 | 12 / 49 | false | Kwame Nkrumah Interchange (ends at, 2 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r05 Kwame Nkrumah Interchange -> Danquah Circle | auto | 5.56960, -0.21520 | 5.56700, -0.18090 | 4.2 | 500.0 | 12 / 49 | false | Kwame Nkrumah Interchange (ends at, 2 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r04 Achimota -> Kwame Nkrumah Interchange | motor_scooter | 5.61500, -0.23300 | 5.56960, -0.21520 | 7.3 | 500.0 | 7 / 84 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r04 Achimota -> Kwame Nkrumah Interchange | auto | 5.61500, -0.23300 | 5.56960, -0.21520 | 7.4 | 500.0 | 7 / 116 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r05 Kwame Nkrumah Interchange -> Danquah Circle | motor_scooter | 5.56960, -0.21520 | 5.56700, -0.18090 | 4.2 | 500.0 | 12 / 49 | false | Kwame Nkrumah Interchange (ends at, 2 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 44 | 8.8 | 78.5 | 1 |
+| r05 Kwame Nkrumah Interchange -> Danquah Circle | auto | 5.56960, -0.21520 | 5.56700, -0.18090 | 4.2 | 500.0 | 12 / 49 | false | Kwame Nkrumah Interchange (ends at, 2 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 44 | 8.8 | 78.5 | 1 |
 | r06 Danquah Circle -> Airport | motor_scooter | 5.56700, -0.18090 | 5.60520, -0.16680 | 9.7 | 500.0 | 2 / 123 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r06 Danquah Circle -> Airport | auto | 5.56700, -0.18090 | 5.60520, -0.16680 | 9.0 | 500.0 | 1 / 62 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r07 Osu -> Danquah Circle | motor_scooter | 5.55410, -0.18360 | 5.56700, -0.18090 | 1.5 | 500.0 | 13 / 41 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r07 Osu -> Danquah Circle | auto | 5.55410, -0.18360 | 5.56700, -0.18090 | 1.5 | 500.0 | 13 / 41 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r08 Legon -> Tetteh Quarshie Interchange | motor_scooter | 5.65080, -0.18700 | 5.62326, -0.17552 | 6.1 | 500.0 | 5 / 88 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r08 Legon -> Tetteh Quarshie Interchange | auto | 5.65080, -0.18700 | 5.62326, -0.17552 | 4.9 | 500.0 | 4 / 77 | false | Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r09 Madina -> Kwame Nkrumah Interchange | motor_scooter | 5.66830, -0.16650 | 5.56960, -0.21520 | 16.7 | 500.0 | 7 / 190 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r09 Madina -> Kwame Nkrumah Interchange | auto | 5.66830, -0.16650 | 5.56960, -0.21520 | 16.7 | 500.0 | 7 / 182 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r10 Dzorwulu -> Tetteh Quarshie Interchange | motor_scooter | 5.60200, -0.19500 | 5.62326, -0.17552 | 4.4 | 500.0 | 5 / 54 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r10 Dzorwulu -> Tetteh Quarshie Interchange | auto | 5.60200, -0.19500 | 5.62326, -0.17552 | 4.8 | 500.0 | 5 / 45 | false | Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r11 Kaneshie -> Kwame Nkrumah Interchange | motor_scooter | 5.56000, -0.23700 | 5.56960, -0.21520 | 3.1 | 500.0 | 5 / 41 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r11 Kaneshie -> Kwame Nkrumah Interchange | auto | 5.56000, -0.23700 | 5.56960, -0.21520 | 3.1 | 500.0 | 5 / 41 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r12 Labone -> Danquah Circle | motor_scooter | 5.56400, -0.17200 | 5.56700, -0.18090 | 1.2 | 500.0 | 13 / 23 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r12 Labone -> Danquah Circle | auto | 5.56400, -0.17200 | 5.56700, -0.18090 | 1.2 | 500.0 | 13 / 23 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r13 Ridge -> Kwame Nkrumah Interchange | motor_scooter | 5.56000, -0.19800 | 5.56960, -0.21520 | 4.4 | 500.0 | 7 / 88 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r13 Ridge -> Kwame Nkrumah Interchange | auto | 5.56000, -0.19800 | 5.56960, -0.21520 | 4.4 | 500.0 | 7 / 91 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r07 Osu -> Danquah Circle | motor_scooter | 5.55410, -0.18360 | 5.56700, -0.18090 | 1.5 | 500.0 | 13 / 41 | false | Danquah Circle (ends at, 21 m) | STREET_VIDEO, BIRDS_EYE_3D | 77 | 15.4 | 46.6 | 1 |
+| r07 Osu -> Danquah Circle | auto | 5.55410, -0.18360 | 5.56700, -0.18090 | 1.5 | 500.0 | 13 / 41 | false | Danquah Circle (ends at, 21 m) | STREET_VIDEO, BIRDS_EYE_3D | 77 | 15.4 | 46.6 | 1 |
+| r08 Legon -> Tetteh Quarshie Interchange | motor_scooter | 5.65080, -0.18700 | 5.62326, -0.17552 | 6.1 | 500.0 | 5 / 88 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D, STREET_VIDEO | 36 | 7.2 | 68.2 | 0 |
+| r08 Legon -> Tetteh Quarshie Interchange | auto | 5.65080, -0.18700 | 5.62326, -0.17552 | 4.9 | 500.0 | 4 / 77 | false | Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 46 | 9.2 | 61.1 | 1 |
+| r09 Madina -> Kwame Nkrumah Interchange | motor_scooter | 5.66830, -0.16650 | 5.56960, -0.21520 | 16.7 | 500.0 | 7 / 190 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r09 Madina -> Kwame Nkrumah Interchange | auto | 5.66830, -0.16650 | 5.56960, -0.21520 | 16.7 | 500.0 | 7 / 182 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r10 Dzorwulu -> Tetteh Quarshie Interchange | motor_scooter | 5.60200, -0.19500 | 5.62326, -0.17552 | 4.4 | 500.0 | 5 / 54 | false | Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D, STREET_VIDEO | 36 | 7.2 | 68.2 | 0 |
+| r10 Dzorwulu -> Tetteh Quarshie Interchange | auto | 5.60200, -0.19500 | 5.62326, -0.17552 | 4.8 | 500.0 | 5 / 45 | false | Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 21 | 4.2 | 38.7 | 1 |
+| r11 Kaneshie -> Kwame Nkrumah Interchange | motor_scooter | 5.56000, -0.23700 | 5.56960, -0.21520 | 3.1 | 500.0 | 5 / 41 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 27 | 5.4 | 195.5 | 0 |
+| r11 Kaneshie -> Kwame Nkrumah Interchange | auto | 5.56000, -0.23700 | 5.56960, -0.21520 | 3.1 | 500.0 | 5 / 41 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 27 | 5.4 | 195.5 | 0 |
+| r12 Labone -> Danquah Circle | motor_scooter | 5.56400, -0.17200 | 5.56700, -0.18090 | 1.2 | 500.0 | 13 / 23 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 50 | 10.0 | 89.0 | 1 |
+| r12 Labone -> Danquah Circle | auto | 5.56400, -0.17200 | 5.56700, -0.18090 | 1.2 | 500.0 | 13 / 23 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 50 | 10.0 | 89.0 | 1 |
+| r13 Ridge -> Kwame Nkrumah Interchange | motor_scooter | 5.56000, -0.19800 | 5.56960, -0.21520 | 4.4 | 500.0 | 7 / 88 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r13 Ridge -> Kwame Nkrumah Interchange | auto | 5.56000, -0.19800 | 5.56960, -0.21520 | 4.4 | 500.0 | 7 / 91 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
 | r14 Danquah Circle -> Madina | motor_scooter | 5.56700, -0.18090 | 5.66830, -0.16650 | 13.4 | 500.0 | 8 / 123 | false | Tetteh Quarshie Interchange (through, 90 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r14 Danquah Circle -> Madina | auto | 5.56700, -0.18090 | 5.66830, -0.16650 | 13.4 | 500.0 | 8 / 114 | false | Tetteh Quarshie Interchange (through, 90 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r15 Achimota -> Osu | motor_scooter | 5.61500, -0.23300 | 5.55410, -0.18360 | 11.7 | 500.0 | 12 / 189 | false | Kwame Nkrumah Interchange (through, 20 m); Danquah Circle (through, 33 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r15 Achimota -> Osu | auto | 5.61500, -0.23300 | 5.55410, -0.18360 | 11.7 | 500.0 | 12 / 185 | false | Kwame Nkrumah Interchange (through, 20 m); Danquah Circle (through, 33 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r15 Achimota -> Osu | motor_scooter | 5.61500, -0.23300 | 5.55410, -0.18360 | 11.7 | 500.0 | 12 / 189 | false | Kwame Nkrumah Interchange (through, 20 m); Danquah Circle (through, 33 m) | STREET_VIDEO, BIRDS_EYE_3D | 66 | 13.2 | 13.5 | 0 |
+| r15 Achimota -> Osu | auto | 5.61500, -0.23300 | 5.55410, -0.18360 | 11.7 | 500.0 | 12 / 185 | false | Kwame Nkrumah Interchange (through, 20 m); Danquah Circle (through, 33 m) | STREET_VIDEO, BIRDS_EYE_3D | 66 | 13.2 | 13.5 | 0 |
 | r16 Accra Central -> Madina | motor_scooter | 5.55020, -0.21740 | 5.66830, -0.16650 | 17.7 | 500.0 | 8 / 195 | false | Tetteh Quarshie Interchange (through, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r16 Accra Central -> Madina | auto | 5.55020, -0.21740 | 5.66830, -0.16650 | 17.7 | 500.0 | 8 / 187 | false | Tetteh Quarshie Interchange (through, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r17 East Legon -> Kwame Nkrumah Interchange | motor_scooter | 5.63500, -0.15500 | 5.56960, -0.21520 | 13.5 | 500.0 | 7 / 162 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r17 East Legon -> Kwame Nkrumah Interchange | auto | 5.63500, -0.15500 | 5.56960, -0.21520 | 14.3 | 500.0 | 7 / 191 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r18 Tetteh Quarshie Interchange -> Osu | motor_scooter | 5.62326, -0.17552 | 5.55410, -0.18360 | 10.3 | 500.0 | 12 / 141 | false | Tetteh Quarshie Interchange (ends at, 90 m); Danquah Circle (through, 33 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r18 Tetteh Quarshie Interchange -> Osu | auto | 5.62326, -0.17552 | 5.55410, -0.18360 | 10.4 | 500.0 | 12 / 131 | false | Tetteh Quarshie Interchange (ends at, 0 m); Danquah Circle (through, 33 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r17 East Legon -> Kwame Nkrumah Interchange | motor_scooter | 5.63500, -0.15500 | 5.56960, -0.21520 | 13.5 | 500.0 | 7 / 162 | false | Kwame Nkrumah Interchange (ends at, 2 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r17 East Legon -> Kwame Nkrumah Interchange | auto | 5.63500, -0.15500 | 5.56960, -0.21520 | 14.3 | 500.0 | 7 / 191 | false | Kwame Nkrumah Interchange (ends at, 2 m); Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 26 | 5.2 | 195.5 | 0 |
+| r18 Tetteh Quarshie Interchange -> Osu | motor_scooter | 5.62326, -0.17552 | 5.55410, -0.18360 | 10.3 | 500.0 | 12 / 141 | false | Tetteh Quarshie Interchange (ends at, 90 m); Danquah Circle (through, 33 m) | STREET_VIDEO, BIRDS_EYE_3D | 66 | 13.2 | 13.5 | 0 |
+| r18 Tetteh Quarshie Interchange -> Osu | auto | 5.62326, -0.17552 | 5.55410, -0.18360 | 10.4 | 500.0 | 12 / 131 | false | Tetteh Quarshie Interchange (ends at, 0 m); Danquah Circle (through, 33 m) | STREET_VIDEO, BIRDS_EYE_3D | 66 | 13.2 | 13.5 | 0 |
 | r19 Airport -> Accra Central | motor_scooter | 5.60520, -0.16680 | 5.55020, -0.21740 | 14.5 | 500.0 | 14 / 174 | false | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r19 Airport -> Accra Central | auto | 5.60520, -0.16680 | 5.55020, -0.21740 | 14.2 | 500.0 | 13 / 176 | false | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r20 Spintex -> Danquah Circle | motor_scooter | 5.63500, -0.10500 | 5.56700, -0.18090 | 15.3 | 500.0 | 15 / 231 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r20 Spintex -> Danquah Circle | auto | 5.63500, -0.10500 | 5.56700, -0.18090 | 17.1 | 500.0 | 13 / 195 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r21 Kaneshie -> Tetteh Quarshie Interchange | motor_scooter | 5.56000, -0.23700 | 5.62326, -0.17552 | 12.1 | 500.0 | 5 / 126 | false | Kwame Nkrumah Interchange (through, 2 m); Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r21 Kaneshie -> Tetteh Quarshie Interchange | auto | 5.56000, -0.23700 | 5.62326, -0.17552 | 14.2 | 500.0 | 5 / 146 | false | Kwame Nkrumah Interchange (through, 17 m); Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r22 Legon -> Danquah Circle | motor_scooter | 5.65080, -0.18700 | 5.56700, -0.18090 | 11.5 | 500.0 | 12 / 159 | false | Tetteh Quarshie Interchange (through, 110 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r22 Legon -> Danquah Circle | auto | 5.65080, -0.18700 | 5.56700, -0.18090 | 11.5 | 500.0 | 12 / 159 | false | Tetteh Quarshie Interchange (through, 110 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r20 Spintex -> Danquah Circle | motor_scooter | 5.63500, -0.10500 | 5.56700, -0.18090 | 15.3 | 500.0 | 15 / 231 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D | 34 | 6.8 | 193.2 | 1 |
+| r20 Spintex -> Danquah Circle | auto | 5.63500, -0.10500 | 5.56700, -0.18090 | 17.1 | 500.0 | 13 / 195 | false | Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 50 | 10.0 | 89.0 | 1 |
+| r21 Kaneshie -> Tetteh Quarshie Interchange | motor_scooter | 5.56000, -0.23700 | 5.62326, -0.17552 | 12.1 | 500.0 | 5 / 126 | false | Kwame Nkrumah Interchange (through, 2 m); Tetteh Quarshie Interchange (ends at, 90 m) | BIRDS_EYE_3D, STREET_VIDEO | 36 | 7.2 | 68.2 | 0 |
+| r21 Kaneshie -> Tetteh Quarshie Interchange | auto | 5.56000, -0.23700 | 5.62326, -0.17552 | 14.2 | 500.0 | 5 / 146 | false | Kwame Nkrumah Interchange (through, 17 m); Tetteh Quarshie Interchange (ends at, 0 m) | BIRDS_EYE_3D | 21 | 4.2 | 38.7 | 1 |
+| r22 Legon -> Danquah Circle | motor_scooter | 5.65080, -0.18700 | 5.56700, -0.18090 | 11.5 | 500.0 | 12 / 159 | false | Tetteh Quarshie Interchange (through, 110 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 44 | 8.8 | 78.5 | 1 |
+| r22 Legon -> Danquah Circle | auto | 5.65080, -0.18700 | 5.56700, -0.18090 | 11.5 | 500.0 | 12 / 159 | false | Tetteh Quarshie Interchange (through, 110 m); Danquah Circle (ends at, 21 m) | BIRDS_EYE_3D, STREET_VIDEO | 44 | 8.8 | 78.5 | 1 |
 | r23 East Legon -> Accra Central | motor_scooter | 5.63500, -0.15500 | 5.55020, -0.21740 | 14.5 | 500.0 | 14 / 189 | false | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
 | r23 East Legon -> Accra Central | auto | 5.63500, -0.15500 | 5.55020, -0.21740 | 16.3 | 500.0 | 13 / 248 | false | Tetteh Quarshie Interchange (through, 110 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | motor_scooter | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 94 | false | Kwame Nkrumah Interchange (through, 37 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
-| r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | auto | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 103 | false | Kwame Nkrumah Interchange (through, 55 m) | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | motor_scooter | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 94 | false | Kwame Nkrumah Interchange (through, 37 m) | BIRDS_EYE_3D | 12 | 2.4 | 27.8 | 0 |
+| r24 Abeka -> Adabraka (through Kwame Nkrumah Interchange area) | auto | 5.59950, -0.22850 | 5.56300, -0.20900 | 5.8 | 500.0 | 8 / 103 | false | Kwame Nkrumah Interchange (through, 55 m) | BIRDS_EYE_3D | 12 | 2.4 | 27.8 | 0 |
 | r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | motor_scooter | 5.60198, -0.22612 | 5.57811, -0.22970 | no route | | | | | error: Valhalla /route -> HTTP 400: {"error_code":442,"error":"No path could be found for input","status_code":400,"status":"Bad Request"} | | | | |
-| r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | auto | 5.60198, -0.22612 | 5.57811, -0.22970 | 3.8 | 500.0 | 7 / 63 | TRUE | none | BIRDS_EYE_3D | 0 | 0.0 | n/a | 0 |
+| r25 Phase 2 failing pair (corridor tetteh-quarshie-accra-central) | auto | 5.60198, -0.22612 | 5.57811, -0.22970 | 3.8 | 500.0 | 7 / 63 | TRUE | none | BIRDS_EYE_3D | 6 | 1.2 | 101.4 | 0 |
 
-Routes attempted: 50; routed: 49; no route/error: 1; unpaved_fallback used: 1; classified STREET_VIDEO anywhere: 0.
+Routes attempted: 50; routed: 49; no route/error: 1; unpaved_fallback used: 1; classified STREET_VIDEO anywhere: 17.
 
 ## SYNTHETIC classifier demonstrations
 

@@ -45,7 +45,8 @@ services:
   # after scripts/fetch-photon.sh. Loopback only; hard 1.5 GB limit so it fits the 5 GB VM beside PostGIS and Valhalla.
   photon:
     profiles: ["geocoder"]
-    image: eclipse-temurin:17-jre
+    # Pinned by index digest (resolved 2026-11-20 from the 17-jre tag; verified with `docker manifest inspect`). Bump deliberately.
+    image: eclipse-temurin:17-jre@sha256:fb2cec8da84e3f086b59e29bf432d372e396fe0c247adcfb89303a28c2e313c0
     working_dir: /photon
     command: ["java", "-Xms256m", "-Xmx768m", "-jar", "photon-0.7.4.jar", "-data-dir", "/photon", "-listen-ip", "0.0.0.0", "-listen-port", "2322"]
     volumes:

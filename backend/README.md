@@ -81,9 +81,9 @@ with the endpoint enabled (needs `.env` for the database).
   `500` generic for database failures (details are logged server-side only). All SQL is parameterised.
 - Example: `curl 'http://127.0.0.1:8787/landmarks/search?q=asilum+down+farmacy&near=5.57,-0.2&limit=3'`
 
-Geocode chain (`src/patterns/geocodeChain.ts`, `buildGeocodeChain`): coordinate parse (no I/O), then the landmark search above, then an
-optional self-hosted geocoder. `httpGeocoder` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
-The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonGeocoder`): `scripts/fetch-photon.sh` (checksum-verified downloads into
+Geocode chain (`createGeocoder` in `src/geo/geocode.ts`): coordinate parse (no I/O), then the landmark search above, then an
+optional self-hosted geocoder. `photonClient` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
+The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonClient` in `src/geo/photon.ts`): `scripts/fetch-photon.sh` (checksum-verified downloads into
 `data/photon`), then `docker compose --profile geocoder up -d photon` (127.0.0.1:2322, 1.5 GB limit, about 300 MiB used). The landmark stage only
 claims an answer at similarity >= 0.5, so place names that are not in the landmarks table fall through to Photon.
 Measured numbers and the verdict are in `../docs/validation/geocoder-spike.md`.
@@ -184,7 +184,7 @@ centred on the maneuver point, for turns, roundabouts, merges and ramps/exits/fo
   NO scooter route (e.g. the regression pair in `test/approach.integration.test.ts`); that is reported, not hidden.
 - HTTP: `npm run serve` (127.0.0.1 only, `PORT` default 8787). `POST /approach` with
   `{"origin":{"lat":5.6361,"lon":-0.175},"destination":{"lat":5.5502,"lon":-0.2174},"costing":"auto","approach_length_m":500,"decision_window_m":80}`;
-  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), requires `Content-Type: application/json` (415), 4 KB body cap (413, connection closed), 60 s deadline (504; the in-flight Valhalla fetches are aborted), Valhalla calls have their own 30 s timeout. Client errors are generic (`upstream routing failure`, `invalid request`); details go only to the server-side `onError` log.
+  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), requires `Content-Type: application/json` (415), 4 KB body cap (413, connection closed), 60 s deadline (504; the in-flight Valhalla fetches are aborted), Valhalla calls have their own 30 s timeout. All errors are RFC 9457 problem JSON (`application/problem+json`, same shape as `/geocode`); client messages are generic (`upstream routing failure`, `invalid request`) or our own validation text, and details go only to the server-side `onError` log.
 
 ### Matcher and classifier (`src/classify/`)
 
@@ -222,7 +222,7 @@ BIRDS_EYE_3D segments have `bridges: []`, `crossfades: []` and `internalMaxGapM:
 
 The 3 m left-offset limit (`maxLeftOffsetM`) is a builder-chosen, configurable parameter that is not in the spec.
 
-- **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. It may over-flag on dense real data; no real imagery has been measured yet.
+- **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. Real-data coverage is described in `../docs/validation/coverage-audit.md`, which also counts `level_uncertain` segments at the three interchanges; whether it over-flags is not judged there.
 
 Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunnel`, `use` (ramp) and `road_class` stand in for it
 (`EdgeSpan.layer` is honoured when a source provides it).
@@ -230,8 +230,9 @@ Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunn
 ### Validation harness
 
 `npm run validate` runs 25 real Accra pairs with both costings against the live Valhalla and PostGIS and writes
-`../docs/validation/route-validation.{md,json}`. It never calls Mapillary. With the empty `frames` table every routed row is BIRDS_EYE_3D and the
-report says plainly that live coverage was NOT measured. A separate SYNTHETIC section demonstrates each classifier outcome.
+`../docs/validation/route-validation.{md,json}`. It never calls Mapillary. It classifies the last 500 m of each route against whatever the local `frames` table holds and says in its
+report how many frames that was. Real coverage (Mapillary metadata for a 30 m corridor around the same 25 pairs, ingested 2026-11-20) is measured in
+`../docs/validation/coverage-audit.md`. A separate SYNTHETIC section demonstrates each classifier outcome.
 
 ### Coverage audit (metadata only)
 
@@ -240,3 +241,10 @@ cells that cover a 30 m corridor around those routes, keeping only images inside
 `../data/coverage-audit/ingest-stats.json` (git-ignored). `npm run audit:coverage -- report` classifies each route (whole route and last 500 m) from the
 stored frames and writes `../docs/validation/coverage-audit.{md,json}`. It needs `MAPILLARY_TOKEN` in `.env` for `ingest` only and honours
 `IMAGERY_SOURCES_DISABLED`. It reports measurements only, with no verdict.
+
+The audit uses the Phase 2 library directly (`MapillarySource`, `convertImage`, `upsertFrames`) and not the ingestion CLI (`npm run ingest:mapillary`).
+The CLI takes one bbox or one named corridor, and a bbox around 49 routes spread across Accra would cover far more area than the roads (and trip the
+per-run tile cap); the audit instead requests only the 0.002 degree cells along the route polylines, drops images outside the 30 m corridor before
+storage, meters every API call (`CallMeter`: counts, status codes, 429s, back-off) and records field-presence statistics, none of which the CLI does.
+Both paths write the same `frames` rows through the same idempotent store. The audit's `run --skip-ingestion` (or `report`) reuses the stored frames:
+it uses no token and makes no Mapillary call.

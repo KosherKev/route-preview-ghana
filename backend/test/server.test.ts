@@ -47,6 +47,24 @@ describe("approach HTTP service", () => {
     for (const b of bad) expect((await post(b)).status, b).toBe(400);
     expect(calls.length).toBe(n);
   });
+  it("input errors are problem JSON with no internals: bad JSON, empty body, missing coordinates", async () => {
+    const cases: [string, string][] = [
+      ["not json", "body is not valid JSON"],
+      ["", "body is not valid JSON"],
+      [JSON.stringify({ costing: "auto" }), 'origin must be {"lat": number, "lon": number}'],
+      [JSON.stringify({ ...OK, origin: {} }), 'origin must be {"lat": number, "lon": number}'],
+    ];
+    for (const [b, detail] of cases) {
+      const r = await post(b);
+      expect(r.status, b).toBe(400);
+      expect(r.headers.get("content-type")).toBe("application/problem+json");
+      const j = (await r.json()) as Record<string, unknown>;
+      expect(Object.keys(j).sort(), b).toEqual(["detail", "status", "title", "type"]);
+      expect(j).toMatchObject({ type: "about:blank", title: "Invalid request", status: 400 });
+      expect(j.detail, b).toContain(detail);
+      expect(JSON.stringify(j)).not.toMatch(/at \S+\.ts|node_modules|SyntaxError|Unexpected token|stack/);
+    }
+  });
   it("rejects oversized bodies, wrong methods and unknown paths", async () => {
     expect((await post("x".repeat(MAX_BODY_BYTES + 10))).status).toBe(413);
     expect((await fetch(`${base}/approach`)).status).toBe(405);
@@ -68,7 +86,7 @@ describe("approach HTTP service", () => {
     const r = await post("x".repeat(MAX_BODY_BYTES * 50));
     expect(r.status).toBe(413);
     expect(r.headers.get("connection")).toBe("close");
-    expect(await r.json()).toEqual({ error: "body too large" });
+    expect(await r.json()).toEqual({ type: "about:blank", title: "Payload Too Large", status: 413, detail: "body too large" });
   });
   it("returns generic client errors; details go only to the server-side log", async () => {
     logged.length = 0;
@@ -76,7 +94,8 @@ describe("approach HTTP service", () => {
     const r = await post(JSON.stringify(OK));
     expect(r.status).toBe(502);
     const text = await r.text();
-    expect(JSON.parse(text)).toEqual({ error: "upstream routing failure" });
+    expect(JSON.parse(text)).toEqual({ type: "about:blank", title: "Bad Gateway", status: 502, detail: "upstream routing failure" });
+    expect(r.headers.get("content-type")).toBe("application/problem+json");
     expect(text).not.toMatch(/Valhalla|shape|secret/);
     expect(logged).toEqual([{ message: expect.stringContaining("secret body"), status: 502 }]);
     failWith = null;
@@ -86,7 +105,7 @@ describe("approach HTTP service", () => {
     failWith = new ArgumentError("approachLengthM must be > 0");
     const r = await post(JSON.stringify(OK));
     expect(r.status).toBe(400);
-    expect(await r.json()).toEqual({ error: "invalid request" });
+    expect(await r.json()).toEqual({ type: "about:blank", title: "Invalid request", status: 400, detail: "invalid request" });
     expect(logged[0]!.status).toBe(400);
     failWith = null;
   });
@@ -94,7 +113,7 @@ describe("approach HTTP service", () => {
     slow = true;
     const r = await post(JSON.stringify(OK));
     expect(r.status).toBe(504);
-    expect(await r.json()).toEqual({ error: "deadline exceeded" });
+    expect(await r.json()).toEqual({ type: "about:blank", title: "Gateway Timeout", status: 504, detail: "deadline exceeded" });
     expect(sawSignal?.aborted).toBe(true);
     slow = false;
   });

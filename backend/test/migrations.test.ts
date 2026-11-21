@@ -96,4 +96,13 @@ describe("migrations on an empty database", () => {
     await db.query(sql);
     expect(await columns("clips")).toContain("source_summary");
   });
+
+  it("006 is followed by 007, which re-asserts it idempotently on an already-migrated database", async () => {
+    const sql = readFileSync(path.join(MIGRATIONS_DIR, "007_landmark_search_rerunnable.sql"), "utf8");
+    await db.query(sql);
+    await db.query(sql);
+    const idx = await db.query("SELECT 1 FROM pg_indexes WHERE indexname = 'landmarks_name_trgm_idx'");
+    expect(idx.rowCount).toBe(1);
+    expect((await db.query("SELECT landmarks_norm('Café') AS n")).rows[0]!.n).toBe("cafe");
+  });
 });
