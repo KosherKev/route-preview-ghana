@@ -88,13 +88,6 @@ void main() {
         expect(b, inInclusiveRange(0, 360));
       }
     });
-
-    test('a manifest with a clip segment is refused (street video is Phase 5B-2)', () {
-      final m = manifest(segments: [
-        segment(0, 0, 100, [kf(0, 0), kf(5, 50), kf(10, 100)], playback: 'clip', mode: 'STREET_VIDEO'),
-      ]);
-      expect(() => _timeline(m), throwsStateError);
-    });
   });
 
   group('player controller', () {

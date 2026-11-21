@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:route_preview/flyover/manifest.dart';
 import 'package:route_preview/info_panel.dart';
+import 'package:route_preview/scene/scene.dart';
 import 'package:route_preview/scene/scene_loader.dart';
 import 'package:route_preview/tiles/dev_tiles.dart';
 
 import 'support/file_asset_bundle.dart';
+import 'support/mixed.dart';
 import 'support/pmtiles_builder.dart';
 
 /// The Copernicus string as written in the terrain tile file's metadata (docs/data/terrain.md is not on main yet).
@@ -38,5 +41,28 @@ void main() {
     final scene = await tester.runAsync(() => loadScene(tilesDir: dir, bundle: FileAssetBundle()));
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: InfoPanel(scene: scene!))));
     expect(find.textContaining('Invented route and buildings'), findsOneWidget);
+  });
+
+  testWidgets('the panel lists the manifest attribution: sources, creators, licences, the prototype note and any exclusion', (tester) async {
+    final m = mixedManifest((j) {
+      j['sourcesExcluded'] = ['mapillary'];
+      (j['attribution'] as Map<String, dynamic>)['requiresLogoAndLink'] = true;
+    });
+    final scene = RouteOnlyScene.create(manifest: m, message: 'x');
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: InfoPanel(scene: scene))));
+    expect(find.text('Imagery sources'), findsOneWidget);
+    expect(find.textContaining('Sources: synthetic-test'), findsOneWidget);
+    expect(find.textContaining('Creators: Test pattern generator'), findsOneWidget);
+    expect(find.textContaining('Licences: CC0-1.0'), findsOneWidget);
+    expect(find.textContaining('require their logo and a link back'), findsOneWidget);
+    expect(find.textContaining('Excluded by the server (kill switch): mapillary'), findsOneWidget);
+    expect(find.text('Prototype'), findsOneWidget);
+    expect(find.textContaining('prototype-only'), findsOneWidget);
+  });
+
+  testWidgets('with no street imagery the panel says so', (tester) async {
+    final m = PreviewManifest.parse(File('assets/fixtures/accra-real-manifest.json').readAsStringSync());
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: InfoPanel(scene: RouteOnlyScene.create(manifest: m, message: 'x')))));
+    expect(find.textContaining('No street imagery in this preview'), findsOneWidget);
   });
 }

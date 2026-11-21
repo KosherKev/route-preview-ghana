@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
+import '../clips/clip_store.dart';
 import '../fixture.dart';
 import '../flyover/manifest.dart';
 import '../route_geometry.dart';
@@ -12,6 +15,33 @@ class Attribution {
   final String title;
   final String text;
   const Attribution(this.title, this.text);
+}
+
+/// What the manifest says about its imagery: sources, creators, licences and links, the prototype flag, and any source the
+/// server's kill switch removed. Shown in the info panel for every scene.
+List<Attribution> manifestAttributions(PreviewManifest m) {
+  final a = m.attribution;
+  final lines = <String>[];
+  if (a.sources.isEmpty) {
+    lines.add('No street imagery in this preview: map-only flyover.');
+  } else {
+    lines.add('Sources: ${a.sources.join(', ')}');
+    if (a.creators.isNotEmpty) lines.add('Creators: ${a.creators.join(', ')}');
+    if (a.licenses.isNotEmpty) lines.add('Licences: ${a.licenses.join(', ')}');
+    if (a.sourceUrls.isNotEmpty) lines.add('Links: ${a.sourceUrls.join('\n')}');
+    if (a.requiresLogoAndLink) lines.add('These sources require their logo and a link back.');
+  }
+  if (m.sourcesExcluded.isNotEmpty) {
+    lines.add('Excluded by the server (kill switch): ${m.sourcesExcluded.join(', ')}');
+  }
+  return [
+    Attribution('Imagery sources', lines.join('\n')),
+    if (m.prototype)
+      const Attribution(
+        'Prototype',
+        'Street imagery and clips are prototype-only: used on this device for development, never published or shared.',
+      ),
+  ];
 }
 
 /// What the flyover screen plays: a manifest, the style to draw it on, and the few hooks the map needs. Two kinds:
@@ -31,6 +61,12 @@ abstract class Scene {
 
   /// Background colour of the style, used for the horizon fade overlay (null = no overlay).
   int? get horizonColor;
+
+  /// Street-video clips on this device (keys of `Documents/clips`), where the clips are, and a short note on where the
+  /// manifest came from ("Live preview API" or "Bundled fixture route").
+  Set<String> get availableClips;
+  ClipStore? get clipStore;
+  String get sourceLabel;
 
   Future<void> onStyleLoaded(MapLibreMapController map);
 
@@ -54,9 +90,16 @@ class FixtureScene implements Scene {
   @override
   String get bannerNote => 'Invented route and buildings. Heights are approximate.';
   @override
-  List<Attribution> get attributions => const [Attribution('Fixture', 'Invented route and buildings; no real map data.')];
+  List<Attribution> get attributions =>
+      [const Attribution('Fixture', 'Invented route and buildings; no real map data.'), ...manifestAttributions(manifest)];
   @override
   int? get horizonColor => null;
+  @override
+  Set<String> get availableClips => const {};
+  @override
+  ClipStore? get clipStore => null;
+  @override
+  String get sourceLabel => 'Bundled fixture route';
 
   @override
   Future<void> onStyleLoaded(MapLibreMapController map) async {
@@ -107,12 +150,19 @@ class TileScene implements Scene {
 
   @override
   final String styleJson;
+  @override
+  final Set<String> availableClips;
+  @override
+  final ClipStore? clipStore;
+  @override
+  final String sourceLabel;
 
   String _probeResult = '';
   double _lastDoneEndM = -1;
   bool _busy = false;
 
-  TileScene._(this.manifest, this.tiles, this.route, this.styleJson, this.hillshade, this.probeUnsupported);
+  TileScene._(this.manifest, this.tiles, this.route, this.styleJson, this.hillshade, this.probeUnsupported,
+      this.availableClips, this.clipStore, this.sourceLabel);
 
   factory TileScene.create({
     required PreviewManifest manifest,
@@ -120,6 +170,9 @@ class TileScene implements Scene {
     required DevTilesResult tiles,
     bool hillshade = true,
     bool probeUnsupported = false,
+    Set<String> availableClips = const {},
+    ClipStore? clipStore,
+    String sourceLabel = 'Bundled fixture route',
   }) {
     final route = RouteGeometry.fromPolyline6(manifest.routePolyline6, lengthM: manifest.routeLengthM);
     final dest = manifest.destination!;
@@ -131,7 +184,7 @@ class TileScene implements Scene {
       destination: RouteGeometry.destinationCollection(dest[0], dest[1]),
       hillshade: hillshade,
     );
-    return TileScene._(manifest, tiles, route, style, hillshade, probeUnsupported);
+    return TileScene._(manifest, tiles, route, style, hillshade, probeUnsupported, availableClips, clipStore, sourceLabel);
   }
 
   @override
@@ -140,7 +193,7 @@ class TileScene implements Scene {
   String get bannerTitle => 'Accra · pre-trip preview';
   @override
   String get bannerNote =>
-      'Most building heights are ESTIMATED (about 4 to 14 m), not measured.${_probeResult.isEmpty ? '' : '\n$_probeResult'}';
+      '$sourceLabel. Most building heights are ESTIMATED (about 4 to 14 m), not measured.${_probeResult.isEmpty ? '' : '\n$_probeResult'}';
   @override
   int? get horizonColor => 0xFFECE8DD;
 
@@ -167,6 +220,7 @@ class TileScene implements Scene {
               'where building:levels is set, and otherwise an estimate of 4 to 14 m from a stable hash of the building id '
               '(not a measurement, and not a footprint-based estimate). Do not read a building height as accurate.',
         ),
+        ...manifestAttributions(manifest),
       ];
 
   @override
@@ -195,6 +249,101 @@ class TileScene implements Scene {
 
   /// The completed part of the route (from where the flyover starts to the camera) is drawn brighter. Updates are
   /// throttled to every 2 m and one at a time.
+  @override
+  Future<void> onProgress(MapLibreMapController map, double offsetM) async {
+    if (_busy || (offsetM - _lastDoneEndM).abs() < 2) return;
+    _busy = true;
+    try {
+      _lastDoneEndM = offsetM;
+      await map.setGeoJsonSource('route-done', route.lineFeatureCollection(manifest.timelineStartM, offsetM));
+    } finally {
+      _busy = false;
+    }
+  }
+}
+
+/// The live (or any) manifest on a plain background: the route, the part already passed, and the destination. Used when
+/// the map tiles are not on the device, so a manifest from the API can still be played (the flyover camera follows the
+/// route over an empty map). Overlays, clips and the timeline work exactly as on [TileScene].
+class RouteOnlyScene implements Scene {
+  @override
+  final PreviewManifest manifest;
+  final RouteGeometry route;
+  @override
+  final String styleJson;
+  @override
+  final Set<String> availableClips;
+  @override
+  final ClipStore? clipStore;
+  @override
+  final String sourceLabel;
+  @override
+  final String? fallbackMessage;
+  double _lastDoneEndM = -1;
+  bool _busy = false;
+
+  RouteOnlyScene._(this.manifest, this.route, this.styleJson, this.availableClips, this.clipStore, this.sourceLabel, this.fallbackMessage);
+
+  factory RouteOnlyScene.create({
+    required PreviewManifest manifest,
+    required String message,
+    Set<String> availableClips = const {},
+    ClipStore? clipStore,
+    String sourceLabel = 'Live preview API',
+  }) {
+    final route = RouteGeometry.fromPolyline6(manifest.routePolyline6, lengthM: manifest.routeLengthM);
+    final dest = manifest.destination!;
+    Map<String, dynamic> src(Map<String, dynamic> data) => {'type': 'geojson', 'data': data};
+    Map<String, dynamic> line(String id, String source, String color, num width, {double? blur, double? opacity}) => {
+          'id': id,
+          'type': 'line',
+          'source': source,
+          'layout': {'line-cap': 'round', 'line-join': 'round'},
+          'paint': {'line-color': color, 'line-width': width, 'line-blur': ?blur, 'line-opacity': ?opacity},
+        };
+    final style = jsonEncode({
+      'version': 8,
+      'name': 'route-only',
+      'sources': {
+        'route': src(route.fullLine),
+        'route-done': src({'type': 'FeatureCollection', 'features': <dynamic>[]}),
+        'destination': src(RouteGeometry.destinationCollection(dest[0], dest[1])),
+      },
+      'layers': [
+        {'id': 'land', 'type': 'background', 'paint': {'background-color': '#ece8dd'}},
+        line('route-glow', 'route', '#ff4d85', 18, blur: 9, opacity: 0.45),
+        line('route-casing', 'route', '#ffffff', 10),
+        line('route-line', 'route', '#e9779a', 6),
+        line('route-done', 'route-done', '#ff1f66', 6.5),
+        {
+          'id': 'destination-ring',
+          'type': 'circle',
+          'source': 'destination',
+          'filter': ['==', ['geometry-type'], 'Point'],
+          'paint': {'circle-radius': 12, 'circle-color': '#ffffff', 'circle-stroke-color': '#ff1f66', 'circle-stroke-width': 3},
+        },
+      ],
+    });
+    return RouteOnlyScene._(manifest, route, style, availableClips, clipStore, sourceLabel, message);
+  }
+
+  @override
+  String get bannerTitle => 'Route only \u00b7 pre-trip preview';
+  @override
+  String get bannerNote => '$sourceLabel. Map tiles are not on this device, so only the route is drawn.';
+  @override
+  List<Attribution> get attributions => [
+        const Attribution('Map', 'No map tiles are loaded: only the route from the preview API is drawn.'),
+        ...manifestAttributions(manifest),
+      ];
+  @override
+  int? get horizonColor => null;
+
+  @override
+  Future<void> onStyleLoaded(MapLibreMapController map) async {
+    debugPrint('[flyover] route-only style ready');
+  }
+
   @override
   Future<void> onProgress(MapLibreMapController map, double offsetM) async {
     if (_busy || (offsetM - _lastDoneEndM).abs() < 2) return;

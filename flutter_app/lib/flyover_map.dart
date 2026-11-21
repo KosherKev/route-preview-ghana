@@ -28,7 +28,7 @@ MapLibreMap buildFlyoverMap({
     compassEnabled: false,
     // Keep the map attribution button (OSM's licence wants attribution visible), lifted above the player controls.
     attributionButtonPosition: AttributionButtonPosition.bottomLeft,
-    attributionButtonMargins: const Point<double>(8, 235),
+    attributionButtonMargins: const Point<double>(8, 300),
     // Product boundary: no device position, ever.
     myLocationEnabled: false,
     myLocationTrackingMode: MyLocationTrackingMode.none,
