@@ -1,0 +1,275 @@
+{
+ "manifestVersion": 1,
+ "prototype": true,
+ "degraded": false,
+ "costing": "motor_scooter",
+ "unpavedFallback": false,
+ "warnings": [],
+ "origin": {
+  "lat": 5.6037,
+  "lon": -0.187
+ },
+ "destination": {
+  "lat": 5.56,
+  "lon": -0.2057
+ },
+ "route": {
+  "lengthM": 5727.4711430089255,
+  "timeSec": 498.228,
+  "polyline6": "_x_uItnlJfC\\r[bEjIfB`g@xHrg@pHtMlCzPrCd_@rEvANxJ|@rCPlDDdt@T`RFtJBrC@jTTxFFfA@nTBzBTjLfApMlBtK`CrG~CpHvD~JjHfOxLlA~CxAxDzBhIIPOt@?|@Rz@`@r@n@f@x@V|@D|@MvBf@rTtChWvA`DZ`FPzMp@bZ~@tFPvOLbOr@~VdBbDTnYzDhRfD|XrG|JnDnVzIjHlD|s@tb@|dA|f@vh@`Vpo@hY~EtBrE`BpNzDdN~DfRtDhYbFfSnElRfFx_@~MzwAhj@lb@nPflAd_@h[rJd]zKtdBjj@lcBll@`|@n^l|@d`@l\\jNrm@hWxSvIv_@|NncB~j@lGzAhGlAdIpAz]zEtN~B|KtCxKrDdCx@rLbFjLdFdPfHldAhd@xi@xVfWzLjZbNvQnIl_@pP|JnExKdDvNzCrMfAdLTvHSxDKvUgDxQmFdVeKxO}FbFgAnBc@zL{A~JCdEb@`GhB|GxCl@v@xA`B~DpA~BVnCObBWvAa@jAu@rA_H`D{Oh@kDvCw@nA]\\Ep@?r@@jCLxWt[`r@xu@|FnGwe@xa@mH|EuCrCSxAj@~BxCfExt@b{@vY|\\dRpUdBpB|ExFd@l@"
+ },
+ "approach": {
+  "requestedLengthM": 500,
+  "lengthM": 500,
+  "startM": 5227.4711430089255,
+  "endM": 5727.4711430089255,
+  "wholeRoute": false
+ },
+ "timeline": {
+  "startM": 5227.4711430089255,
+  "endM": 5727.4711430089255,
+  "lengthM": 500
+ },
+ "nominal": {
+  "streetSpeedMps": 10,
+  "flyoverSpeedMps": 30,
+  "note": "Nominal figures only. Speed ramps are client work; durations here are the preview clock at nominal speed."
+ },
+ "segments": [
+  {
+   "index": 0,
+   "mode": "BIRDS_EYE_3D",
+   "startM": 5227.4711430089255,
+   "endM": 5727.4711430089255,
+   "lengthM": 500,
+   "polyline6": "y`mrIjkjKtJpK|FnGwe@xa@mH|EuCrCSxAj@~BxCfExt@b{@vY|\\dRpUdBpB|ExFd@l@",
+   "bridges": [],
+   "captureYears": null,
+   "playback": "flyover",
+   "playbackReason": "level_uncertain",
+   "nominalDurationSec": 16.666666666666668,
+   "nominalSpeedMps": 29.999999999999996,
+   "status": null,
+   "clipRef": null,
+   "clip": null,
+   "flyover": {
+    "durationSec": 16.666666666666668,
+    "nominalSpeedMps": 29.999999999999996,
+    "keyframes": [
+     {
+      "t": 0,
+      "offsetM": 5227.4711430089255,
+      "lat": 5.56137346402238,
+      "lon": -0.20243776872995475,
+      "bearingDeg": 236.72763451874698,
+      "pitchDeg": 35,
+      "zoom": 14.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 0.9803921568627452,
+      "offsetM": 5249.55540924137,
+      "lat": 5.561237741677107,
+      "lon": -0.202583458444526,
+      "bearingDeg": 256.727634518747,
+      "pitchDeg": 40.21575412171789,
+      "zoom": 14.812945247303073,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 1.9607843137254903,
+      "offsetM": 5274.387487401354,
+      "lat": 5.561085003244323,
+      "lon": -0.20274715400607954,
+      "bearingDeg": 276.727634518747,
+      "pitchDeg": 50.774475880317524,
+      "zoom": 15.446468552819052,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 2.9411764705882355,
+      "offsetM": 5301.601002565205,
+      "lat": 5.5612131130741975,
+      "lon": -0.20291345319730353,
+      "bearingDeg": 296.727634518747,
+      "pitchDeg": 59.04335436596784,
+      "zoom": 15.942601261958071,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 3.9215686274509807,
+      "offsetM": 5330.829579809251,
+      "lat": 5.561409065426033,
+      "lon": -0.20308949426177444,
+      "bearingDeg": 316.727634518747,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 4.901960784313726,
+      "offsetM": 5361.706844209821,
+      "lat": 5.561616070800499,
+      "lon": -0.2032754652191577,
+      "bearingDeg": 302.41952236691293,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 5.882352941176471,
+      "offsetM": 5393.866420843243,
+      "lat": 5.56184263213219,
+      "lon": -0.2034554637037611,
+      "bearingDeg": 282.41952236691293,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 6.862745098039216,
+      "offsetM": 5426.941934785844,
+      "lat": 5.561833787744112,
+      "lon": -0.2037028990336213,
+      "bearingDeg": 262.41952236691293,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 7.843137254901961,
+      "offsetM": 5460.567011113953,
+      "lat": 5.561633234675574,
+      "lon": -0.20393020469465561,
+      "bearingDeg": 242.41952236691293,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 8.823529411764707,
+      "offsetM": 5494.375274903898,
+      "lat": 5.5614299302578845,
+      "lon": -0.20415735783033148,
+      "bearingDeg": 228.0357775496973,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 9.803921568627452,
+      "offsetM": 5528.000351232007,
+      "lat": 5.561227727429454,
+      "lon": -0.20438328015431495,
+      "bearingDeg": 228.04730290284408,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 10.784313725490197,
+      "offsetM": 5561.075865174608,
+      "lat": 5.561028829368801,
+      "lon": -0.2046055100432212,
+      "bearingDeg": 228.0733289758084,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 11.764705882352942,
+      "offsetM": 5593.23544180803,
+      "lat": 5.560835548848764,
+      "lon": -0.2048216848164538,
+      "bearingDeg": 228.28525978804532,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 12.745098039215687,
+      "offsetM": 5624.1127062086,
+      "lat": 5.5606500400602545,
+      "lon": -0.2050292986241546,
+      "bearingDeg": 229.00792603377,
+      "pitchDeg": 60,
+      "zoom": 16,
+      "easing": "linear"
+     },
+     {
+      "t": 13.725490196078432,
+      "offsetM": 5653.341283452646,
+      "lat": 5.560475887044568,
+      "lon": -0.20522710350785428,
+      "bearingDeg": 229.12537485932603,
+      "pitchDeg": 60.30612660289029,
+      "zoom": 16.05739873804193,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 14.705882352941178,
+      "offsetM": 5680.5547986164975,
+      "lat": 5.560316901760261,
+      "lon": -0.20541405363044246,
+      "bearingDeg": 228.799067051502,
+      "pitchDeg": 62.95216771829839,
+      "zoom": 16.553531447180948,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 15.686274509803923,
+      "offsetM": 5705.386876776481,
+      "lat": 5.560170425043827,
+      "lon": -0.20558340730395838,
+      "bearingDeg": 228.56394030587887,
+      "pitchDeg": 66.33095868105028,
+      "zoom": 17.187054752696927,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 16.666666666666668,
+      "offsetM": 5727.4711430089255,
+      "lat": 5.560039,
+      "lon": -0.205733,
+      "bearingDeg": 228.94913335498416,
+      "pitchDeg": 68,
+      "zoom": 17.5,
+      "easing": "linear"
+     }
+    ]
+   }
+  }
+ ],
+ "overlays": {
+  "turns": [
+   {
+    "offsetM": 5278.6132412480765,
+    "maneuver": "right",
+    "direction": "right",
+    "kind": "turn",
+    "streetName": "Tsiranana Loop",
+    "window": {
+     "startM": 5238.6132412480765,
+     "endM": 5318.6132412480765
+    }
+   }
+  ],
+  "landmarks": [],
+  "turnWindowM": 80,
+  "landmarkOptions": {
+   "maxDistanceM": 40,
+   "maxPer100m": 3,
+   "dedupeWithinM": 100
+  }
+ },
+ "captureYears": null,
+ "attribution": {
+  "bySource": [],
+  "sources": [],
+  "creators": [],
+  "licenses": [],
+  "sourceUrls": [],
+  "requiresLogoAndLink": false
+ },
+ "sourcesExcluded": []
+}
