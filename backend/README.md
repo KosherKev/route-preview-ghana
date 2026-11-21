@@ -81,9 +81,9 @@ with the endpoint enabled (needs `.env` for the database).
   `500` generic for database failures (details are logged server-side only). All SQL is parameterised.
 - Example: `curl 'http://127.0.0.1:8787/landmarks/search?q=asilum+down+farmacy&near=5.57,-0.2&limit=3'`
 
-Geocode chain (`src/patterns/geocodeChain.ts`, `buildGeocodeChain`): coordinate parse (no I/O), then the landmark search above, then an
-optional self-hosted geocoder. `httpGeocoder` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
-The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonGeocoder`): `scripts/fetch-photon.sh` (checksum-verified downloads into
+Geocode chain (`createGeocoder` in `src/geo/geocode.ts`): coordinate parse (no I/O), then the landmark search above, then an
+optional self-hosted geocoder. `photonClient` refuses any non-loopback URL, so public Nominatim or Photon servers cannot be called.
+The optional second stage is a self-hosted, Ghana-only Photon 0.7.4 (`photonClient` in `src/geo/photon.ts`): `scripts/fetch-photon.sh` (checksum-verified downloads into
 `data/photon`), then `docker compose --profile geocoder up -d photon` (127.0.0.1:2322, 1.5 GB limit, about 300 MiB used). The landmark stage only
 claims an answer at similarity >= 0.5, so place names that are not in the landmarks table fall through to Photon.
 Measured numbers and the verdict are in `../docs/validation/geocoder-spike.md`.
