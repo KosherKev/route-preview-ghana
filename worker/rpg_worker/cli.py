@@ -35,7 +35,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rife-binary", type=Path)
     ap.add_argument("--rife-model", default="rife-v4.6")
     ap.add_argument("--speed", type=float, default=10.0)
+    ap.add_argument("--prefetch-only", action="store_true", help="download and cache the plans' frames, nothing else (needs no ffmpeg)")
     a = ap.parse_args(argv)
+    if a.prefetch_only:
+        budget = Budget(paths.BUDGET_FILE)
+        fetcher = MapillaryFetcher(read_token(), budget)
+        new = 0
+        for pf in sorted(a.plans.glob("*.json")):
+            for f in json.loads(pf.read_text())["plan"]["frames"]:
+                new += fetcher.download(f["image_id"], paths.FRAMES_CACHE / f"{f['image_id']}.jpg")
+        print(f"prefetched {new} new frames; budget: downloads {budget.downloads}/{budget.max_downloads}, api calls {budget.api_calls}")
+        return 0
     ffmpeg_bin = ff.find_tool("ffmpeg", "RPG_FFMPEG")
     interp = {"hold": lambda: HoldInterpolator(), "minterpolate": lambda: MinterpolateInterpolator(ffmpeg_bin),
               "rife": lambda: RifeInterpolator(a.rife_binary, a.rife_model)}[a.interpolator]()

@@ -44,7 +44,7 @@ def scene(tilt_deg, w=1280, h=720):
     return cv2.warpAffine(img, m, (w, h), borderMode=cv2.BORDER_REPLICATE)
 
 
-@pytest.mark.parametrize("tilt", [-5.0, -2.0, 3.0, 6.0])
+@pytest.mark.parametrize("tilt", [-3.5, -2.0, 3.0, 3.9])
 def test_estimates_and_removes_tilt(tilt):
     img = scene(tilt)
     est = estimate_tilt_deg(img)

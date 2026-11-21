@@ -12,8 +12,9 @@ from collections.abc import Sequence
 import cv2
 import numpy as np
 
-MAX_TILT_DEG = 8.0
-HORIZONTAL_WINDOW_DEG = 20.0  # only lines within this many degrees of horizontal count as horizon evidence
+MAX_TILT_DEG = 4.0
+HORIZONTAL_WINDOW_DEG = 6.0  # only lines within this many degrees of horizontal count as horizon evidence
+ROI_TOP, ROI_BOTTOM = 0.25, 0.70  # rows (fraction of height) considered
 MIN_EVIDENCE = 0.3  # total length of near-horizontal lines, as a fraction of image width
 
 
@@ -27,6 +28,9 @@ def estimate_tilt_deg(img: np.ndarray) -> float | None:
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(gray, 60, 160)
     sh, sw = edges.shape
+    # Dashcam frames show windscreen/dashboard at the top and bottom and converging lane lines off-axis: judge only the middle band.
+    edges[: int(sh * ROI_TOP)] = 0
+    edges[int(sh * ROI_BOTTOM):] = 0
     min_len = int(sw * 0.15)
     lines = cv2.HoughLinesP(edges, 1, math.pi / 360, threshold=40, minLineLength=min_len, maxLineGap=int(sw * 0.04))
     if lines is None:
