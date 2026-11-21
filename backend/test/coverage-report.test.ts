@@ -82,3 +82,16 @@ describe("per-route approach counts", () => {
     expect(md).toMatch(/\| 4 \| 7 \| 6 \| 5 \|/); // whole refused 4, then approach 7, 6, 5
   });
 });
+
+import { DEFAULT_GATE_CONFIG, gateResult, gateRow } from "../src/validation/coverage";
+describe("renderCoverageMarkdown gate section", () => {
+  it("renders per-route and total pass/fail when a gate is present, and nothing when absent", () => {
+    const g = gateResult([gateRow("r1", "auto", 500, 100, DEFAULT_GATE_CONFIG), gateRow("r2", "auto", 500, 400, DEFAULT_GATE_CONFIG)], DEFAULT_GATE_CONFIG, ["auto"]);
+    const md = renderCoverageMarkdown({ ...audit, gate: g });
+    expect(md).toContain("Coverage gate (D9)");
+    expect(md).toContain("| r1 | auto | 500 | 100 | 20.0% | FAIL |");
+    expect(md).toContain("| r2 | auto | 500 | 400 | 80.0% | PASS |");
+    expect(md).toContain("| total all | 2 |");
+    expect(renderCoverageMarkdown(audit)).not.toContain("Coverage gate (D9)");
+  });
+});

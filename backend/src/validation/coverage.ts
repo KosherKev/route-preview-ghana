@@ -144,3 +144,56 @@ export function sumSummaries(list: readonly SegmentSummary[]): SegmentSummary {
   out.streetFraction = out.lengthM > 0 ? out.streetVideoM / out.lengthM : 0;
   return out;
 }
+
+// ---- Coverage gate (D9) ----------------------------------------------------------------------------------------------
+export interface GateConfig {
+  /** Minimum last-500 m STREET_VIDEO share, 0..1. Default 0.35. */
+  threshold: number;
+  /** Only frames captured in this UTC year or later count. Default 2022. */
+  minCaptureYear: number;
+}
+export const DEFAULT_GATE_CONFIG: GateConfig = { threshold: 0.35, minCaptureYear: 2022 };
+
+/** Frames captured in `minYear` (UTC) or later. A missing or unparseable captured_at never counts. */
+export function framesFromYear<T extends { capturedAt: string | null }>(frames: readonly T[], minYear: number): T[] {
+  return frames.filter((f) => {
+    if (!f.capturedAt) return false;
+    const t = Date.parse(f.capturedAt);
+    return Number.isFinite(t) && new Date(t).getUTCFullYear() >= minYear;
+  });
+}
+
+export interface GateRow {
+  routeId: string;
+  costing: string;
+  approachLengthM: number;
+  streetVideoM: number;
+  share: number;
+  pass: boolean;
+}
+export interface GateTotal { routes: number; approachLengthM: number; streetVideoM: number; share: number; pass: boolean }
+export interface GateResult {
+  config: GateConfig;
+  rows: GateRow[];
+  /** Length-weighted per costing, plus "all" over every ok route-costing pair. */
+  totals: Record<string, GateTotal>;
+  routesPassing: number;
+  routesTotal: number;
+}
+
+export function gateRow(routeId: string, costing: string, approachLengthM: number, streetVideoM: number, cfg: GateConfig): GateRow {
+  const share = approachLengthM > 0 ? streetVideoM / approachLengthM : 0;
+  return { routeId, costing, approachLengthM, streetVideoM, share, pass: approachLengthM > 0 && share >= cfg.threshold };
+}
+
+export function gateResult(rows: readonly GateRow[], cfg: GateConfig, costings: readonly string[]): GateResult {
+  const total = (rs: readonly GateRow[]): GateTotal => {
+    const len = rs.reduce((n, r) => n + r.approachLengthM, 0), sv = rs.reduce((n, r) => n + r.streetVideoM, 0);
+    const share = len > 0 ? sv / len : 0;
+    return { routes: rs.length, approachLengthM: len, streetVideoM: sv, share, pass: len > 0 && share >= cfg.threshold };
+  };
+  const totals: Record<string, GateTotal> = {};
+  for (const c of costings) totals[c] = total(rows.filter((r) => r.costing === c));
+  totals.all = total(rows);
+  return { config: cfg, rows: [...rows], totals, routesPassing: rows.filter((r) => r.pass).length, routesTotal: rows.length };
+}
