@@ -57,7 +57,7 @@ attribution fields (`creator_username`, `source_url`, `clips.source_summary`) an
   extra members (`field`, `query`, `degraded`, `candidates`). The 200 success body is unchanged.
 
 Photon is the self-hosted Ghana-only geocoder (no public Photon or Nominatim server is ever called). It is stopped by default because it
-holds about 300 MiB on the 5 GiB Colima VM next to PostGIS and Valhalla:
+holds about 270 to 300 MiB (and the VM about 1.2 GiB used in total, with about 3.7 GiB available; method in the spike doc) on the 5 GiB Colima VM next to PostGIS and Valhalla:
 
 ```
 scripts/fetch-photon.sh                              # once: index and jar into data/photon

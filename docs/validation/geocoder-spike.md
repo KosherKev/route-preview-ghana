@@ -29,17 +29,29 @@ Re-measured 2026-11-20 (follow-up F) on the 5 GiB Colima VM; figures from the fi
 | Index size on disk | 67 MiB (`photon_data`) | `du -sm data/photon/photon_data` |
 | Image size | 433 MB disk usage, 115 MB content size (`eclipse-temurin:17-jre`, generic JRE; jar and index are bind-mounted, not baked in) | `docker image ls eclipse-temurin` |
 | Time to ready | 7.1 s from container start to "Database cluster is now ready" | `docker inspect` StartedAt (20:46:50.85) against the container log timestamp (20:46:57.95) |
-| Photon memory | 264 MiB right after start, 313 MiB after 40 `/geocode` requests (20 distinct place names, each sent twice, whichever stage answered) | `docker stats --no-stream` (excludes page cache) |
-| Photon peak memory | 363,622,400 B (346.8 MiB) cgroup peak after those 40 requests, including startup; 393,375,744 B (375.2 MiB) after five further `npm test` runs with live Photon tests | `/sys/fs/cgroup/memory.peak` inside the container; limit is 1.5 GiB |
 | Photon query latency (warm, loopback) | 11 to 19 ms per request, 6 repeats of one query | `curl -w %{time_total}` directly against Photon `/api` |
 | `/geocode` latency through the service | 14 to 19 ms for a Photon-answered query (5 repeats), 11 to 12 ms for a landmark-answered query (3 repeats) | `curl -w %{time_total}` against the running service |
-| PostGIS memory, idle | 151.7 MiB | `docker stats --no-stream`, no tests running; the cgroup `memory.current` reads about 320 to 330 MiB for the same state because it includes page cache |
-| PostGIS memory, under test load | 467 MiB seen in one `docker stats` sample during `npm test`; cgroup `memory.current` peaked at 749.6, 750.6 and 764.7 MiB across three runs (27 to 28 samples each); lifetime cgroup peak 950.5 MiB against the 1 GiB limit | `docker stats` and `/sys/fs/cgroup/memory.current` sampled in a loop while `npm test` ran |
-| Whole stack at idle | PostGIS 151.7 + Valhalla 255.4 + Photon 313 MiB = about 720 MiB by `docker stats` | `docker stats --no-stream` with all three running |
 
-The earlier 111 MiB and 367 MiB PostGIS readings could not be reproduced and are replaced by the numbers above; note that `docker stats`
-excludes page cache while the cgroup file includes it, so the two counters differ by design. Under test load PostGIS can approach its 1 GiB cap by the cgroup counter, which is one reason
-Photon is stopped when not in use.
+### Memory (re-measured 2026-11-21, follow-up G)
+
+Method, the same for PostGIS, Valhalla and Photon: two per-container counters read inside the Colima VM's Docker, and the VM's own counters.
+
+- **Working set**: `docker stats --no-stream` (cgroup usage minus inactive page cache).
+- **cgroup `memory.current`**: `docker exec <container> cat /sys/fs/cgroup/memory.current` (includes page cache, so it is larger for PostGIS and Valhalla, which read big files). Lifetime peak: `memory.peak` in the same directory.
+- **VM level**: `colima ssh -- free -m` and `grep MemAvailable /proc/meminfo` inside the VM. This is what decides whether the VM is under pressure: it counts everything in the VM (kernel, dockerd, page cache), not only container working sets. VM total 4,916 MiB, no swap.
+
+| State | PostGIS | Valhalla | Photon | VM used | VM available (of 4,916 MiB) |
+|---|---|---|---|---|---|
+| Idle, Photon stopped | 151.9 working set, 322 cgroup | 255.8 working set, 359 cgroup | stopped | 966 MiB | 3,950 MiB |
+| Idle, Photon running (about 15 s after ready) | 151.9 working set, 322 cgroup | 255.8 working set, 360 cgroup | 267.3 working set, 299 cgroup | 1,219 MiB | 3,697 MiB |
+| `npm test` running, Photon up (338 tests) | 415.3 working set (3 samples), 768.8 cgroup max (30 samples) | 255.8 working set, 360.1 cgroup max | 287.4 working set, 320.6 cgroup max | 1,555 MiB max | 3,361 MiB min |
+| Lifetime cgroup peak (`memory.peak`) | 950.5 (1 GiB limit) | 1,186.1 (2 GiB limit) | 321.6 (since this start; 1.5 GiB limit) | | |
+
+All container figures are MiB. The per-container figures are single readings or short samples (3 to 30), not averages over time.
+
+**Whole stack.** The earlier "about 720 MiB" was the sum of three working sets (PostGIS + Valhalla + Photon = 151.9 + 255.8 + 267.3 = 675 MiB now) and understated the VM's load. The VM itself reports 1,219 MiB used with everything running (966 MiB with Photon stopped, so Photon adds about 250 MiB), plus about 3.5 GiB of buff/cache, which the kernel gives back under pressure. Memory available to new work is 3,697 MiB at idle with Photon running, and fell to 3,361 MiB at its lowest during a full `npm test`. On these readings the 5 GiB VM is not under memory pressure with Photon running, with about 3.3 GiB available at the worst point sampled; PostGIS under test load is the largest single swing (cgroup 768.8 MiB against a 1 GiB limit, lifetime peak 950.5 MiB).
+
+The earlier 111 MiB and 367 MiB PostGIS readings could not be reproduced. The first version of this section mixed counters (working set for Photon and PostGIS idle, cgroup for PostGIS under load); this one uses the same counters for every row. Photon is still stopped by default.
 
 ## Query quality (re-run 2026-11-20 through `GET /geocode`, live PostGIS table and live container)
 
