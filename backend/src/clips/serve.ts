@@ -2,7 +2,7 @@
 // This is not a serving feature. Nothing is uploaded or published anywhere, and it does NOT change isClipServable (which stays
 // false for every prototype clip, so no public path may serve them). It answers only when ALL hold, checked per request:
 //   1. PROTOTYPE_CLIP_SERVING=1 (default off; any other value, or unset, makes every /clips/ path a plain 404),
-//   2. the server socket is bound to loopback and the caller is on loopback,
+//   2. no proxy or tailnet header on the request (X-Forwarded-*, Forwarded, Via, Tailscale-*), whatever the flag says, and the server socket is bound to loopback and the caller is on loopback,
 //   3. the key is registered in the clips table (never a file-system lookup by caller-supplied name),
 //   4. the clip's imagery sources are not disabled by the kill switch (IMAGERY_SOURCES_DISABLED).
 import { createReadStream, promises as fsp } from "node:fs";
@@ -36,6 +36,11 @@ function problem(res: http.ServerResponse, status: number, title: string, detail
   res.end(text);
 }
 
+const PROXY_HEADERS = new Set(["x-forwarded-for", "x-forwarded-host", "x-forwarded-proto", "forwarded", "via"]);
+/** True when the request carries any proxy header or any Tailscale-* header (names compared case-insensitively). */
+export const hasProxyHeader = (headers: http.IncomingHttpHeaders): boolean =>
+  Object.keys(headers).some((k) => { const n = k.toLowerCase(); return PROXY_HEADERS.has(n) || n.startsWith("tailscale-"); });
+
 export type ByteRange = { start: number; end: number } | "unsatisfiable" | null;
 
 /** Single `bytes=` range only. null = no (or ignorable) Range header; "unsatisfiable" = 416 (also for multiple ranges and malformed specs). */
@@ -61,6 +66,9 @@ export async function handleClipRequest(
   req: http.IncomingMessage, res: http.ServerResponse, server: http.Server, serving: ClipServing | undefined,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
+  // 0. any proxy or tailnet header: `tailscale serve` (and any reverse proxy) connects from loopback, so the loopback checks below cannot
+  //    protect clips behind one. Refused regardless of the flag, with nothing about the server in the answer.
+  if (hasProxyHeader(req.headers)) return problem(res, 403, "Forbidden");
   // 1. default off (also when no clip store is wired): indistinguishable from a path that does not exist
   if (!serving || !clipServingEnabled(env)) return problem(res, 404, "Not Found");
   // 2. loopback only
