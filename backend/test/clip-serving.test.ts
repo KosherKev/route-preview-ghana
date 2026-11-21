@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { clipServingEnabled, handleClipRequest, parseRange, type ClipServeRecord } from "../src/clips/serve";
+import { clipServingEnabled, handleClipRequest, hasProxyHeader, parseRange, type ClipServeRecord } from "../src/clips/serve";
 import { isClipServable } from "../src/imagery/sources";
 import { createApproachServer, listenLoopback } from "../src/routing/server";
 
@@ -198,6 +198,13 @@ describe("proxy / tailnet headers (tailscale serve makes every caller look like 
     ["X-Forwarded-Host", "servermac.tail607401.ts.net"], ["X-Forwarded-Proto", "https"],
     ["Forwarded", "for=100.64.0.9;proto=https"], ["Via", "1.1 tailscale"],
     ["Tailscale-User-Login", "someone@example.invalid"], ["tailscale-user-name", "x"], ["Tailscale-Headers-Info", "x"],
+    ["X-Real-IP", "100.64.0.9"], ["x-real-ip", "100.64.0.9"], ["X-REAL-IP", "100.64.0.9"],
+    ["CF-Connecting-IP", "100.64.0.9"], ["cf-connecting-ip", "100.64.0.9"], ["Cf-Connecting-Ip", "100.64.0.9"],
+    ["True-Client-IP", "100.64.0.9"], ["true-client-ip", "100.64.0.9"],
+    ["X-Client-IP", "100.64.0.9"], ["x-client-ip", "100.64.0.9"],
+    ["Forwarded-For", "100.64.0.9"], ["forwarded-for", "100.64.0.9"],
+    ["X-Forwarded-Server", "x"], ["X-Original-Forwarded-For", "x"], ["X-Forwarded-Port", "443"], ["Forwarded-Proto", "https"], ["xFORWARDEDx", "x"],
+    ["X-Real-IP", ""], ["Forwarded", ""],
   ];
   for (const flag of [undefined, "1"]) {
     for (const [name, value] of cases) {
@@ -211,6 +218,27 @@ describe("proxy / tailnet headers (tailscale serve makes every caller look like 
       });
     }
   }
+  it("refuses duplicate headers, a proxy header mixed in among harmless ones, and the forms with two lines of the same name", async () => {
+    process.env.PROTOTYPE_CLIP_SERVING = "1";
+    for (const h of [
+      { "X-Forwarded-For": ["1.2.3.4", "5.6.7.8"] }, { "X-Real-IP": ["1.2.3.4", "5.6.7.8"] }, { "CF-Connecting-IP": ["a", "b"] },
+      { Accept: "*/*", "X-Client-IP": "1.2.3.4", "User-Agent": "x" }, { "x-real-ip": "1.1.1.1", "X-Real-Ip": "2.2.2.2" },
+    ] as http.OutgoingHttpHeaders[]) {
+      const r = await raw("/clips/111/forward.mp4", "GET", h);
+      expect(r.status, JSON.stringify(h)).toBe(403);
+      expect(lookups).toEqual([]);
+    }
+  });
+  it("hasProxyHeader: matches case-insensitively, any name containing forwarded, and does not flag ordinary headers", () => {
+    for (const n of ["x-real-ip", "X-Real-IP", "CF-Connecting-IP", "True-Client-IP", "X-Client-IP", "Forwarded-For", "Forwarded", "Via", "X-FoRwArDeD-Anything", "Tailscale-User", "TAILSCALE-X"]) {
+      expect(hasProxyHeader({ [n]: "v" }), n).toBe(true);
+    }
+    expect(hasProxyHeader({ [`x-real-ip`]: "" })).toBe(true);
+    for (const n of ["host", "accept", "range", "user-agent", "x-requested-with", "x-forward", "cf-ray", "connection", "x-client-version"]) {
+      expect(hasProxyHeader({ [n]: "v" }), n).toBe(false);
+    }
+    expect(hasProxyHeader({})).toBe(false);
+  });
   it("also refuses HEAD and malformed paths that carry such a header", async () => {
     process.env.PROTOTYPE_CLIP_SERVING = "1";
     expect((await raw("/clips/111/forward.mp4", "HEAD", { Via: "1.1 x" })).status).toBe(403);

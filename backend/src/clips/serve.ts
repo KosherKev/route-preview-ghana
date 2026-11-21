@@ -2,7 +2,7 @@
 // This is not a serving feature. Nothing is uploaded or published anywhere, and it does NOT change isClipServable (which stays
 // false for every prototype clip, so no public path may serve them). It answers only when ALL hold, checked per request:
 //   1. PROTOTYPE_CLIP_SERVING=1 (default off; any other value, or unset, makes every /clips/ path a plain 404),
-//   2. no proxy or tailnet header on the request (X-Forwarded-*, Forwarded, Via, Tailscale-*), whatever the flag says, and the server socket is bound to loopback and the caller is on loopback,
+//   2. no proxy or tailnet header on the request (any name containing "forwarded", Forwarded-For, Via, X-Real-IP, CF-Connecting-IP, True-Client-IP, X-Client-IP, Tailscale-*), whatever the flag says, and the server socket is bound to loopback and the caller is on loopback,
 //   3. the key is registered in the clips table (never a file-system lookup by caller-supplied name),
 //   4. the clip's imagery sources are not disabled by the kill switch (IMAGERY_SOURCES_DISABLED).
 import { createReadStream, promises as fsp } from "node:fs";
@@ -36,10 +36,12 @@ function problem(res: http.ServerResponse, status: number, title: string, detail
   res.end(text);
 }
 
-const PROXY_HEADERS = new Set(["x-forwarded-for", "x-forwarded-host", "x-forwarded-proto", "forwarded", "via"]);
-/** True when the request carries any proxy header or any Tailscale-* header (names compared case-insensitively). */
+const PROXY_HEADERS = new Set([
+  "forwarded", "via", "x-real-ip", "cf-connecting-ip", "true-client-ip", "x-client-ip", "forwarded-for",
+]);
+/** True when the request carries any proxy header: a listed name, any name containing "forwarded", or any Tailscale-* header (names compared case-insensitively; a header that is present with an empty value counts). */
 export const hasProxyHeader = (headers: http.IncomingHttpHeaders): boolean =>
-  Object.keys(headers).some((k) => { const n = k.toLowerCase(); return PROXY_HEADERS.has(n) || n.startsWith("tailscale-"); });
+  Object.keys(headers).some((k) => { const n = k.toLowerCase(); return PROXY_HEADERS.has(n) || n.includes("forwarded") || n.startsWith("tailscale-"); });
 
 export type ByteRange = { start: number; end: number } | "unsatisfiable" | null;
 
