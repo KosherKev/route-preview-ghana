@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import 'fixture.dart';
 import 'flyover_map.dart';
 import 'flyover/player_controller.dart';
 import 'flyover/timeline.dart';
+import 'info_panel.dart';
 import 'player_controls.dart';
+import 'scene/scene.dart';
 
-/// Plays the fixture flyover on a MapLibre Native map: 3D building extrusions plus the route line, camera driven
-/// by the manifest's keyframes. Pre-trip preview only: no location is requested, shown or used.
+/// Plays a [Scene]'s flyover on a MapLibre Native map: the camera is driven by the manifest's keyframes. Pre-trip
+/// preview only: no location is requested, shown or used.
 class FlyoverScreen extends StatefulWidget {
-  final Fixture fixture;
+  final Scene scene;
   final bool autoplay;
   final Duration autoplayDelay;
 
@@ -19,7 +20,7 @@ class FlyoverScreen extends StatefulWidget {
   final double initialSpeed;
   const FlyoverScreen({
     super.key,
-    required this.fixture,
+    required this.scene,
     this.autoplay = false,
     this.autoplayDelay = Duration.zero,
     this.initialSpeed = 1.0,
@@ -37,10 +38,12 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
   bool _cameraBusy = false;
   Duration _last = Duration.zero;
 
+  Scene get _scene => widget.scene;
+
   @override
   void initState() {
     super.initState();
-    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(widget.fixture.manifest))
+    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(_scene.manifest))
       ..setSpeed(widget.initialSpeed)
       ..addListener(_onPlayer);
     _ticker = createTicker((elapsed) {
@@ -78,6 +81,12 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
         bearing: c.bearingDeg,
         tilt: c.pitchDeg,
       )));
+      try {
+        await _scene.onProgress(map, c.offsetM);
+      } catch (e) {
+        // The completed-route highlight is cosmetic: never let it stop the camera or autoplay.
+        debugPrint('[flyover] progress update failed: $e');
+      }
     } finally {
       _cameraBusy = false;
     }
@@ -85,33 +94,11 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
 
   Future<void> _onStyleLoaded() async {
     final map = _map!;
-    await map.addGeoJsonSource('route', widget.fixture.route);
-    await map.addGeoJsonSource('buildings', widget.fixture.buildings);
-    await map.addLineLayer(
-      'route',
-      'route-line',
-      const LineLayerProperties(lineColor: '#d6336c', lineWidth: 5, lineCap: 'round', lineJoin: 'round'),
-    );
-    await map.addFillExtrusionLayer(
-      'buildings',
-      'buildings-3d',
-      const FillExtrusionLayerProperties(
-        // Real OSM heights are rare, so most buildings carry a flagged default: colour them differently so the
-        // extrusions never read as measured heights.
-        fillExtrusionColor: [
-          'case',
-          ['==', ['get', 'height_source'], 'osm'],
-          '#8fa3b8',
-          '#cfc6b4',
-        ],
-        fillExtrusionHeight: ['get', 'height'],
-        fillExtrusionBase: 0,
-        fillExtrusionOpacity: 0.92,
-      ),
-    );
+    await _scene.onStyleLoaded(map);
     _styleReady = true;
     await _moveCamera();
-    debugPrint('[flyover] style ready, ${(widget.fixture.buildings['features'] as List).length} buildings');
+    if (mounted) setState(() {});
+    debugPrint('[flyover] style ready');
     if (widget.autoplay) {
       await Future<void>.delayed(widget.autoplayDelay);
       if (!mounted) return;
@@ -122,13 +109,14 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final f = widget.fixture;
     final first = _player.timeline.cameraAt(0);
+    final horizon = _scene.horizonColor;
+    final msg = _scene.fallbackMessage;
     return Scaffold(
       body: Stack(
         children: [
           buildFlyoverMap(
-            styleString: f.styleJson,
+            styleString: _scene.styleJson,
             initialCameraPosition: CameraPosition(
               target: LatLng(first.lat, first.lon),
               zoom: first.zoom,
@@ -138,17 +126,68 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
             onMapCreated: (c) => _map = c,
             onStyleLoadedCallback: _onStyleLoaded,
           ),
+          // MapLibre Native on iOS has no fog or sky (see the D3 note): a soft fade at the top of the screen stands in
+          // for the horizon haze at high pitch.
+          if (horizon != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 170,
+              child: IgnorePointer(
+                // Only needed when the camera is tilted far enough to show the horizon.
+                child: Opacity(
+                  opacity: ((_player.camera.pitchDeg - 50) / 20).clamp(0.0, 1.0),
+                  child: DecoratedBox(
+                    key: const Key('horizon-fade'),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(horizon), Color(horizon).withValues(alpha: 0)],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           SafeArea(
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                margin: const EdgeInsets.all(12),
+                key: const Key('banner'),
+                margin: const EdgeInsets.fromLTRB(12, 12, 60, 12),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(10)),
-                child: const Text(
-                  'SYNTHETIC FIXTURE · pre-trip preview\nBuilding heights are approximate (most use a default).',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_scene.bannerTitle,
+                        textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text(_scene.bannerNote, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
+                    if (msg != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(msg,
+                            key: const Key('fallback-message'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Color(0xFFFFD27A), fontSize: 11)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, right: 8),
+                child: IconButton.filledTonal(
+                  key: const Key('info-button'),
+                  icon: const Icon(Icons.info_outline),
+                  tooltip: 'Attribution and notes',
+                  onPressed: () => InfoPanel.show(context, _scene),
                 ),
               ),
             ),
@@ -158,8 +197,8 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
               alignment: Alignment.bottomCenter,
               child: PlayerControls(
                 controller: _player,
-                timelineStartM: f.manifest.timelineStartM,
-                timelineEndM: f.manifest.timelineEndM,
+                timelineStartM: _scene.manifest.timelineStartM,
+                timelineEndM: _scene.manifest.timelineEndM,
               ),
             ),
           ),

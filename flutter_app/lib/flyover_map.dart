@@ -1,3 +1,5 @@
+import 'dart:math' show Point;
+
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 /// The one place the flyover's MapLibre widget is built, so its product-boundary settings live in one spot and a widget
@@ -24,6 +26,9 @@ MapLibreMap buildFlyoverMap({
     zoomGesturesEnabled: false,
     tiltGesturesEnabled: false,
     compassEnabled: false,
+    // Keep the map attribution button (OSM's licence wants attribution visible), lifted above the player controls.
+    attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+    attributionButtonMargins: const Point<double>(8, 235),
     // Product boundary: no device position, ever.
     myLocationEnabled: false,
     myLocationTrackingMode: MyLocationTrackingMode.none,
