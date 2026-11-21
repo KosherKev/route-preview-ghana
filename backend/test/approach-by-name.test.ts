@@ -81,7 +81,12 @@ describe("name-based routing", () => {
     ]) {
       const r = await post({ ...b, costing: "auto" });
       expect(r.status, JSON.stringify(b)).toBe(400);
+      expect(r.headers.get("content-type")).toBe("application/problem+json");
+      expect(await r.json()).toMatchObject({ type: "about:blank", title: "Invalid request", status: 400, detail: expect.any(String) });
     }
+    const long = (await (await post({ origin_query: "x".repeat(101), destination: LL, costing: "auto" })).json()) as Record<string, unknown>;
+    expect(long.detail).toBe("origin_query: q must be at most 100 characters");
+    expect(Object.keys(long).sort()).toEqual(["detail", "status", "title", "type"]);
     const bare = make(undefined);
     await listenLoopback(bare, 0);
     try { expect((await post({ origin_query: "Total", destination: LL, costing: "auto" }, `http://127.0.0.1:${(bare.address() as AddressInfo).port}`)).status).toBe(400); }

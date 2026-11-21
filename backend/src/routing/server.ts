@@ -2,7 +2,7 @@
 //   GET  /health
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
-//   POST /approach  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
+//   POST /approach  (every error is RFC 9457 problem JSON: type, title, status, detail; a 422 adds field, query, degraded, candidates)  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
 import { ArgumentError, extractApproach, type ApproachOptions, type ApproachResult } from "./approach";
@@ -113,6 +113,10 @@ export interface ServerOptions {
 const GENERIC: Record<number, string> = {
   400: "invalid request", 413: "body too large", 415: 'content-type must be application/json', 502: "upstream routing failure", 504: "deadline exceeded",
 };
+const TITLES: Record<number, string> = {
+  400: "Invalid request", 404: "Not Found", 405: "Method Not Allowed", 413: "Payload Too Large", 415: "Unsupported Media Type",
+  502: "Bad Gateway", 504: "Gateway Timeout",
+};
 
 function sendProblem(res: http.ServerResponse, status: number, title: string, detail?: string) {
   if (res.headersSent) return;
@@ -188,12 +192,12 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
           return sendProblem(res, 500, "Internal Server Error");
         }
       }
-      if (url.pathname !== "/approach") return send(res, 404, { error: "not found" });
-      if (req.method !== "POST") return send(res, 405, { error: "use POST" });
+      if (url.pathname !== "/approach") return sendProblem(res, 404, TITLES[404]!);
+      if (req.method !== "POST") return sendProblem(res, 405, TITLES[405]!, "use POST");
       const ct = String(req.headers["content-type"] ?? "").split(";")[0]!.trim().toLowerCase();
       if (ct !== "application/json") {
         req.resume(); // discard whatever the client sends; the body is never read
-        return send(res, 415, { error: GENERIC[415] });
+        return sendProblem(res, 415, TITLES[415]!, GENERIC[415]);
       }
       let parsed: unknown;
       try { parsed = JSON.parse(await readBody(req)); } catch (e) {
@@ -201,9 +205,9 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
           // stop the client sending more: answer, close the connection, then destroy the request stream
           res.setHeader("connection", "close");
           res.once("finish", () => req.destroy());
-          return send(res, 413, { error: GENERIC[413] });
+          return sendProblem(res, 413, TITLES[413]!, GENERIC[413]);
         }
-        return send(res, 400, { error: "body is not valid JSON" });
+        return sendProblem(res, 400, TITLES[400]!, "body is not valid JSON");
       }
       const named = await resolveQueries(parsed, opts.geocode, margin);
       const r = parseApproachRequest(named.body);
@@ -224,11 +228,11 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
     } catch (e) {
       // our own validation messages are safe to echo; everything else is logged server-side and answered generically
       if (e instanceof Unresolved) return sendProblem422(res, e.body);
-      if (e instanceof ValidationError) return send(res, 400, { error: e.message });
-      if (e instanceof ArgumentError) { onError(e, { status: 400, path: url.pathname }); return send(res, 400, { error: GENERIC[400] }); }
+      if (e instanceof ValidationError) return sendProblem(res, 400, TITLES[400]!, e.message);
+      if (e instanceof ArgumentError) { onError(e, { status: 400, path: url.pathname }); return sendProblem(res, 400, TITLES[400]!, GENERIC[400]); }
       const status = (e as { status?: number }).status === 504 ? 504 : 502;
       onError(e, { status, path: url.pathname });
-      return send(res, status, { error: GENERIC[status] });
+      return sendProblem(res, status, TITLES[status]!, GENERIC[status]);
     }
   });
   server.requestTimeout = 15_000;

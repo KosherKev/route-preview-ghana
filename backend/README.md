@@ -184,7 +184,7 @@ centred on the maneuver point, for turns, roundabouts, merges and ramps/exits/fo
   NO scooter route (e.g. the regression pair in `test/approach.integration.test.ts`); that is reported, not hidden.
 - HTTP: `npm run serve` (127.0.0.1 only, `PORT` default 8787). `POST /approach` with
   `{"origin":{"lat":5.6361,"lon":-0.175},"destination":{"lat":5.5502,"lon":-0.2174},"costing":"auto","approach_length_m":500,"decision_window_m":80}`;
-  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), requires `Content-Type: application/json` (415), 4 KB body cap (413, connection closed), 60 s deadline (504; the in-flight Valhalla fetches are aborted), Valhalla calls have their own 30 s timeout. Client errors are generic (`upstream routing failure`, `invalid request`); details go only to the server-side `onError` log.
+  `GET /health`. Validates input (Ghana bounding box, costing enum, numeric ranges), requires `Content-Type: application/json` (415), 4 KB body cap (413, connection closed), 60 s deadline (504; the in-flight Valhalla fetches are aborted), Valhalla calls have their own 30 s timeout. All errors are RFC 9457 problem JSON (`application/problem+json`, same shape as `/geocode`); client messages are generic (`upstream routing failure`, `invalid request`) or our own validation text, and details go only to the server-side `onError` log.
 
 ### Matcher and classifier (`src/classify/`)
 

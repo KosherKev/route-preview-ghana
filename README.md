@@ -48,6 +48,11 @@ attribution fields (`creator_username`, `source_url`, `clips.source_summary`) an
   computed. The response is 422 `application/problem+json` with `title` ("Ambiguous place", "No confident match" or "Place not found"),
   `field` (`origin_query` or `destination_query`), `query`, `degraded` and a `candidates` list; the client picks one and resends its
   coordinates.
+- Every `POST /approach` error uses the same RFC 9457 problem JSON as `/geocode` and `/landmarks/search`
+  (`application/problem+json`: `type`, `title`, `status`, `detail`; never Valhalla bodies, stack traces or paths). Bad input is 400
+  (invalid JSON, missing or out-of-Ghana coordinates, bad costing, over-long or malformed `*_query`), 413 oversized body, 415 wrong
+  content type, 405 wrong method, 502 upstream routing failure, 504 deadline. The 422 disambiguation body is the same problem JSON with
+  extra members (`field`, `query`, `degraded`, `candidates`). The 200 success body is unchanged.
 
 Photon is the self-hosted Ghana-only geocoder (no public Photon or Nominatim server is ever called). It is stopped by default because it
 holds about 300 MiB on the 5 GiB Colima VM next to PostGIS and Valhalla:
