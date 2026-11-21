@@ -3,6 +3,7 @@
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
 //   GET|HEAD /clips/<edge_id>/<direction>.mp4  (DEV ONLY: 404 unless PROTOTYPE_CLIP_SERVING=1 and loopback-bound; see src/clips/serve.ts)
+//   POST /preview/bundle  (only when a bundler is supplied; writes a local prototype bundle file, returns its description; nothing is served or uploaded)
 //   POST /preview  (only when a preview builder is supplied; same input rules, disambiguation and problem JSON as /approach; see docs/api/preview-manifest.md)
 //   POST /approach  (every error is RFC 9457 problem JSON: type, title, status, detail; a 422 adds field, query, degraded, candidates)  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
@@ -12,6 +13,7 @@ import type { Costing, LatLon } from "./valhalla";
 import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
 import type { Candidate, GeocodeFn } from "../geo/geocode";
 import { DEFAULT_DISAMBIGUATION_MARGIN, resolvePlace } from "./resolve";
+import { BundleError, type BundleResult } from "../preview/bundle";
 import { handleClipRequest, type ClipServing } from "../clips/serve";
 import type { NamedEnd, PreviewBuilder, PreviewRequest } from "../preview/build";
 
@@ -135,6 +137,8 @@ export interface ServerOptions {
   preview?: PreviewBuilder;
   /** Dev-only clip door (GET|HEAD /clips/<edge>/<direction>.mp4). Needs PROTOTYPE_CLIP_SERVING=1 AND a loopback-bound server; see src/clips/serve.ts. */
   clipServing?: ClipServing;
+  /** Enables POST /preview/bundle (same body as /preview): builds the preview, packages the offline bundle into a local gitignored file and returns its description. */
+  bundle?: (r: PreviewRequest, ctx: { signal?: AbortSignal; resolved?: Record<string, NamedEnd>; degraded?: boolean }) => Promise<BundleResult>;
   /** Name-based routing: top two candidates with scores closer than this (and > 500 m apart) are returned for disambiguation. Default 0.05. */
   disambiguationMargin?: number;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
@@ -226,7 +230,8 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
           return sendProblem(res, 500, "Internal Server Error");
         }
       }
-      const isPreview = url.pathname === "/preview" && !!opts.preview;
+      const isBundle = url.pathname === "/preview/bundle" && !!opts.bundle;
+      const isPreview = (url.pathname === "/preview" && !!opts.preview) || isBundle;
       if (url.pathname !== "/approach" && !isPreview) return sendProblem(res, 404, TITLES[404]!);
       if (req.method !== "POST") return sendProblem(res, 405, TITLES[405]!, "use POST");
       const ct = String(req.headers["content-type"] ?? "").split(";")[0]!.trim().toLowerCase();
@@ -262,6 +267,12 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
           const r = parsePreviewRequest(named.body);
           const resolved = named.resolved as Record<string, NamedEnd>;
           const degraded = Object.values(resolved).some((v) => v.degraded === true);
+          if (isBundle) {
+            const b = await race(opts.bundle!(r, { signal: ac.signal, resolved, degraded }));
+            const { clips, files, attribution: _a, ...env } = b.envelope;
+            void _a;
+            return send(res, 200, { file: b.file, sizeBytes: b.sizeBytes, ...env, clipCount: clips.length, files });
+          }
           return send(res, 200, await race(opts.preview!(r, { signal: ac.signal, resolved, degraded })));
         }
         const r = parseApproachRequest(named.body);
@@ -275,6 +286,7 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
     } catch (e) {
       // our own validation messages are safe to echo; everything else is logged server-side and answered generically
       if (e instanceof Unresolved) return sendProblem422(res, e.body);
+      if (e instanceof BundleError) { if (e.status >= 500) onError(e, { status: e.status, path: url.pathname }); return sendProblem(res, e.status, e.title, e.status >= 500 ? undefined : e.message); }
       if (e instanceof ValidationError) return sendProblem(res, 400, TITLES[400]!, e.message);
       if (e instanceof ArgumentError) { onError(e, { status: 400, path: url.pathname }); return sendProblem(res, 400, TITLES[400]!, GENERIC[400]); }
       const status = (e as { status?: number }).status === 504 ? 504 : 502;

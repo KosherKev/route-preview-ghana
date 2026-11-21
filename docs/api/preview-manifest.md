@@ -109,3 +109,29 @@ classifier, so affected stretches become flyover segments.
   "attribution": {"requiresLogoAndLink": true, "sources": ["mapillary"]}
 }
 ```
+
+## Offline bundle: `POST /preview/bundle`
+
+Same request body, errors and disambiguation as `POST /preview`. It builds the preview, then packages it into **one local tar file** under
+`data/bundles/` (gitignored, mode 600) for the app on a simulator or emulator, and answers with a description of that file (path, size,
+`contentHash`, `expiresAt`, ...). Nothing is uploaded, published or served, and no endpoint renders a clip. Contents:
+
+| Path | What |
+| --- | --- |
+| `bundle.json` | Envelope: `bundleVersion` 1, `prototype: true`, `shareable: false`, `createdAt`, `expiresAt`, `contentHash`, `hashAlgorithm`, `files[]` (path, bytes, sha256), `clips[]`, `attribution`, `requiresLogoAndLink`, `tiles: {reserved: true, files: []}`, `notice` |
+| `preview.json` | The preview manifest, verbatim |
+| `clips/<edge>_<direction>.mp4` | Each READY clip |
+| `tiles/` | Reserved, empty (PMTiles slices come later) |
+
+- **Size cap**: 25 MB by default (`BUNDLE_MAX_BYTES`), measured on the finished archive. Above it the request fails with 413
+  `application/problem+json` ("Bundle too large", with the actual and permitted sizes); nothing is written.
+- **Expiry**: `expiresAt` is `createdAt` + 7 days by default (`BUNDLE_TTL_DAYS`). A client must discard an expired bundle.
+- **Content hash**: sha256 over the canonical (key-sorted) preview manifest and, for each clip sorted by key, `key bytes sha256(clip)`. It
+  contains no timestamp, so it is stable for the same manifest and clips and changes if either changes, even by one byte of one clip. The
+  envelope records it so a client can detect changed imagery.
+- **Kill switch**: a clip whose recorded sources include one disabled by `IMAGERY_SOURCES_DISABLED` is refused (403), as is a manifest whose
+  attribution names a disabled source. Unregistered or uncached clips are refused (409).
+- A bundle is a prototype artefact and not shareable. Prototype clips are bundled (never published) only because this is a local file for
+  development; `isClipServable` is unchanged.
+
+Tests: `backend/test/bundle.test.ts`.
