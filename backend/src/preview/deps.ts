@@ -3,6 +3,7 @@ import { statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Client } from "pg";
+import type { ClipServing } from "../clips/serve";
 import type { Axis } from "../geo/local";
 import { loadFramesAlongAxisDetailed } from "../classify/load";
 import { DEFAULT_MATCH_CONFIG } from "../classify/match";
@@ -60,5 +61,16 @@ export function createPgPreviewDeps(db: Pick<Client, "query">, o: { clipsDir?: s
       return rows.map((r) => rowToClipRecord(r, clipsDir)).filter((c): c is ClipRecord => c !== null);
     },
     loadLandmarks: (axis, from, to, maxDist) => loadLandmarkRows(db, axis, from, to, maxDist),
+  };
+}
+
+/** Registered-clip lookup for the dev clip door (read-only). */
+export function createPgClipServing(db: Pick<Client, "query">, clipsDir: string = DEFAULT_CLIPS_DIR): ClipServing {
+  return {
+    clipsDir,
+    async lookup(edgeId, direction) {
+      const { rows } = await db.query("SELECT video_url, source_summary FROM clips WHERE edge_id = $1 AND direction = $2 LIMIT 1", [edgeId, direction]);
+      return rows[0] ?? null;
+    },
   };
 }

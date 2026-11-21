@@ -2,6 +2,7 @@
 //   GET  /health
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
+//   GET|HEAD /clips/<edge_id>/<direction>.mp4  (DEV ONLY: 404 unless PROTOTYPE_CLIP_SERVING=1 and loopback-bound; see src/clips/serve.ts)
 //   POST /preview  (only when a preview builder is supplied; same input rules, disambiguation and problem JSON as /approach; see docs/api/preview-manifest.md)
 //   POST /approach  (every error is RFC 9457 problem JSON: type, title, status, detail; a 422 adds field, query, degraded, candidates)  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
@@ -11,6 +12,7 @@ import type { Costing, LatLon } from "./valhalla";
 import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
 import type { Candidate, GeocodeFn } from "../geo/geocode";
 import { DEFAULT_DISAMBIGUATION_MARGIN, resolvePlace } from "./resolve";
+import { handleClipRequest, type ClipServing } from "../clips/serve";
 import type { NamedEnd, PreviewBuilder, PreviewRequest } from "../preview/build";
 
 export const MAX_BODY_BYTES = 4096;
@@ -131,6 +133,8 @@ export interface ServerOptions {
   geocode?: GeocodeFn;
   /** Enables POST /preview. Injected like the others so the server holds no database connection. */
   preview?: PreviewBuilder;
+  /** Dev-only clip door (GET|HEAD /clips/<edge>/<direction>.mp4). Needs PROTOTYPE_CLIP_SERVING=1 AND a loopback-bound server; see src/clips/serve.ts. */
+  clipServing?: ClipServing;
   /** Name-based routing: top two candidates with scores closer than this (and > 500 m apart) are returned for disambiguation. Default 0.05. */
   disambiguationMargin?: number;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
@@ -184,9 +188,11 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
   const margin = opts.disambiguationMargin ?? DEFAULT_DISAMBIGUATION_MARGIN;
   if (!Number.isFinite(margin) || margin < 0 || margin > 1) throw new Error("disambiguationMargin must be a number between 0 and 1");
   const onError = opts.onError ?? ((e: unknown, i: { status: number; path: string }) => console.error(`[approach-server] ${i.status} ${i.path}: ${(e as Error)?.message ?? e}`));
-  const server = http.createServer(async (req, res) => {
+  const server: http.Server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     try {
+      // the raw request path is inspected (the URL parser above would normalise "/clips/../x" away)
+      if ((req.url ?? "").split("?")[0]!.startsWith("/clips")) return await handleClipRequest(req, res, server, opts.clipServing);
       if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { ok: true });
       if (url.pathname === "/landmarks/search" && opts.landmarkSearch) {
         if (req.method !== "GET") return sendProblem(res, 405, "Method Not Allowed", "use GET");
