@@ -116,3 +116,7 @@ export function isClipServable(clip: ClipSourceInfo, env: NodeJS.ProcessEnv = pr
     return false;
   }
 }
+
+/** Canonical `frames.source` labels. Code must pass one of these explicitly on every insert (D10); the column default is a safety net only. */
+export const MAPILLARY_SOURCE = "mapillary" as const;
+export const OWN_CAPTURE_SOURCE = "own_capture";

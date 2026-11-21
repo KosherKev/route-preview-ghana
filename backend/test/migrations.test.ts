@@ -78,8 +78,8 @@ describe("migrations on an empty database", () => {
     expect(by["frames.creator_username"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
     expect(by["frames.source_url"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
     expect(by["clips.source_summary"]).toMatchObject({ data_type: "jsonb", is_nullable: "NO" });
-    // pre-existing columns are unchanged by 005
-    expect(by["frames.source"]).toMatchObject({ is_nullable: "NO", column_default: null });
+    // pre-existing columns are unchanged by 005 (source gained its default in 008, see below)
+    expect(by["frames.source"]).toMatchObject({ is_nullable: "NO", column_default: "'mapillary'::text" });
     expect(by["frames.license"]).toMatchObject({ is_nullable: "YES" });
     expect(by["frames.creator"]).toMatchObject({ is_nullable: "YES" });
   });
@@ -104,5 +104,14 @@ describe("migrations on an empty database", () => {
     const idx = await db.query("SELECT 1 FROM pg_indexes WHERE indexname = 'landmarks_name_trgm_idx'");
     expect(idx.rowCount).toBe(1);
     expect((await db.query("SELECT landmarks_norm('Café') AS n")).rows[0]!.n).toBe("cafe");
+  });
+
+  it("008 sets only a default of 'mapillary' on frames.source and is re-runnable", async () => {
+    const sql = readFileSync(path.join(MIGRATIONS_DIR, "008_frames_source_default.sql"), "utf8");
+    await db.query(sql);
+    const r = await db.query("SELECT is_nullable, data_type, column_default FROM information_schema.columns WHERE table_name='frames' AND column_name='source'");
+    expect(r.rows[0]).toEqual({ is_nullable: "NO", data_type: "text", column_default: "'mapillary'::text" });
+    await db.query("INSERT INTO frames (image_id, geom, source) VALUES ('mig-default', ST_SetSRID(ST_MakePoint(0,0),4326), DEFAULT)");
+    expect((await db.query("SELECT source FROM frames WHERE image_id='mig-default'")).rows[0]!.source).toBe("mapillary");
   });
 });
