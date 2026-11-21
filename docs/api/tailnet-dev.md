@@ -37,8 +37,8 @@ or any `Tailscale-*` header, even if `PROTOTYPE_CLIP_SERVING=1` were set. The se
 (or 403 with those headers). Do not set the flag on a process that is published with `serve`.
 
 In the manifest, a street segment with a clip in the local cache reports `status: ready`, `playback: clip` and a `clipRef`/`clip.key`; without
-one it reports `status: not_rendered`, `clip: null` and `playback: flyover` (reason `clip_not_rendered`). Either way the app cannot download the
-clip over the tailnet, so it must play the flyover (`flyover` keyframes are always present for a segment it cannot play as a clip). See
+one it reports `status: not_rendered`, `clip: null` and `playback: flyover` (reason `clip_not_rendered`). A `ready` segment carries no flyover (`flyover: null`) and its clip cannot be fetched over the tailnet, so the app must treat it as unplayable here and show its own fallback (the route and
+markers); `not_rendered` segments carry flyover keyframes the app can play. See
 [the manifest](preview-manifest.md).
 
 ## Risk: no authentication yet
