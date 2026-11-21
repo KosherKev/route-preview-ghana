@@ -12,7 +12,7 @@ npm run typecheck
 ## Local stack (repo root)
 
 ```
-curl -L -o data/ghana-latest.osm.pbf https://download.geofabrik.de/africa/ghana-latest.osm.pbf   # git-ignored
+mkdir -p data/valhalla && curl -L -o data/valhalla/ghana-latest.osm.pbf https://download.geofabrik.de/africa/ghana-latest.osm.pbf   # git-ignored
 docker compose up -d         # project name: route-preview-ghana
 docker compose ps
 ```
@@ -24,7 +24,7 @@ Volumes are `route-preview-ghana_valhalla_tiles` and `route-preview-ghana_postgi
 ### Valhalla
 
 - Image: `ghcr.io/valhalla/valhalla:3.9.3` (pinned in `docker-compose.yml`).
-- On first start `docker/valhalla/entrypoint.sh` writes the config and builds tiles from `data/ghana-latest.osm.pbf` with
+- On first start `docker/valhalla/entrypoint.sh` writes the config and builds tiles from `data/valhalla/ghana-latest.osm.pbf` with
   `mjolnir.concurrency = 2` (no timezone/admin DBs, no elevation, no transit), then serves with 2 threads. To rebuild, remove the
   project volume `route-preview-ghana_valhalla_tiles` and bring the service up again.
 - Unpaved-surface handling, using only what 3.9.3 supports (checked against the 3.9.3 API docs and `src/sif/`):
