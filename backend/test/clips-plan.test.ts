@@ -69,13 +69,12 @@ describe("clip rows", () => {
     expect(row.start_offset).toBeGreaterThanOrEqual(0);
     expect(row.end_offset).toBeLessThanOrEqual(1);
   });
-  it("insertClipIfAbsent does not insert a second row for the same edge and direction", async () => {
+  it("insertClipIfAbsent is a single ON CONFLICT insert and reports whether it inserted", async () => {
     const calls: string[] = [];
-    const mk = (n: number) => ({ query: async (q: string) => { calls.push(q.trim().split(/\s/)[0]!); return { rowCount: n }; } });
-    expect(await insertClipIfAbsent(mk(1) as never, row)).toBe(false);
-    expect(calls).toEqual(["SELECT"]);
-    calls.length = 0;
-    expect(await insertClipIfAbsent(mk(0) as never, row)).toBe(true);
-    expect(calls).toEqual(["SELECT", "INSERT"]);
+    const mk = (n: number) => ({ query: async (q: string) => { calls.push(q); return { rowCount: n }; } });
+    expect(await insertClipIfAbsent(mk(0) as never, row)).toBe(false);
+    expect(await insertClipIfAbsent(mk(1) as never, row)).toBe(true);
+    expect(calls).toHaveLength(2);
+    for (const q of calls) expect(q).toMatch(/^\s*INSERT[\s\S]*ON CONFLICT \(edge_id, direction\) DO NOTHING/);
   });
 });

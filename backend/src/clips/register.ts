@@ -68,15 +68,19 @@ export function buildClipRow(
   };
 }
 
-/** Inserts the row unless a clip row already exists for (edge_id, direction), so a re-run never duplicates. Returns whether it inserted. */
+/**
+ * Inserts the row idempotently: `ON CONFLICT (edge_id, direction) DO NOTHING` against the unique index from migration 009,
+ * so a re-run or a concurrent registration never duplicates and never errors. DO NOTHING (not DO UPDATE) because an existing
+ * row is the source of truth: a later promotion, status change or expiry must not be reset by re-registering the same clip.
+ * Returns whether this call inserted the row.
+ */
 export async function insertClipIfAbsent(client: Pick<Client, "query">, row: ClipRow): Promise<boolean> {
-  const have = await client.query("SELECT 1 FROM clips WHERE edge_id = $1 AND direction = $2 LIMIT 1", [row.edge_id, row.direction]);
-  if ((have.rowCount ?? 0) > 0) return false;
-  await client.query(
+  const res = await client.query(
     `INSERT INTO clips (edge_id, start_offset, end_offset, direction, video_url, length_m, imagery_version, render_params, status,
-       start_pose, end_pose, expires_at, source_summary) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+       start_pose, end_pose, expires_at, source_summary) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     ON CONFLICT (edge_id, direction) DO NOTHING`,
     [row.edge_id, row.start_offset, row.end_offset, row.direction, row.video_url, row.length_m, row.imagery_version,
       JSON.stringify(row.render_params), row.status, JSON.stringify(row.start_pose), JSON.stringify(row.end_pose), row.expires_at, JSON.stringify(row.source_summary)],
   );
-  return true;
+  return (res.rowCount ?? 0) > 0;
 }
