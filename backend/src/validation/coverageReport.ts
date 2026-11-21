@@ -21,6 +21,8 @@ export interface IngestStats {
   fields: FieldStats;
   calls: CallStats;
   notes: string[];
+  /** Raw IMAGERY_SOURCES_DISABLED when the ingest ran (null when unset). Absent in stats written before this field existed. */
+  killSwitch?: { value: string | null };
 }
 
 export interface InterchangeCell { relation: "ends_at" | "through" | "no"; distanceM: number; levelUncertainSegments: number }
@@ -53,8 +55,41 @@ export interface DbStats {
   bySource: Record<string, number>;
 }
 
+/** Frames-table reconciliation against the corridor, measured at report time from the stored frames and the re-routed corridor. */
+export interface FrameReconciliation {
+  framesTotal: number;
+  /** Images the audit ingest stored (ingest-stats storedImages). */
+  storedByAudit: number;
+  /** framesTotal - storedByAudit. */
+  surplus: number;
+  inCorridor: number;
+  outsideCorridor: number;
+  /** Rows outside the corridor that lie inside the stray test run's query bbox. */
+  outsideInStrayBbox: number;
+  stray: { storedImages: number; bbox: [number, number, number, number]; maxCalls: number; fixedInCommit: string };
+}
+
+/** The one note about stray test rows: states the measured numbers and what is inferred. */
+export function strayRowsNote(r: FrameReconciliation): string {
+  const inferredInside = r.stray.storedImages - r.outsideCorridor;
+  const parts = [
+    `Stray test rows: before this audit, the CLI test in test/sources.test.ts (since fixed in commit ${r.stray.fixedInCommit}) made live Mapillary calls because the copied .env supplied a token: at most ${r.stray.maxCalls} calls against the bbox ${r.stray.bbox.join(",")}, which stored ${r.stray.storedImages} images (that figure was recorded at the time; it cannot be re-derived from the database). Those calls are NOT in the API count above.`,
+    `Reconciliation, measured at report time: the frames table has ${r.framesTotal} rows; the audit ingest stored ${r.storedByAudit}; the surplus is ${r.surplus}. Re-routing the pairs and applying the same corridor to every stored frame gives ${r.inCorridor} rows inside the corridor and ${r.outsideCorridor} outside it, ${r.outsideInStrayBbox} of those outside rows inside the stray bbox.`,
+  ];
+  if (r.inCorridor === r.storedByAudit && r.outsideCorridor === r.surplus) {
+    parts.push(`The outside-corridor count equals the surplus exactly, so the surplus is the stray rows the ingest never touched, and ${r.stray.storedImages} - ${r.outsideCorridor} = ${inferredInside} of the stray images lie inside the corridor and were re-upserted (idempotent) by the ingest, so they are inside the ${r.storedByAudit}. That ${inferredInside} is inferred by subtraction: rows do not record which run wrote them.`);
+  } else {
+    parts.push(`These numbers do not reconcile: the inside-corridor count (${r.inCorridor}) differs from what the ingest stored (${r.storedByAudit}) or the outside count (${r.outsideCorridor}) differs from the surplus (${r.surplus}). The corridor at report time may not match the corridor at ingest time. The ${r.stray.storedImages} figure cannot be reconciled with the table from these data.`);
+  }
+  parts.push("Frames outside the corridor are never near a route axis, so they do not affect classification.");
+  return parts.join(" ");
+}
+
 export interface CoverageAudit {
   generatedAt: string;
+  /** Raw IMAGERY_SOURCES_DISABLED at report time (null when unset): the classifier drops frames from disabled sources. */
+  killSwitchAtReport: string | null;
+  reconciliation: FrameReconciliation | null;
   verdict: "none: this report states measurements only";
   config: { match: MatchConfig; classify: ClassifyConfig; approachLengthM: number };
   ingest: IngestStats | null;
@@ -63,6 +98,14 @@ export interface CoverageAudit {
   rows: AuditRow[];
   totals: Record<Costing, CostingTotals>;
   limitations: string[];
+}
+
+const showSwitch = (v: string | null) => (v === null || v === "" ? "unset" : `"${v.replace(/[^\x20-\x7e]/g, (c) => `\\u{${c.codePointAt(0)!.toString(16)}}`)}"`);
+
+/** Kill-switch statement for the ingest, from the recorded value. */
+export function killSwitchLine(k: IngestStats["killSwitch"]): string {
+  if (!k) return "Kill switch IMAGERY_SOURCES_DISABLED at ingest time: not recorded (this ingest ran before the value was recorded; it can only have run with mapillary not disabled, because the ingest refuses to start otherwise).";
+  return `Kill switch IMAGERY_SOURCES_DISABLED at ingest time: ${showSwitch(k.value)} (recorded by the ingest run).`;
 }
 
 export const COSTINGS: Costing[] = ["motor_scooter", "auto"];
@@ -91,10 +134,11 @@ export function renderCoverageMarkdown(a: CoverageAudit): string {
     L.push("## Ingestion and API usage", "");
     L.push(`- Window: ${ing.startedAt} to ${ing.finishedAt}.`);
     L.push(`- Corridor half-width: ${ing.corridor.halfWidthM} m either side of each route polyline; cell size ${ing.corridor.cellDeg} degrees; ${ing.corridor.cells} cells; ${ing.corridor.routesUsed} routes used (${ing.corridor.routesFailed} failed to route and contributed no corridor).`);
-    L.push(`- Mapillary API calls made by the audit ingest: **${ing.calls.calls}** (${Object.entries(ing.calls.byStatus).map(([k, v]) => `HTTP ${k}: ${v}`).join(", ") || "none"}); calls that failed at the network level before any HTTP response (and were retried): ${ing.calls.networkErrors}. Every request counted above is a metadata query (/images); the kill switch IMAGERY_SOURCES_DISABLED was unset.`);
+    L.push(`- Mapillary API calls made by the audit ingest: **${ing.calls.calls}** (${Object.entries(ing.calls.byStatus).map(([k, v]) => `HTTP ${k}: ${v}`).join(", ") || "none"}); calls that failed at the network level before any HTTP response (and were retried): ${ing.calls.networkErrors}. Every request counted above is a metadata query (/images). ${killSwitchLine(ing.killSwitch)}`);
     L.push(`- Rate-limit events (HTTP 429): **${ing.calls.rateLimitEvents.length}**${ing.calls.rateLimitEvents.length ? ` (${ing.calls.rateLimitEvents.map((e) => `call ${e.atCall}, Retry-After ${e.retryAfter ?? "absent"}`).join("; ")})` : ""}. Retried 429/5xx responses: ${ing.calls.retriedResponses}. Total back-off waiting: ${(ing.calls.backoffWaitMs / 1000).toFixed(1)} s.`);
     L.push(`- Unique images returned: ${ing.fetchedUniqueImages}; inside the corridor and stored: ${ing.storedImages}; skipped at conversion: ${ing.skipped.no_geometry} without geometry, ${ing.skipped.invalid_captured_at} with an invalid captured_at.`);
     for (const n of ing.notes) L.push(`- Note: ${n}`);
+    if (a.reconciliation) L.push(`- Note: ${strayRowsNote(a.reconciliation)}`);
     L.push("");
     L.push("## quality_score null rate", "");
     const f = ing.fields;
@@ -114,6 +158,7 @@ export function renderCoverageMarkdown(a: CoverageAudit): string {
     L.push("| " + AGE_BUCKETS.map((k) => `${f.captureYear[k]} (${rate(f.captureYear[k], f.images)})`).join(" | ") + " |", "");
   }
   L.push("## Frames table at report time", "");
+  L.push(`- Kill switch IMAGERY_SOURCES_DISABLED at report time: ${showSwitch(a.killSwitchAtReport)} (frames from a disabled source are removed before classification).`);
   L.push(`- Rows in \`frames\`: ${a.db.framesTotal} (${Object.entries(a.db.bySource).map(([k, v]) => `${k}: ${v}`).join(", ") || "none"}); quality_score null: ${a.db.qualityScoreNull} (${rate(a.db.qualityScoreNull, a.db.framesTotal)}); below ${a.config.match.minQualityScore}: ${a.db.qualityScoreBelow05}.`, "");
 
   L.push("## Totals", "");
@@ -154,12 +199,13 @@ export function renderCoverageMarkdown(a: CoverageAudit): string {
   L.push("");
 
   L.push("## Per route", "");
-  L.push("Street % columns are STREET_VIDEO metres over route (or approach) metres. Bridges, cap and refused columns are for the whole route.", "");
-  L.push("| Route | Costing | Route km | Whole street % | Approach street % | Segments | Bridges | At cap | Refused gaps | level_uncertain | Usable frames | Notes |");
-  L.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |");
+  L.push(`Street % columns are STREET_VIDEO metres over route (or approach) metres. Bridges are crossfade bridges used, "at cap" is STREET_VIDEO segments holding the maximum of ${a.config.classify.maxBridgesPerSegment} bridges, refused gaps are bridge-tier gaps not bridged because the sequence_id differs.`, "");
+  L.push(`Whole-route columns first, then the same three counts for the last ${a.config.approachLengthM} m approach (Appr.).`, "");
+  L.push("| Route | Costing | Route km | Whole street % | Approach street % | Segments | Bridges | At cap | Refused gaps | Appr. bridges | Appr. at cap | Appr. refused gaps | level_uncertain | Usable frames | Notes |");
+  L.push("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |");
   for (const r of a.rows) {
-    if (r.status !== "ok" || !r.whole || !r.approach) { L.push(`| ${r.routeId} ${r.label} | ${r.costing} | | | | | | | | | | error: ${r.error ?? "unknown"} |`); continue; }
-    L.push(`| ${r.routeId} ${r.label} | ${r.costing} | ${km(r.routeLengthM)} | ${pct(r.whole.streetFraction)} | ${pct(r.approach.streetFraction)} | ${r.whole.segments} | ${r.whole.bridges} | ${r.whole.segmentsAtBridgeCap} | ${r.whole.refusedSequenceGaps} | ${r.whole.levelUncertainSegments} | ${r.whole.usableFrames} | ${r.unpaved_fallback ? "unpaved_fallback" : ""} |`);
+    if (r.status !== "ok" || !r.whole || !r.approach) { L.push(`| ${r.routeId} ${r.label} | ${r.costing} | | | | | | | | | | | | | error: ${r.error ?? "unknown"} |`); continue; }
+    L.push(`| ${r.routeId} ${r.label} | ${r.costing} | ${km(r.routeLengthM)} | ${pct(r.whole.streetFraction)} | ${pct(r.approach.streetFraction)} | ${r.whole.segments} | ${r.whole.bridges} | ${r.whole.segmentsAtBridgeCap} | ${r.whole.refusedSequenceGaps} | ${r.approach.bridges} | ${r.approach.segmentsAtBridgeCap} | ${r.approach.refusedSequenceGaps} | ${r.whole.levelUncertainSegments} | ${r.whole.usableFrames} | ${r.unpaved_fallback ? "unpaved_fallback" : ""} |`);
   }
   L.push("");
 

@@ -1,6 +1,7 @@
 // Metadata-only real-coverage audit (Phase 3 follow-up D).
 //   npm run audit:coverage -- ingest [--note "text"] [--half-width-m 30] [--interval-ms 500]
 //   npm run audit:coverage -- report [--out <dir>] [--note "text"]
+//   npm run audit:coverage -- run [--skip-ingestion] [ingest and report options]   (ingest, then report; --skip-ingestion makes it exactly "report": no token read, no Mapillary call)
 // ingest: routes the 25 validated pairs (Valhalla), ingests Mapillary IMAGE METADATA ONLY for cells covering a corridor
 //   around those routes into the local PostGIS frames table, and writes aggregate counts to data/coverage-audit/ingest-stats.json.
 // report: classifies every route (whole route and last-500 m approach) from the stored frames and writes
@@ -15,7 +16,7 @@ import { DEFAULT_CLASSIFY_CONFIG } from "../src/classify/classify";
 import { loadFramesAlongAxisDetailed } from "../src/classify/load";
 import { DEFAULT_MATCH_CONFIG } from "../src/classify/match";
 import { classifyFrames } from "../src/classify/pipeline";
-import { assertSourceEnabled, SourceDisabledError, warnOnceIfSuspiciousSources } from "../src/imagery/sources";
+import { assertSourceEnabled, IMAGERY_SOURCES_DISABLED_VAR, SourceDisabledError, warnOnceIfSuspiciousSources } from "../src/imagery/sources";
 import { CallMeter } from "../src/ingest/callMeter";
 import { convertImage, MapillarySource, requireToken, type FrameRow } from "../src/ingest/mapillary";
 import { Corridor, cellBBox, DEFAULT_CORRIDOR } from "../src/ingest/routeCorridor";
@@ -24,7 +25,7 @@ import { DEFAULT_APPROACH_LENGTH_M, extractApproach, type ApproachResult } from 
 import { decodePolyline6, type Costing } from "../src/routing/valhalla";
 import type { LatLon } from "../src/geo/local";
 import { levelUncertainNear, routeInputs, sumSummaries, summariseSegments, usableFrames } from "../src/validation/coverage";
-import { COSTINGS, renderCoverageMarkdown, type AuditRow, type CoverageAudit, type CostingTotals, type DbStats, type IngestStats } from "../src/validation/coverageReport";
+import { COSTINGS, renderCoverageMarkdown, type AuditRow, type CoverageAudit, type CostingTotals, type DbStats, type FrameReconciliation, type IngestStats } from "../src/validation/coverageReport";
 import { addImage, emptyFieldStats } from "../src/validation/ingestStats";
 import { NAMED_POINTS, NEAR_NAMED_M, ROUTE_PAIRS, type NamedKey } from "../src/validation/routes";
 import { approachInputs, namedProximity } from "../src/validation/run";
@@ -32,6 +33,9 @@ import { approachInputs, namedProximity } from "../src/validation/run";
 loadEnv();
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const STATS_FILE = path.join(repoRoot, "data", "coverage-audit", "ingest-stats.json");
+// The stray test run that wrote rows before the audit (see strayRowsNote): its own recorded stored-image count and query bbox.
+const STRAY_RUN = { storedImages: 3383, bbox: [-0.21, 5.59, -0.19, 5.61] as [number, number, number, number], maxCalls: 4, fixedInCommit: "8e900f3" };
+const killSwitchRaw = (): string | null => process.env[IMAGERY_SOURCES_DISABLED_VAR] ?? null;
 const argv = process.argv.slice(2);
 const cmd = argv[0];
 const opt = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
@@ -103,10 +107,29 @@ async function ingest() {
     startedAt, finishedAt: new Date().toISOString(),
     corridor: { halfWidthM, cellDeg: DEFAULT_CORRIDOR.cellDeg, stepM: DEFAULT_CORRIDOR.stepM, cells: cells.length, routesUsed: lines.length, routesFailed: failed },
     minIntervalMs, cellsRequested: cells.length, fetchedUniqueImages: seen.size, storedImages: stored.size, skipped, fields, calls: meter.stats, notes,
+    killSwitch: { value: killSwitchRaw() },
   };
   mkdirSync(path.dirname(STATS_FILE), { recursive: true });
   writeFileSync(STATS_FILE, JSON.stringify(out, null, 2) + "\n");
   console.log(`done: api calls ${meter.stats.calls}, stored images ${stored.size}, rate-limit events ${meter.stats.rateLimitEvents.length}; wrote aggregate stats`);
+}
+
+/** Applies the ingest corridor to every stored frame (re-routed polylines, same half-width): inside, outside, and outside within the stray bbox. */
+async function reconcileFrames(
+  client: pg.Client, results: Awaited<ReturnType<typeof routeAll>>["results"], ingestStats: IngestStats | null, framesTotal: number,
+): Promise<FrameReconciliation | null> {
+  const lines: LatLon[][] = results.filter((x) => x.r).map((x) => decodePolyline6(x.r!.route.polyline6).map(([lat, lon]) => ({ lat, lon })));
+  if (!ingestStats || lines.length === 0) return null;
+  const corridor = new Corridor(lines, { ...DEFAULT_CORRIDOR, halfWidthM: ingestStats.corridor.halfWidthM });
+  const { rows } = await client.query("SELECT ST_X(geom) AS lon, ST_Y(geom) AS lat FROM frames");
+  const [w, s, e, n] = STRAY_RUN.bbox;
+  let inCorridor = 0, outsideCorridor = 0, outsideInStrayBbox = 0;
+  for (const r of rows as { lon: number; lat: number }[]) {
+    if (corridor.contains({ lat: r.lat, lon: r.lon })) { inCorridor++; continue; }
+    outsideCorridor++;
+    if (r.lon >= w && r.lon <= e && r.lat >= s && r.lat <= n) outsideInStrayBbox++;
+  }
+  return { framesTotal, storedByAudit: ingestStats.storedImages, surplus: framesTotal - ingestStats.storedImages, inCorridor, outsideCorridor, outsideInStrayBbox, stray: STRAY_RUN };
 }
 
 async function report() {
@@ -124,6 +147,7 @@ async function report() {
 
     const rows: AuditRow[] = [];
     const { results } = await routeAll();
+    const reconciliation = await reconcileFrames(client, results, ingestStats, db.framesTotal);
     const cfg = DEFAULT_CLASSIFY_CONFIG;
     for (const { pair, costing, r, error } of results) {
       const base = { routeId: pair.id, label: pair.label, costing };
@@ -163,6 +187,7 @@ async function report() {
     const m = DEFAULT_MATCH_CONFIG;
     const audit: CoverageAudit = {
       generatedAt: new Date().toISOString(),
+      killSwitchAtReport: killSwitchRaw(), reconciliation,
       verdict: "none: this report states measurements only",
       config: { match: m, classify: cfg, approachLengthM: DEFAULT_APPROACH_LENGTH_M },
       ingest: ingestStats, db,
@@ -195,7 +220,11 @@ async function report() {
 (async () => {
   if (cmd === "ingest") await ingest();
   else if (cmd === "report") await report();
-  else throw new Error("usage: coverage-audit.ts ingest | report");
+  else if (cmd === "run") {
+    if (argv.includes("--skip-ingestion")) console.log("--skip-ingestion: reusing the stored frames; no Mapillary call will be made and no token is read");
+    else await ingest();
+    await report();
+  } else throw new Error("usage: coverage-audit.ts ingest | report | run [--skip-ingestion]");
 })().catch((e) => {
   console.error(String((e as Error).message ?? e)); // messages never carry the token or a URL (see mapillary.ts)
   process.exit(e instanceof SourceDisabledError ? 4 : 1);
