@@ -42,7 +42,7 @@ local-development door, off by default, lets an app on the same machine play a p
 
 - `backend/` API and pattern stubs
 - `worker/` video/segment workers (later phases)
-- `flutter_app/` rider app (later phases)
+- `flutter_app/` rider app (Phase 5B-1: scaffold, offline fixture flyover; see its README. Never synced to live GPS)
 - `data/` local data, git-ignored
 - `reference/` notes on third-party references; clones are git-ignored
 

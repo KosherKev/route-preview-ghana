@@ -26,7 +26,7 @@ Native Flutter app.
 
 ## D3 Flyover renderer (CLOSED 2026-11-20)
 
-MapLibre Native.
+MapLibre Native. Flutter plugin choice and the 5B-1 probes: [D3-maplibre-flutter-plugin.md](D3-maplibre-flutter-plugin.md).
 
 ## D4 Flyover base data (CLOSED 2026-11-20)
 
