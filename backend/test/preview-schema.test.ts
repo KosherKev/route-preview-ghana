@@ -66,3 +66,11 @@ describe("preview manifest JSON Schema", () => {
     expect(manifestErrors(m).length).toBeGreaterThan(0);
   });
 });
+
+describe("Flutter app fixture", () => {
+  it("the committed flutter_app fixture manifest still validates against the schema (backend-side equivalent of the Dart schema test)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const fx = JSON.parse(readFileSync(new URL("../../flutter_app/assets/fixtures/manifest.json", import.meta.url), "utf8"));
+    expect(manifestErrors(fx)).toEqual([]);
+  });
+});
