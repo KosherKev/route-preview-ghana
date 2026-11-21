@@ -97,6 +97,12 @@ SEA = {  # open water south of the coast; the coast near Accra is at about lat 5
     "off Teshie": (5.53, -0.09), "off Tema port": (5.60, 0.02), "south edge, lon -0.30": (5.455, -0.30), "south edge, lon 0.00": (5.455, 0.00),
 }
 
+def bsea_gate(bsea, limit):
+    """bsea = [buildings examined, buildings inside the sea]. Fails if nothing was examined (vacuous) or if more than `limit` are inside."""
+    examined, inside = bsea
+    return [(examined > 0, f"buildings-in-sea gate examined buildings: {examined} z14 buildings in tiles that contain sea (zero would make the gate vacuous)"),
+            (examined > 0 and inside <= limit, f"OSM buildings inside the sea polygon at most {limit}: {inside} of {examined} z14 buildings in tiles that contain sea (first vertex tested)")]
+
 def main(v2, v1):
     h, meta, c2, nt, geoms = scan(v2, want_geoms=("sea", "water", "landuse"))
     bsea = list(BSEA)
@@ -118,11 +124,18 @@ def main(v2, v1):
     for feats in geoms["landuse"].values():
         for tags, _ in feats: classes[tags.get("class")] = classes.get(tags.get("class"), 0) + 1
     print("landuse features per class at z14:", dict(sorted(classes.items())))
+    check(len(classes) >= 10 and sum(classes.values()) > 0, f"landuse is populated: {sum(classes.values())} z14 features in {len(classes)} classes (an empty layer would make the class check below vacuous)")
     check("other" not in classes, "no landuse feature fell back to class 'other'")
     hits = list(BHITS)
     from collections import Counter
     print("  buildings with first vertex inside sea, by 0.01 deg cell (lat, lon):", dict(sorted(Counter(hits).items())))
-    check(bsea[1] <= 0.001 * bsea[0], f"OSM buildings inside the sea polygon under 0.1 percent (harbour and reclaimed land at 0 m): {bsea[1]} of {bsea[0]} z14 buildings in tiles that contain sea (first vertex tested)")
+    # Gate: no OSM building may start inside the sea polygon, and the check must actually examine buildings (a gate that examines none
+    # passes vacuously). Limit 0 is the measured result, not a fitted one: with the sea built from the OSM coastline, 0 of 114,645 z14
+    # buildings in tiles that contain sea (first vertex tested) were inside it on the 2026-11-21 extract. The earlier DEM-derived sea
+    # had 70 (0.06 percent), all of them harbour/reclaimed land the DEM holds at 0 m; that was a flaw of the DEM method, not of the data.
+    # A future extract with a mapped jetty or stilt house over water would need a look, then a limit raised to the measured count.
+    BSEA_LIMIT = 0
+    for ok, msg in bsea_gate(bsea, BSEA_LIMIT): check(ok, msg)
     for name, (lat, lon) in LAND.items():
         sea = covered(geoms, "sea", lon, lat)
         print(f"  land point {name} ({lat}, {lon}): sea={sea}")
