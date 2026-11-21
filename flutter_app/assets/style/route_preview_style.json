@@ -1,0 +1,260 @@
+{
+  "version": 8,
+  "name": "route-preview-offline",
+  "metadata": {
+    "comment": "Offline style template. Double-curly-brace placeholders are substituted at runtime: two pmtiles:// URLs (vector and terrain tiles, which live in the app sandbox and never in the repo) and three GeoJSON objects (route, completed route, destination). No remote URLs, no glyphs, no sprites: text labels are out of scope. Source layers listed under optionalSourceLayers may be absent from the tiles and then simply draw nothing.",
+    "optionalSourceLayers": ["landuse", "sea"]
+  },
+  "light": { "anchor": "map", "color": "#fff3e2", "intensity": 0.55, "position": [1.2, 235, 42] },
+  "sources": {
+    "osm": {
+      "type": "vector",
+      "url": "{{VECTOR_TILES_URL}}",
+      "attribution": "<a href=\"https://www.openstreetmap.org/copyright\">&copy; OpenStreetMap contributors</a>"
+    },
+    "terrain": {
+      "type": "raster-dem",
+      "url": "{{TERRAIN_TILES_URL}}",
+      "tileSize": 256,
+      "encoding": "terrarium",
+      "attribution": "Copernicus DEM GLO-30"
+    },
+    "route": { "type": "geojson", "data": "{{ROUTE_GEOJSON}}" },
+    "route-done": { "type": "geojson", "data": "{{ROUTE_DONE_GEOJSON}}" },
+    "destination": { "type": "geojson", "data": "{{DESTINATION_GEOJSON}}" }
+  },
+  "layers": [
+    { "id": "land", "type": "background", "paint": { "background-color": "#ece8dd" } },
+
+    {
+      "id": "landuse",
+      "type": "fill",
+      "source": "osm",
+      "source-layer": "landuse",
+      "paint": {
+        "fill-color": [
+          "match", ["get", "class"],
+          ["park", "garden", "recreation_ground", "grass", "meadow", "village_green"], "#d3e4c3",
+          ["forest", "wood"], "#bcd7a6",
+          ["farmland", "farmyard", "orchard", "vineyard", "allotments"], "#e4e8cb",
+          ["cemetery"], "#d8e2cf",
+          ["residential"], "#eae3d6",
+          ["commercial", "retail"], "#efe1d3",
+          ["industrial"], "#e3dfe4",
+          "#ece8dd"
+        ],
+        "fill-opacity": 0.9
+      }
+    },
+    {
+      "id": "sea",
+      "type": "fill",
+      "source": "osm",
+      "source-layer": "sea",
+      "paint": { "fill-color": "#b9d6ea" }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "osm",
+      "source-layer": "water",
+      "paint": { "fill-color": "#bcd8ec", "fill-outline-color": "#a6c8e0" }
+    },
+
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain",
+      "paint": {
+        "hillshade-exaggeration": 0.3,
+        "hillshade-illumination-direction": 315,
+        "hillshade-illumination-anchor": "map",
+        "hillshade-shadow-color": "#4f4d46",
+        "hillshade-highlight-color": "#ffffff",
+        "hillshade-accent-color": "#76736a"
+      }
+    },
+
+    {
+      "id": "road-minor-casing",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["tertiary", "tertiary_link", "secondary", "secondary_link", "primary", "primary_link", "trunk", "trunk_link", "motorway", "motorway_link"], false, true]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#cfc8b8", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 0.9, 17, ["match", ["get", "highway"], ["residential", "unclassified"], 9, 6]] }
+    },
+    {
+      "id": "road-minor",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["tertiary", "tertiary_link", "secondary", "secondary_link", "primary", "primary_link", "trunk", "trunk_link", "motorway", "motorway_link"], false, true]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#ffffff", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 0.4, 17, ["match", ["get", "highway"], ["residential", "unclassified"], 6.5, 3.8]] }
+    },
+    {
+      "id": "road-tertiary-casing",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["tertiary", "tertiary_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#cdbf9f", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 1.4, 17, 12] }
+    },
+    {
+      "id": "road-tertiary",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["tertiary", "tertiary_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#fff6dc", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 0.8, 17, 9] }
+    },
+    {
+      "id": "road-main-casing",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["secondary", "secondary_link", "primary", "primary_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#cfb27a", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 2.0, 17, 17] }
+    },
+    {
+      "id": "road-main",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["secondary", "secondary_link", "primary", "primary_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#fbe3a8", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 1.2, 17, 13.5] }
+    },
+    {
+      "id": "road-highway-casing",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["trunk", "trunk_link", "motorway", "motorway_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#c98f3d", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 2.6, 17, 22] }
+    },
+    {
+      "id": "road-highway",
+      "type": "line",
+      "source": "osm",
+      "source-layer": "road",
+      "minzoom": 11,
+      "filter": ["all", ["!", ["has", "tunnel"]], ["match", ["get", "highway"], ["trunk", "trunk_link", "motorway", "motorway_link"], true, false]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#f7c978", "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 11, 1.6, 17, 18] }
+    },
+    {
+      "id": "route-glow",
+      "type": "line",
+      "source": "route",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#ff4d85", "line-width": 18, "line-blur": 9, "line-opacity": 0.45 }
+    },
+    {
+      "id": "route-casing",
+      "type": "line",
+      "source": "route",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#ffffff", "line-width": 10 }
+    },
+    {
+      "id": "route-line",
+      "type": "line",
+      "source": "route",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#e9779a", "line-width": 6 }
+    },
+    {
+      "id": "route-done",
+      "type": "line",
+      "source": "route-done",
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#ff1f66", "line-width": 6.5 }
+    },
+
+    {
+      "id": "buildings-3d",
+      "type": "fill-extrusion",
+      "source": "osm",
+      "source-layer": "building",
+      "minzoom": 13,
+      "paint": {
+        "fill-extrusion-height": [
+          "case",
+          ["all", ["==", ["get", "height_source"], "height"], [">", ["to-number", ["get", "height"], 0], 0]],
+          ["to-number", ["get", "height"], 0],
+          ["all", ["==", ["get", "height_source"], "levels"], [">", ["to-number", ["get", "building:levels"], 0], 0]],
+          ["*", 3, ["to-number", ["get", "building:levels"], 0]],
+          ["+", 4, ["%", ["%", ["*", ["%", ["id"], 1009], 7919], 1013], 11]]
+        ],
+        "fill-extrusion-base": ["to-number", ["get", "min_height"], 0],
+        "fill-extrusion-color": [
+          "let", "h",
+          [
+            "case",
+            ["all", ["==", ["get", "height_source"], "height"], [">", ["to-number", ["get", "height"], 0], 0]],
+            ["to-number", ["get", "height"], 0],
+            ["all", ["==", ["get", "height_source"], "levels"], [">", ["to-number", ["get", "building:levels"], 0], 0]],
+            ["*", 3, ["to-number", ["get", "building:levels"], 0]],
+            ["+", 4, ["%", ["%", ["*", ["%", ["id"], 1009], 7919], 1013], 11]]
+          ],
+          [
+            "case",
+            ["==", ["get", "height_source"], "height"],
+            ["interpolate", ["linear"], ["var", "h"], 3, "#bccbd9", 40, "#8da3b9"],
+            ["==", ["get", "height_source"], "levels"],
+            ["interpolate", ["linear"], ["var", "h"], 3, "#eadfce", 30, "#c8b69e"],
+            ["interpolate", ["linear"], ["var", "h"], 4, "#f1e9dc", 14, "#e2d5c2"]
+          ]
+        ],
+        "fill-extrusion-vertical-gradient": true,
+        "fill-extrusion-opacity": 0.96
+      }
+    },
+
+    {
+      "id": "destination-pole",
+      "type": "fill-extrusion",
+      "source": "destination",
+      "filter": ["==", ["geometry-type"], "Polygon"],
+      "paint": {
+        "fill-extrusion-height": 45,
+        "fill-extrusion-base": 0,
+        "fill-extrusion-color": "#ff1f66",
+        "fill-extrusion-vertical-gradient": true
+      }
+    },
+    {
+      "id": "destination-ring",
+      "type": "circle",
+      "source": "destination",
+      "filter": ["==", ["geometry-type"], "Point"],
+      "paint": {
+        "circle-radius": 13,
+        "circle-color": "#ffffff",
+        "circle-stroke-color": "#ff1f66",
+        "circle-stroke-width": 3,
+        "circle-pitch-alignment": "map"
+      }
+    },
+    {
+      "id": "destination-core",
+      "type": "circle",
+      "source": "destination",
+      "filter": ["==", ["geometry-type"], "Point"],
+      "paint": { "circle-radius": 6, "circle-color": "#ff1f66", "circle-pitch-alignment": "map" }
+    }
+  ]
+}
