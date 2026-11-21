@@ -1,0 +1,79 @@
+# Planetiler custom schema for the Phase 5A PMTiles feasibility spike (docs/validation/phase5a-pmtiles-spike.md).
+# OSM only: buildings with their height tags, plus roads and OSM water polygons so the base map is not blank.
+# Deliberately NOT the OpenMapTiles profile: that profile downloads Natural Earth and water-polygon files with no
+# published checksum, and this spike runs nothing that cannot be verified.
+# Building heights: raw OSM `height` and `building:levels` are carried through unchanged, and `height_source` says which one a
+# feature has ("height", "levels" or "default"). There is NO guessed number in the tiles: a client that extrudes a building
+# with height_source "default" must apply its own flagged default (documented: 6 m, i.e. two storeys).
+schema_name: Accra buildings (spike)
+schema_description: OSM buildings with height tags, roads and water for the Accra metropolitan area
+version: 0.1.0
+attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>
+sources:
+  osm:
+    type: osm
+    local_path: data/osm/ghana-latest.osm.pbf
+layers:
+- id: building
+  features:
+  - source: osm
+    geometry: polygon
+    min_zoom: 13
+    include_when:
+      building: __any__
+    exclude_when:
+      building: "no"
+    attributes:
+    - key: height
+    - key: min_height
+    - key: building:levels
+    - key: building:min_level
+    - key: roof:height
+    - key: building
+    - key: name
+      min_zoom: 14
+    - key: height_source
+      value:
+        default_value: default
+        overrides:
+          height:
+            height: __any__
+          levels:
+            building:levels: __any__
+- id: road
+  features:
+  - source: osm
+    geometry: line
+    min_zoom: 8
+    include_when:
+      highway:
+      - motorway
+      - trunk
+      - primary
+      - secondary
+      - tertiary
+      - unclassified
+      - residential
+      - service
+      - motorway_link
+      - trunk_link
+      - primary_link
+      - secondary_link
+      - tertiary_link
+    attributes:
+    - key: highway
+    - key: name
+      min_zoom: 12
+    - key: bridge
+    - key: tunnel
+- id: water
+  features:
+  - source: osm
+    geometry: polygon
+    min_zoom: 6
+    include_when:
+      natural: water
+    attributes:
+    - key: natural
+    - key: name
+      min_zoom: 12
