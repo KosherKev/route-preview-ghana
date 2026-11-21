@@ -1,7 +1,7 @@
 // Usage: npm run serve   (PORT env, default 8787; binds 127.0.0.1 only)
 import path from "node:path";
 import pg from "pg";
-import { dbConfig, loadEnv } from "../src/config";
+import { dbConfig, loadApiEnv } from "../src/config";
 import { searchLandmarks } from "../src/geo/landmarkSearch";
 import { createGeocoder } from "../src/geo/geocode";
 import { photonClient } from "../src/geo/photon";
@@ -10,7 +10,7 @@ import { createPreviewBuilder } from "../src/preview/build";
 import { createBundler, DEFAULT_BUNDLE_MAX_BYTES, DEFAULT_BUNDLE_TTL_DAYS } from "../src/preview/bundle";
 import { createPgClipServing, DEFAULT_CLIPS_DIR, createPgPreviewDeps } from "../src/preview/deps";
 
-loadEnv();
+loadApiEnv(); // API process: PROTOTYPE_CLIP_SERVING and MAPILLARY_TOKEN are removed even if .env defines them
 const pool = new pg.Pool({ ...dbConfig(), max: 4, statement_timeout: 5000 });
 pool.on("error", (e) => console.error(`[pg pool] ${e.message}`));
 const port = Number(process.env.PORT ?? 8787);

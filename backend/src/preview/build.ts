@@ -64,7 +64,7 @@ export interface ManifestSegment {
   startM: number; endM: number; lengthM: number;
   /** polyline6 of the segment geometry (lat, lon pairs, precision 6). */
   polyline6: string;
-  /** What the client plays for this segment. */
+  /** What the client plays for this segment: "clip" means use the clip when it can be fetched, otherwise play `flyover`. */
   playback: "clip" | "flyover";
   /** Why the flyover is played for a street segment, or the classifier's reason for a flyover segment. */
   playbackReason: string;
@@ -77,7 +77,8 @@ export interface ManifestSegment {
   bridges: { startM: number; endM: number; gapM: number }[];
   /** Capture-date indicator data for street segments (from the frames in the segment); null otherwise. */
   captureYears: { min: number; max: number } | null;
-  flyover: { durationSec: number; nominalSpeedMps: number; keyframes: FlyoverPlan["keyframes"] } | null;
+  flyover: { durationSec: number; nominalSpeedMps: number; keyframes: FlyoverPlan["keyframes"] };
+  // always present: a street segment with a ready clip carries it as the fallback for a client that cannot fetch the clip
 }
 
 export interface PreviewManifest {
@@ -189,9 +190,10 @@ export function assembleManifest(i: AssembleInput): PreviewManifest {
     const rec = matchClip(seg, i.clips);
     if (rec) {
       const clip = toReady(rec);
+      const f = flyoverOf(); // fallback for a client that cannot fetch the clip (over the tailnet the clip door is shut)
       const dur = clip.durationSec > 0 ? clip.durationSec : lengthM / NOMINAL_STREET_SPEED_MPS;
       segments.push({ ...base, playback: "clip", playbackReason: "clip_ready", nominalDurationSec: dur, nominalSpeedMps: lengthM / dur,
-        status: "ready", clipRef: { ...ref, key: rec.key }, clip, flyover: null });
+        status: "ready", clipRef: { ...ref, key: rec.key }, clip, flyover: f });
     } else {
       const f = flyoverOf();
       segments.push({ ...base, playback: "flyover", playbackReason: "clip_not_rendered", nominalDurationSec: f.durationSec, nominalSpeedMps: f.nominalSpeedMps,

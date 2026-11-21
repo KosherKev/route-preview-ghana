@@ -32,8 +32,10 @@ The `rpg-api` session is a dev convenience. Nothing is enabled at login: no laun
 ## Clips are never served this way
 
 `tailscale serve` forwards from localhost, so every request looks like loopback to the API. To keep clips out of reach, `/clips/...` is
-refused (403 problem JSON) whenever the request carries `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Proto`, `Forwarded`, `Via`
-or any `Tailscale-*` header, even if `PROTOTYPE_CLIP_SERVING=1` were set. The session also leaves the flag unset, so `/clips/...` answers 404
+refused (403 problem JSON) whenever the request carries any proxy header, even if `PROTOTYPE_CLIP_SERVING=1` were set. Names are compared
+case-insensitively and an empty value still counts: any header whose name contains `forwarded` (`X-Forwarded-For`, `X-Forwarded-Host`,
+`X-Forwarded-Proto`, `Forwarded`, `Forwarded-For`, ...), `Via`, `X-Real-IP`, `CF-Connecting-IP`, `True-Client-IP`, `X-Client-IP`,
+`Client-IP`, `X-Cluster-Client-IP`, `X-Originating-IP`, `Fastly-Client-IP`, and any `Tailscale-*` header. The session also leaves the flag unset, so `/clips/...` answers 404
 (or 403 with those headers). Do not set the flag on a process that is published with `serve`.
 
 In the manifest, a street segment with a clip in the local cache reports `status: ready`, `playback: clip` and a `clipRef`/`clip.key`; without

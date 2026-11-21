@@ -127,7 +127,7 @@
           "items": { "type": "object", "additionalProperties": false, "required": ["startM", "endM", "gapM"], "properties": { "startM": { "type": "number" }, "endM": { "type": "number" }, "gapM": { "type": "number" } } }
         },
         "captureYears": { "$ref": "#/definitions/yearRangeOrNull" },
-        "flyover": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/flyover" }] }
+        "flyover": { "$ref": "#/definitions/flyover" }
       },
       "allOf": [
         {
@@ -136,7 +136,7 @@
         },
         {
           "if": { "properties": { "status": { "const": "ready" } }, "required": ["status"] },
-          "then": { "properties": { "playback": { "const": "clip" }, "clip": { "$ref": "#/definitions/readyClip" }, "flyover": { "const": null } } }
+          "then": { "properties": { "playback": { "const": "clip" }, "clip": { "$ref": "#/definitions/readyClip" }, "flyover": { "$ref": "#/definitions/flyover" } } }
         },
         {
           "if": { "properties": { "status": { "const": "not_rendered" } }, "required": ["status"] },

@@ -13,7 +13,8 @@ describe("POST /preview manifest builder", () => {
     expect(m.prototype).toBe(true);
     const street = m.segments.filter((s) => s.mode === "STREET_VIDEO");
     expect(street).toHaveLength(1);
-    expect(street[0]).toMatchObject({ status: "ready", playback: "clip", playbackReason: "clip_ready", flyover: null });
+    expect(street[0]).toMatchObject({ status: "ready", playback: "clip", playbackReason: "clip_ready" });
+    expect(street[0]!.flyover.keyframes.length).toBeGreaterThan(2); // fallback when the clip cannot be fetched
     expect(street[0]!.clip).toMatchObject({ edge_id: 1009, direction: "forward", key: "1009/forward.mp4", status: "ready", servePath: "/clips/1009/forward.mp4", durationSec: 15 });
     expect(street[0]!.captureYears).toEqual({ min: 2024, max: 2024 });
     expect(m.captureYears).toEqual({ min: 2024, max: 2024 });
@@ -25,6 +26,24 @@ describe("POST /preview manifest builder", () => {
     expect(m.segments.at(-1)!.endM).toBeCloseTo(scene.axis.lengthM);
     for (let i = 1; i < m.segments.length; i++) expect(m.segments[i]!.startM).toBeCloseTo(m.segments[i - 1]!.endM);
     expect(m.overlays.turns.map((t) => [t.offsetM, t.maneuver, t.direction])).toEqual([[1200, "left", "left"]]);
+  });
+
+  it("every street segment carries valid flyover keyframes, with and without a ready clip, and the geometry holds", async () => {
+    const withClip = await createPreviewBuilder(depsFixture({ frames: streetFrames(950, 1100), clips: [clipRecord(1009, 150)] }))(REQ);
+    const without = await createPreviewBuilder(depsFixture({ frames: streetFrames(1100, 1250) }))(REQ);
+    for (const m of [withClip, without]) {
+      expect(manifestErrors(m)).toEqual([]);
+      const street = m.segments.filter((x) => x.mode === "STREET_VIDEO");
+      expect(street).toHaveLength(1);
+      for (const seg of m.segments) {
+        const k = seg.flyover.keyframes;
+        expect(k.length).toBeGreaterThan(2);
+        for (let i = 1; i < k.length; i++) { expect(k[i]!.t).toBeGreaterThan(k[i - 1]!.t); expect(k[i]!.offsetM).toBeGreaterThanOrEqual(k[i - 1]!.offsetM); }
+        for (const f of k) { expect(f.offsetM).toBeGreaterThanOrEqual(seg.startM - 1e-6); expect(f.offsetM).toBeLessThanOrEqual(seg.endM + 1e-6); }
+      }
+    }
+    expect(withClip.segments.find((x) => x.mode === "STREET_VIDEO")).toMatchObject({ playback: "clip", status: "ready" });
+    expect(without.segments.find((x) => x.mode === "STREET_VIDEO")).toMatchObject({ playback: "flyover", status: "not_rendered" });
   });
 
   it("(b) street segment with no clip row: not_rendered, clip null, flyover keyframes to play instead", async () => {
