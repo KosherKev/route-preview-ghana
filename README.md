@@ -5,7 +5,9 @@ Pre-trip route preview for Ghana dispatch riders: eye-level street video plus a 
 ## Product boundary
 
 - Pre-trip preview only. It is never synced to live GPS.
-- Live navigation is out of scope.
+- Live navigation is out of scope. No endpoint, parameter or field accepts or stores a live, device or "current" position, and turn and
+  landmark overlays are static data keyed by distance along the route. The Flutter app must not request location permission.
+  Enforced by `backend/test/product-boundary.test.ts`; details in [docs/api/preview-manifest.md](docs/api/preview-manifest.md).
 - Keep the architecture modular: the street-imagery source (Mapillary now, rider-captured later) and the renderer sit behind swappable interfaces.
 
 ## Decisions

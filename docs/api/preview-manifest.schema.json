@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://route-preview-ghana.invalid/schemas/preview-manifest-v1.json",
+  "title": "Route preview manifest v1",
+  "description": "Pre-trip preview timeline for a fixed origin and destination. Every offset is metres along the planned route. The manifest has no field for a device, rider or live position.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "prototype", "degraded", "costing", "unpavedFallback", "warnings", "origin", "destination", "route", "approach", "timeline", "nominal", "segments", "overlays", "captureYears", "attribution", "sourcesExcluded"],
+  "properties": {
+    "manifestVersion": { "const": 1 },
+    "prototype": { "const": true },
+    "degraded": { "type": "boolean" },
+    "costing": { "enum": ["motor_scooter", "auto"] },
+    "unpavedFallback": { "type": "boolean" },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "origin": { "$ref": "#/definitions/point" },
+    "destination": { "$ref": "#/definitions/point" },
+    "resolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "origin": { "$ref": "#/definitions/namedEnd" }, "destination": { "$ref": "#/definitions/namedEnd" } }
+    },
+    "route": {
+      "type": "object", "additionalProperties": false, "required": ["lengthM", "timeSec", "polyline6"],
+      "properties": { "lengthM": { "type": "number", "minimum": 0 }, "timeSec": { "type": "number", "minimum": 0 }, "polyline6": { "type": "string" } }
+    },
+    "approach": {
+      "type": "object", "additionalProperties": false, "required": ["requestedLengthM", "lengthM", "startM", "endM", "wholeRoute"],
+      "properties": {
+        "requestedLengthM": { "type": "number", "exclusiveMinimum": 0 }, "lengthM": { "type": "number", "minimum": 0 },
+        "startM": { "type": "number", "minimum": 0 }, "endM": { "type": "number", "minimum": 0 }, "wholeRoute": { "type": "boolean" }
+      }
+    },
+    "timeline": {
+      "type": "object", "additionalProperties": false, "required": ["startM", "endM", "lengthM"],
+      "properties": { "startM": { "type": "number", "minimum": 0 }, "endM": { "type": "number", "minimum": 0 }, "lengthM": { "type": "number", "minimum": 0 } }
+    },
+    "nominal": {
+      "type": "object", "additionalProperties": false, "required": ["streetSpeedMps", "flyoverSpeedMps", "note"],
+      "properties": { "streetSpeedMps": { "type": "number", "exclusiveMinimum": 0 }, "flyoverSpeedMps": { "type": "number", "exclusiveMinimum": 0 }, "note": { "type": "string" } }
+    },
+    "segments": { "type": "array", "items": { "$ref": "#/definitions/segment" } },
+    "overlays": {
+      "type": "object", "additionalProperties": false, "required": ["turns", "landmarks", "turnWindowM", "landmarkOptions"],
+      "properties": {
+        "turns": { "type": "array", "items": { "$ref": "#/definitions/turn" } },
+        "landmarks": { "type": "array", "items": { "$ref": "#/definitions/landmark" } },
+        "turnWindowM": { "type": "number", "exclusiveMinimum": 0 },
+        "landmarkOptions": {
+          "type": "object", "additionalProperties": false, "required": ["maxDistanceM", "maxPer100m", "dedupeWithinM"],
+          "properties": { "maxDistanceM": { "type": "number", "exclusiveMinimum": 0 }, "maxPer100m": { "type": "integer", "minimum": 1 }, "dedupeWithinM": { "type": "number", "minimum": 0 } }
+        }
+      }
+    },
+    "captureYears": { "$ref": "#/definitions/yearRangeOrNull" },
+    "attribution": { "$ref": "#/definitions/attribution" },
+    "sourcesExcluded": { "type": "array", "items": { "type": "string" } }
+  },
+  "definitions": {
+    "point": {
+      "type": "object", "additionalProperties": false, "required": ["lat", "lon"],
+      "properties": { "lat": { "type": "number", "minimum": -90, "maximum": 90 }, "lon": { "type": "number", "minimum": -180, "maximum": 180 } }
+    },
+    "namedEnd": {
+      "type": "object", "additionalProperties": false, "required": ["query", "name", "lat", "lon", "source", "score", "degraded"],
+      "properties": {
+        "query": { "type": "string" }, "name": { "type": "string" }, "lat": { "type": "number" }, "lon": { "type": "number" },
+        "source": { "type": "string" }, "score": { "type": "number" }, "degraded": { "type": "boolean" }
+      }
+    },
+    "yearRange": {
+      "type": "object", "additionalProperties": false, "required": ["min", "max"],
+      "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }
+    },
+    "yearRangeOrNull": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/yearRange" }] },
+    "clipRef": {
+      "type": "object", "additionalProperties": false, "required": ["edge_id", "direction", "key"],
+      "properties": { "edge_id": { "type": "integer", "minimum": 0 }, "direction": { "enum": ["forward"] }, "key": { "type": "string", "pattern": "^[0-9]{1,15}/[a-z]+\\.mp4$" } }
+    },
+    "readyClip": {
+      "type": "object", "additionalProperties": false,
+      "required": ["edge_id", "direction", "key", "status", "durationSec", "fps", "speedMps", "bytes", "lengthM", "servePath", "startPose", "endPose"],
+      "properties": {
+        "edge_id": { "type": "integer", "minimum": 0 }, "direction": { "enum": ["forward"] }, "key": { "type": "string", "pattern": "^[0-9]{1,15}/[a-z]+\\.mp4$" },
+        "status": { "const": "ready" },
+        "durationSec": { "type": "number", "minimum": 0 },
+        "fps": { "type": ["number", "null"] }, "speedMps": { "type": ["number", "null"] },
+        "bytes": { "type": "integer", "minimum": 0 }, "lengthM": { "type": "number", "minimum": 0 },
+        "servePath": { "type": "string", "pattern": "^/clips/[0-9]{1,15}/[a-z]+\\.mp4$" },
+        "startPose": {}, "endPose": {}
+      }
+    },
+    "keyframe": {
+      "type": "object", "additionalProperties": false, "required": ["t", "offsetM", "lat", "lon", "bearingDeg", "pitchDeg", "zoom", "easing"],
+      "properties": {
+        "t": { "type": "number", "minimum": 0 }, "offsetM": { "type": "number", "minimum": 0 },
+        "lat": { "type": "number" }, "lon": { "type": "number" },
+        "bearingDeg": { "type": "number", "minimum": 0, "exclusiveMaximum": 360 },
+        "pitchDeg": { "type": "number", "minimum": 0, "maximum": 80 },
+        "zoom": { "type": "number", "minimum": 12, "maximum": 19 },
+        "easing": { "enum": ["linear", "cubic-in-out"] }
+      }
+    },
+    "flyover": {
+      "type": "object", "additionalProperties": false, "required": ["durationSec", "nominalSpeedMps", "keyframes"],
+      "properties": {
+        "durationSec": { "type": "number", "exclusiveMinimum": 0 }, "nominalSpeedMps": { "type": "number", "minimum": 0 },
+        "keyframes": { "type": "array", "minItems": 3, "items": { "$ref": "#/definitions/keyframe" } }
+      }
+    },
+    "segment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "mode", "startM", "endM", "lengthM", "polyline6", "playback", "playbackReason", "nominalDurationSec", "nominalSpeedMps", "status", "clipRef", "clip", "bridges", "captureYears", "flyover"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "mode": { "enum": ["STREET_VIDEO", "BIRDS_EYE_3D"] },
+        "startM": { "type": "number", "minimum": 0 }, "endM": { "type": "number", "minimum": 0 }, "lengthM": { "type": "number", "minimum": 0 },
+        "polyline6": { "type": "string" },
+        "playback": { "enum": ["clip", "flyover"] },
+        "playbackReason": { "type": "string" },
+        "nominalDurationSec": { "type": "number", "exclusiveMinimum": 0 }, "nominalSpeedMps": { "type": "number", "minimum": 0 },
+        "status": { "enum": ["ready", "not_rendered", null] },
+        "clipRef": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/clipRef" }] },
+        "clip": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/readyClip" }] },
+        "bridges": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": false, "required": ["startM", "endM", "gapM"], "properties": { "startM": { "type": "number" }, "endM": { "type": "number" }, "gapM": { "type": "number" } } }
+        },
+        "captureYears": { "$ref": "#/definitions/yearRangeOrNull" },
+        "flyover": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/flyover" }] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "BIRDS_EYE_3D" } } },
+          "then": { "properties": { "playback": { "const": "flyover" }, "status": { "const": null }, "clip": { "const": null }, "clipRef": { "const": null }, "flyover": { "$ref": "#/definitions/flyover" } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "ready" } }, "required": ["status"] },
+          "then": { "properties": { "playback": { "const": "clip" }, "clip": { "$ref": "#/definitions/readyClip" }, "flyover": { "const": null } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "not_rendered" } }, "required": ["status"] },
+          "then": { "properties": { "playback": { "const": "flyover" }, "clip": { "const": null }, "clipRef": { "$ref": "#/definitions/clipRef" }, "flyover": { "$ref": "#/definitions/flyover" } } }
+        }
+      ]
+    },
+    "turn": {
+      "type": "object", "additionalProperties": false, "required": ["offsetM", "maneuver", "direction", "kind", "streetName", "window"],
+      "properties": {
+        "offsetM": { "type": "number", "minimum": 0 }, "maneuver": { "type": "string" },
+        "direction": { "enum": ["left", "right", "straight", "uturn"] },
+        "kind": { "enum": ["turn", "roundabout", "merge", "ramp_or_fork", "other"] },
+        "streetName": { "type": ["string", "null"] },
+        "window": { "type": "object", "additionalProperties": false, "required": ["startM", "endM"], "properties": { "startM": { "type": "number", "minimum": 0 }, "endM": { "type": "number", "minimum": 0 } } }
+      }
+    },
+    "landmark": {
+      "type": "object", "additionalProperties": false, "required": ["offsetM", "name", "category", "kind", "side", "distanceM", "lat", "lon", "osm"],
+      "properties": {
+        "offsetM": { "type": "number", "minimum": 0 }, "name": { "type": "string", "minLength": 1 }, "category": { "type": "string" },
+        "kind": { "type": ["string", "null"] }, "side": { "enum": ["left", "right"] }, "distanceM": { "type": "number", "minimum": 0 },
+        "lat": { "type": "number" }, "lon": { "type": "number" }, "osm": { "type": "string" }
+      }
+    },
+    "sourceAttribution": {
+      "type": "object", "additionalProperties": false, "required": ["source", "creators", "licenses", "sourceUrls", "requiresLogoAndLink"],
+      "properties": {
+        "source": { "type": "string" }, "creators": { "type": "array", "items": { "type": "string" } }, "licenses": { "type": "array", "items": { "type": "string" } },
+        "sourceUrls": { "type": "array", "items": { "type": "string" } }, "requiresLogoAndLink": { "type": "boolean" }
+      }
+    },
+    "attribution": {
+      "type": "object", "additionalProperties": false, "required": ["bySource", "sources", "creators", "licenses", "sourceUrls", "requiresLogoAndLink"],
+      "properties": {
+        "bySource": { "type": "array", "items": { "$ref": "#/definitions/sourceAttribution" } },
+        "sources": { "type": "array", "items": { "type": "string" } }, "creators": { "type": "array", "items": { "type": "string" } },
+        "licenses": { "type": "array", "items": { "type": "string" } }, "sourceUrls": { "type": "array", "items": { "type": "string" } },
+        "requiresLogoAndLink": { "type": "boolean" }
+      }
+    }
+  }
+}
