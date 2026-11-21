@@ -1,7 +1,7 @@
 // Metadata-only real-coverage audit (Phase 3 follow-up D).
 //   npm run audit:coverage -- ingest [--note "text"] [--half-width-m 30] [--interval-ms 500]
 //   npm run audit:coverage -- report [--out <dir>] [--note "text"]
-//   npm run audit:coverage -- run [--skip-ingestion] [ingest and report options]   (ingest, then report; --skip-ingestion makes it exactly "report": no token read, no Mapillary call)
+//   npm run audit:coverage -- run [--skip-ingestion] [ingest and report options]   (ingest, then report; --skip-ingestion makes it exactly "report": no token used, no Mapillary call)
 // ingest: routes the 25 validated pairs (Valhalla), ingests Mapillary IMAGE METADATA ONLY for cells covering a corridor
 //   around those routes into the local PostGIS frames table, and writes aggregate counts to data/coverage-audit/ingest-stats.json.
 // report: classifies every route (whole route and last-500 m approach) from the stored frames and writes
@@ -221,7 +221,7 @@ async function report() {
   if (cmd === "ingest") await ingest();
   else if (cmd === "report") await report();
   else if (cmd === "run") {
-    if (argv.includes("--skip-ingestion")) console.log("--skip-ingestion: reusing the stored frames; no Mapillary call will be made and no token is read");
+    if (argv.includes("--skip-ingestion")) console.log("--skip-ingestion: reusing the stored frames; no Mapillary call will be made and no token is used");
     else await ingest();
     await report();
   } else throw new Error("usage: coverage-audit.ts ingest | report | run [--skip-ingestion]");

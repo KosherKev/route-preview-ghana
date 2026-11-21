@@ -247,4 +247,4 @@ The CLI takes one bbox or one named corridor, and a bbox around 49 routes spread
 per-run tile cap); the audit instead requests only the 0.002 degree cells along the route polylines, drops images outside the 30 m corridor before
 storage, meters every API call (`CallMeter`: counts, status codes, 429s, back-off) and records field-presence statistics, none of which the CLI does.
 Both paths write the same `frames` rows through the same idempotent store. The audit's `run --skip-ingestion` (or `report`) reuses the stored frames:
-it never reads the token and makes no Mapillary call.
+it uses no token and makes no Mapillary call.

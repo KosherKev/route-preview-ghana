@@ -1,5 +1,25 @@
 {
-  "generatedAt": "2026-11-20T20:31:34.764Z",
+  "generatedAt": "2026-11-21T05:34:49.787Z",
+  "killSwitchAtReport": null,
+  "reconciliation": {
+    "framesTotal": 50476,
+    "storedByAudit": 47280,
+    "surplus": 3196,
+    "inCorridor": 47280,
+    "outsideCorridor": 3196,
+    "outsideInStrayBbox": 3181,
+    "stray": {
+      "storedImages": 3383,
+      "bbox": [
+        -0.21,
+        5.59,
+        -0.19,
+        5.61
+      ],
+      "maxCalls": 4,
+      "fixedInCommit": "8e900f3"
+    }
+  },
   "verdict": "none: this report states measurements only",
   "config": {
     "match": {
@@ -67,10 +87,7 @@
       "rateLimitEvents": [],
       "backoffWaitMs": 18000
     },
-    "notes": [
-      "Before this audit started, the CLI test in test/sources.test.ts (since fixed in commit 'Stop sources CLI test reading a real token from .env') ran live twice against the bbox -0.21,5.59,-0.19,5.61 (one tile, up to 2 pages each, so at most 4 calls) because the copied .env supplied a token. Those calls are NOT in the count above; the 3383 images they stored were upserted idempotently and are re-fetched or discarded by the corridor filter.",
-      "Correction to the setup note above: the stray test-run images that fell outside the corridor were NOT discarded; they remain in the local frames table (see 'Frames table at report time'), but frames outside the corridor are never near a route axis so they do not affect classification."
-    ]
+    "notes": []
   },
   "db": {
     "framesTotal": 50476,
@@ -4161,10 +4178,10 @@
     "Thresholds (60 m minimum run, 15 m RIFE ceiling, 30 m bridge ceiling, 2 bridges per segment, 25 degree heading tolerance, 0.5 quality, 15 m lateral) are the Phase 3 defaults and are untuned against this data.",
     "A 'street' share is a geometric statement about usable frame spacing along a Valhalla route, not a statement that a rider-facing preview would look acceptable.",
     "Capture-age buckets describe the frames inside STREET_VIDEO segments. Old imagery may show a road that has since changed; no age filter is applied and none is recommended or rejected here.",
-    "Only a 30 m corridor around the 25 validated pairs (both costings) was ingested. Coverage elsewhere in Accra is not measured, and 25 pairs are a sample of trips, not of the road network.",
+    "Only a 30 m corridor around the 25 validated pairs (both costings) was ingested. Coverage outside that corridor was not sampled, and 25 pairs are a sample of trips, not of the road network.",
     "Last-500 m approach figures use the existing approach window; very short routes use the whole route as the approach.",
     "Frames are matched with one sequence per edge (the Phase 3 rule); a corridor with several overlapping sequences is reduced to one, so frame counts are lower than raw image counts.",
     "Where a route-costing pair failed to route, it contributes nothing to totals (see the Routes column of the totals table).",
-    "The existing docs/validation/route-validation.md is the earlier no-imagery run (empty frames table) and is left unchanged; its 'not measured' statement predates this audit."
+    "docs/validation/route-validation.md classifies the same 25 pairs (last 500 m only) and points here for the coverage measurement."
   ]
 }
