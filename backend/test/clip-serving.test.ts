@@ -205,6 +205,10 @@ describe("proxy / tailnet headers (tailscale serve makes every caller look like 
     ["Forwarded-For", "100.64.0.9"], ["forwarded-for", "100.64.0.9"],
     ["X-Forwarded-Server", "x"], ["X-Original-Forwarded-For", "x"], ["X-Forwarded-Port", "443"], ["Forwarded-Proto", "https"], ["xFORWARDEDx", "x"],
     ["X-Real-IP", ""], ["Forwarded", ""],
+    ["Client-IP", "100.64.0.9"], ["client-ip", "100.64.0.9"], ["CLIENT-IP", "100.64.0.9"],
+    ["X-Cluster-Client-IP", "100.64.0.9"], ["x-cluster-client-ip", "100.64.0.9"],
+    ["X-Originating-IP", "100.64.0.9"], ["x-originating-ip", "100.64.0.9"],
+    ["Fastly-Client-IP", "100.64.0.9"], ["FASTLY-CLIENT-IP", "100.64.0.9"], ["Client-IP", ""],
   ];
   for (const flag of [undefined, "1"]) {
     for (const [name, value] of cases) {
@@ -223,6 +227,8 @@ describe("proxy / tailnet headers (tailscale serve makes every caller look like 
     for (const h of [
       { "X-Forwarded-For": ["1.2.3.4", "5.6.7.8"] }, { "X-Real-IP": ["1.2.3.4", "5.6.7.8"] }, { "CF-Connecting-IP": ["a", "b"] },
       { Accept: "*/*", "X-Client-IP": "1.2.3.4", "User-Agent": "x" }, { "x-real-ip": "1.1.1.1", "X-Real-Ip": "2.2.2.2" },
+      { "Client-IP": ["1.2.3.4", "5.6.7.8"] }, { "X-Cluster-Client-IP": ["a", "b"] }, { "X-Originating-IP": ["a", "b"] }, { "Fastly-Client-IP": ["a", "b"] },
+      { Accept: "*/*", "x-originating-ip": "1.2.3.4" }, { "fastly-client-ip": "1.1.1.1", "Fastly-Client-Ip": "2.2.2.2" },
     ] as http.OutgoingHttpHeaders[]) {
       const r = await raw("/clips/111/forward.mp4", "GET", h);
       expect(r.status, JSON.stringify(h)).toBe(403);
@@ -230,11 +236,11 @@ describe("proxy / tailnet headers (tailscale serve makes every caller look like 
     }
   });
   it("hasProxyHeader: matches case-insensitively, any name containing forwarded, and does not flag ordinary headers", () => {
-    for (const n of ["x-real-ip", "X-Real-IP", "CF-Connecting-IP", "True-Client-IP", "X-Client-IP", "Forwarded-For", "Forwarded", "Via", "X-FoRwArDeD-Anything", "Tailscale-User", "TAILSCALE-X"]) {
+    for (const n of ["x-real-ip", "X-Real-IP", "CF-Connecting-IP", "True-Client-IP", "X-Client-IP", "Client-IP", "X-Cluster-Client-IP", "X-Originating-IP", "Fastly-Client-IP", "fastly-client-ip", "Forwarded-For", "Forwarded", "Via", "X-FoRwArDeD-Anything", "Tailscale-User", "TAILSCALE-X"]) {
       expect(hasProxyHeader({ [n]: "v" }), n).toBe(true);
     }
     expect(hasProxyHeader({ [`x-real-ip`]: "" })).toBe(true);
-    for (const n of ["host", "accept", "range", "user-agent", "x-requested-with", "x-forward", "cf-ray", "connection", "x-client-version"]) {
+    for (const n of ["host", "accept", "range", "user-agent", "x-requested-with", "x-forward", "cf-ray", "connection", "x-client-version", "client-version", "x-originating"]) {
       expect(hasProxyHeader({ [n]: "v" }), n).toBe(false);
     }
     expect(hasProxyHeader({})).toBe(false);
