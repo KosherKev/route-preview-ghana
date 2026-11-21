@@ -121,3 +121,29 @@ describe("levelUncertainNear", () => {
     expect(r).toEqual({ near: false, count: 0 });
   });
 });
+
+import { DEFAULT_GATE_CONFIG, framesFromYear, gateResult, gateRow } from "../src/validation/coverage";
+describe("coverage gate (D9)", () => {
+  it("defaults to 35 percent and 2022", () => expect(DEFAULT_GATE_CONFIG).toEqual({ threshold: 0.35, minCaptureYear: 2022 }));
+  it("keeps only frames captured in the minimum UTC year or later; undated and invalid never count", () => {
+    const f = [
+      { capturedAt: "2021-12-31T23:59:59Z" }, { capturedAt: "2022-01-01T00:00:00Z" }, { capturedAt: "2025-06-01T00:00:00Z" },
+      { capturedAt: null }, { capturedAt: "not a date" },
+    ];
+    expect(framesFromYear(f, 2022).map((x) => x.capturedAt)).toEqual(["2022-01-01T00:00:00Z", "2025-06-01T00:00:00Z"]);
+  });
+  it("passes at exactly the threshold and fails just below; zero-length fails", () => {
+    expect(gateRow("a", "auto", 500, 175, DEFAULT_GATE_CONFIG).pass).toBe(true);
+    expect(gateRow("a", "auto", 500, 174, DEFAULT_GATE_CONFIG).pass).toBe(false);
+    expect(gateRow("a", "auto", 0, 0, DEFAULT_GATE_CONFIG).pass).toBe(false);
+  });
+  it("totals are length-weighted, not a mean of shares; threshold is configurable", () => {
+    const rows = [gateRow("a", "auto", 500, 500, DEFAULT_GATE_CONFIG), gateRow("b", "auto", 500, 0, DEFAULT_GATE_CONFIG), gateRow("c", "motor_scooter", 100, 10, DEFAULT_GATE_CONFIG)];
+    const g = gateResult(rows, DEFAULT_GATE_CONFIG, ["motor_scooter", "auto"]);
+    expect(g.totals.auto).toMatchObject({ routes: 2, approachLengthM: 1000, streetVideoM: 500, share: 0.5, pass: true });
+    expect(g.totals.motor_scooter!.pass).toBe(false);
+    expect(g.totals.all!.share).toBeCloseTo(510 / 1100);
+    expect(g.routesPassing).toBe(1);
+    expect(gateResult(rows, { threshold: 0.05, minCaptureYear: 2022 }, ["auto"]).totals.all!.pass).toBe(true);
+  });
+});

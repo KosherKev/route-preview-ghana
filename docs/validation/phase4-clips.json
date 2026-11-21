@@ -1,0 +1,72 @@
+{
+  "clips": [
+    {
+      "edge_id": 590792901136,
+      "direction": "forward",
+      "duration_s": 13.792,
+      "fps": 10,
+      "nominal_speed_mps": 10,
+      "frame_count": 138,
+      "source_frames": 12,
+      "interpolated_frames": 33,
+      "bridge_frames": 0,
+      "interpolated_share": 0.733,
+      "bridges_used": 0,
+      "interpolator": "minterpolate",
+      "file_bytes": 1146566,
+      "encode_seconds": 1.86,
+      "capture_year_buckets": {
+        "2026": 12
+      }
+    },
+    {
+      "edge_id": 619381277200,
+      "direction": "forward",
+      "duration_s": 15.539,
+      "fps": 10,
+      "nominal_speed_mps": 10,
+      "frame_count": 155,
+      "source_frames": 14,
+      "interpolated_frames": 39,
+      "bridge_frames": 0,
+      "interpolated_share": 0.736,
+      "bridges_used": 0,
+      "interpolator": "minterpolate",
+      "file_bytes": 1126504,
+      "encode_seconds": 1.99,
+      "capture_year_buckets": {
+        "2026": 14
+      }
+    },
+    {
+      "edge_id": 671625527824,
+      "direction": "forward",
+      "duration_s": 17.051,
+      "fps": 10,
+      "nominal_speed_mps": 10,
+      "frame_count": 171,
+      "source_frames": 17,
+      "interpolated_frames": 37,
+      "bridge_frames": 6,
+      "interpolated_share": 0.617,
+      "bridges_used": 1,
+      "interpolator": "minterpolate",
+      "file_bytes": 2812277,
+      "encode_seconds": 1.89,
+      "capture_year_buckets": {
+        "2024": 17
+      }
+    }
+  ],
+  "totals": {
+    "clips": 3,
+    "total_duration_s": 46.382,
+    "total_bridges_used": 1,
+    "total_interpolated_frames": 109,
+    "mapillary_downloads": 43,
+    "mapillary_downloads_cap": 1000,
+    "mapillary_api_calls": 43,
+    "frames_cache_bytes": 12832298,
+    "clips_cache_bytes": 5088398
+  }
+}

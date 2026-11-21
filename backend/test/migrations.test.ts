@@ -5,6 +5,7 @@ import { dbConfig, loadEnv } from "../src/config";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { applyMigrations, MIGRATIONS_DIR } from "../src/db/migrate";
+import { insertClipIfAbsent, type ClipRow } from "../src/clips/register";
 
 // Needs the PostGIS container (docker compose up -d postgis). It creates and drops its own throwaway database.
 loadEnv();
@@ -78,8 +79,8 @@ describe("migrations on an empty database", () => {
     expect(by["frames.creator_username"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
     expect(by["frames.source_url"]).toMatchObject({ data_type: "text", is_nullable: "YES" });
     expect(by["clips.source_summary"]).toMatchObject({ data_type: "jsonb", is_nullable: "NO" });
-    // pre-existing columns are unchanged by 005
-    expect(by["frames.source"]).toMatchObject({ is_nullable: "NO", column_default: null });
+    // pre-existing columns are unchanged by 005 (source gained its default in 008, see below)
+    expect(by["frames.source"]).toMatchObject({ is_nullable: "NO", column_default: "'mapillary'::text" });
     expect(by["frames.license"]).toMatchObject({ is_nullable: "YES" });
     expect(by["frames.creator"]).toMatchObject({ is_nullable: "YES" });
   });
@@ -104,5 +105,38 @@ describe("migrations on an empty database", () => {
     const idx = await db.query("SELECT 1 FROM pg_indexes WHERE indexname = 'landmarks_name_trgm_idx'");
     expect(idx.rowCount).toBe(1);
     expect((await db.query("SELECT landmarks_norm('Café') AS n")).rows[0]!.n).toBe("cafe");
+  });
+
+  it("008 sets only a default of 'mapillary' on frames.source and is re-runnable", async () => {
+    const sql = readFileSync(path.join(MIGRATIONS_DIR, "008_frames_source_default.sql"), "utf8");
+    await db.query(sql);
+    const r = await db.query("SELECT is_nullable, data_type, column_default FROM information_schema.columns WHERE table_name='frames' AND column_name='source'");
+    expect(r.rows[0]).toEqual({ is_nullable: "NO", data_type: "text", column_default: "'mapillary'::text" });
+    await db.query("INSERT INTO frames (image_id, geom, source) VALUES ('mig-default', ST_SetSRID(ST_MakePoint(0,0),4326), DEFAULT)");
+    expect((await db.query("SELECT source FROM frames WHERE image_id='mig-default'")).rows[0]!.source).toBe("mapillary");
+  });
+
+  it("009 makes (edge_id, direction) unique and is purely additive", async () => {
+    const idx = await db.query("SELECT indexdef FROM pg_indexes WHERE indexname = 'clips_edge_direction_uniq'");
+    expect(idx.rows[0]!.indexdef).toMatch(/UNIQUE INDEX .* \(edge_id, direction\)/);
+    await db.query("INSERT INTO clips (edge_id, direction) VALUES (77, 'forward')");
+    await expect(db.query("INSERT INTO clips (edge_id, direction) VALUES (77, 'forward')")).rejects.toThrow(/clips_edge_direction_uniq/);
+    await db.query("INSERT INTO clips (edge_id, direction) VALUES (77, 'reverse')");
+  });
+
+  it("two concurrent registrations for the same key produce exactly one row and no error", async () => {
+    const row: ClipRow = {
+      edge_id: 4242, direction: "forward", start_offset: 0, end_offset: 1, video_url: "local:4242/forward.mp4", length_m: 100,
+      imagery_version: "mapillary:2024-2024", render_params: { prototype: true }, status: "prototype",
+      start_pose: { lat: 0, lon: 0, heading_deg: null }, end_pose: { lat: 0, lon: 0, heading_deg: null },
+      expires_at: "2026-12-21T00:00:00.000Z", source_summary: [],
+    };
+    const a = new pg.Client({ ...cfg, database: dbName }), b = new pg.Client({ ...cfg, database: dbName });
+    await Promise.all([a.connect(), b.connect()]);
+    try {
+      const results = await Promise.all([insertClipIfAbsent(a, row), insertClipIfAbsent(b, row)]);
+      expect(results.filter(Boolean)).toHaveLength(1);
+      expect((await db.query("SELECT count(*)::int AS n FROM clips WHERE edge_id=4242 AND direction='forward'")).rows[0]!.n).toBe(1);
+    } finally { await Promise.all([a.end(), b.end()]); }
   });
 });

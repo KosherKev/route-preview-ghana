@@ -61,3 +61,11 @@ between bridges); it is NOT implemented.
 A 15 to 30 m gap is bridged only when both runs share the same `sequence_id`. If `sequence_id` differs across the gap, or is
 missing on either side, the street segment terminates and hands off to BIRDS_EYE_3D. This was already the builder's behaviour; it is
 now an explicit, tested, documented rule.
+
+## D9 Mapillary coverage gate (CLOSED 2026-11-21)
+
+Mapillary counts as sufficient street imagery for a corridor only when the last-500 m STREET_VIDEO share is at least 35 percent, counting only frames captured in 2022 or later. Reading: the share is the length of STREET_VIDEO segment (matched, quality-filtered frames, as classified) in the last 500 m of the approach, computed from a classification that uses ONLY frames whose `captured_at` year (UTC) is 2022 or later, divided by the length of that approach window. Frames with a missing or unparseable `captured_at` do not count. Frames below quality_score 0.5 are already dropped by the matcher. The threshold is configurable (default 0.35). Measured Accra coverage fails this gate, so own/rider capture stays the long-term primary source (D1). Phase 4 proceeds on Mapillary frames only to prove the video pipeline; every clip is a PROTOTYPE artefact.
+
+## D10 `frames.source` default (CLOSED 2026-11-21)
+
+`frames.source` has a database default of `'mapillary'` (migration 008, the only alteration to an existing column; approved by the owner). Code must still set `source` explicitly on every insert: the default is a safety net, not a convention, and a test fails if any `INSERT INTO frames` omits the column. Canonical labels are the named constants `MAPILLARY_SOURCE` (`mapillary`) and `OWN_CAPTURE_SOURCE` (`own_capture`).

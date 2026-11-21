@@ -3,7 +3,7 @@ import type { CallStats } from "../ingest/callMeter";
 import type { ClassifyConfig } from "../classify/classify";
 import type { MatchConfig } from "../classify/match";
 import type { Costing } from "../routing/valhalla";
-import { AGE_BUCKETS, bucketShares, type SegmentSummary } from "./coverage";
+import { AGE_BUCKETS, bucketShares, type GateResult, type SegmentSummary } from "./coverage";
 import type { FieldStats } from "./ingestStats";
 import { NAMED_POINTS, NEAR_NAMED_M, type NamedKey } from "./routes";
 
@@ -98,6 +98,8 @@ export interface CoverageAudit {
   rows: AuditRow[];
   totals: Record<Costing, CostingTotals>;
   limitations: string[];
+  /** D9 coverage gate (frames captured in the configured year or later only). Absent in older audits. */
+  gate?: GateResult;
 }
 
 const showSwitch = (v: string | null) => (v === null || v === "" ? "unset" : `"${v.replace(/[^\x20-\x7e]/g, (c) => `\\u{${c.codePointAt(0)!.toString(16)}}`)}"`);
@@ -197,6 +199,18 @@ export function renderCoverageMarkdown(a: CoverageAudit): string {
     L.push(`- ${c}, whole route: candidates ${a.totals[c].whole.candidateFrames}, usable ${a.totals[c].whole.usableFrames}; dropped: ${Object.entries(d).map(([k, v]) => `${k} ${v}`).join(", ") || "none"}.`);
   }
   L.push("");
+
+  if (a.gate) {
+    const g = a.gate;
+    L.push(`## Coverage gate (D9): last-${a.config.approachLengthM} m STREET_VIDEO share, frames captured ${g.config.minCaptureYear} or later only`, "");
+    L.push(`Pass means the share is at least ${pct(g.config.threshold)} (configurable). The approach is classified again from the stored frames after removing every frame captured before ${g.config.minCaptureYear} (and frames with no capture date); quality, heading and gap rules are unchanged. Computed from stored frames only: no Mapillary call, no token. The gate makes zero Mapillary API calls, so it has no skip flag and needs none. The gate result is a measurement against the owner's rule, not a change to any classifier threshold.`, "");
+    L.push("| Scope | Routes | Approach km | STREET_VIDEO km | Share | Result |", "| --- | ---: | ---: | ---: | ---: | --- |");
+    for (const [k, t] of Object.entries(g.totals)) L.push(`| total ${k} | ${t.routes} | ${km(t.approachLengthM)} | ${km(t.streetVideoM)} | ${pct(t.share)} | **${t.pass ? "PASS" : "FAIL"}** |`);
+    L.push("", `Routes passing individually: ${g.routesPassing} of ${g.routesTotal}.`, "");
+    L.push("| Route | Costing | Approach m | STREET_VIDEO m | Share | Result |", "| --- | --- | ---: | ---: | ---: | --- |");
+    for (const r of g.rows) L.push(`| ${r.routeId} | ${r.costing} | ${r.approachLengthM.toFixed(0)} | ${r.streetVideoM.toFixed(0)} | ${pct(r.share)} | ${r.pass ? "PASS" : "FAIL"} |`);
+    L.push("");
+  }
 
   L.push("## Per route", "");
   L.push(`Street % columns are STREET_VIDEO metres over route (or approach) metres. Bridges are crossfade bridges used, "at cap" is STREET_VIDEO segments holding the maximum of ${a.config.classify.maxBridgesPerSegment} bridges, refused gaps are bridge-tier gaps not bridged because the sequence_id differs.`, "");

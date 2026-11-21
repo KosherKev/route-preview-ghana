@@ -10,3 +10,8 @@ __pycache__/
 *.mp4
 dist/
 !.env.example
+
+# worker: downloaded tool binaries and caches
+worker/bin/
+worker/tools/
+.pytest_cache/

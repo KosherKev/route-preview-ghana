@@ -1,7 +1,7 @@
 // Mapillary Graph API v4 implementation of the StreetImagerySource interface.
 // The token is read by the caller from MAPILLARY_TOKEN and sent only as an Authorization header;
 // it is never put in a URL, an error message or a log line.
-import { assertSourceEnabled, warnOnceIfSuspiciousSources } from "../imagery/sources";
+import { assertSourceEnabled, MAPILLARY_SOURCE, warnOnceIfSuspiciousSources } from "../imagery/sources";
 import type { ImageFrame, StreetImagerySource } from "../patterns/imagerySource";
 
 export type BBox = readonly [minLon: number, minLat: number, maxLon: number, maxLat: number];
@@ -43,7 +43,7 @@ export interface FrameRow {
   height: number | null;
   quality_score: number | null;
   captured_at: string | null;
-  source: "mapillary";
+  source: typeof MAPILLARY_SOURCE;
   creator: string | null;
   /** Mapillary username of the contributor (null when the API did not return one). */
   creator_username: string | null;
@@ -153,7 +153,7 @@ export function convertImage(img: MapillaryImage): RowResult {
       height: img.height ?? null,
       quality_score: img.quality_score ?? null,
       captured_at: capIso,
-      source: "mapillary",
+      source: MAPILLARY_SOURCE,
       creator: img.creator?.username ?? img.creator?.id ?? null,
       creator_username: typeof img.creator?.username === "string" && img.creator.username !== "" ? img.creator.username : null,
       source_url: mapillaryImageUrl(String(img.id)),

@@ -1,0 +1,2 @@
+imageio-ffmpeg==0.8.1 \
+    --hash=sha256:9538a10e598257263b5de1a1c1b86e7603417bc219245b1e279b452e5e48cc20

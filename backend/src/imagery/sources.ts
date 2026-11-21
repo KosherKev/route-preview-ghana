@@ -79,13 +79,21 @@ export function assertSourceEnabled(name: string, env: NodeJS.ProcessEnv = proce
 export interface ClipSourceInfo {
   source?: string | null;
   source_summary?: unknown;
+  /** clips.status; a clip with status "prototype" is never servable. */
+  status?: string | null;
+  /** clips.render_params; `prototype: true` there also makes the clip unservable. */
+  render_params?: unknown;
 }
+
+/** clips.status value for prototype clips (Phase 4: built from Mapillary imagery without written permission, D1). */
+export const PROTOTYPE_CLIP_STATUS = "prototype";
 
 /**
  * Clip-serving half of the kill switch. FAILS CLOSED: returns true only when ALL hold.
  *  (a) `source_summary` is undefined/null (legacy row with no summary, treated as "no imagery source recorded")
  *      or a real Array. Anything else (a JSON string from a mis-parsed jsonb, an object, a number) returns false.
  *  (b) every summary entry is a plain object with a non-empty string `source`. Any malformed entry returns false.
+ *  (0) a clip whose status is "prototype" (or whose render_params.prototype is true) is never servable, for any source.
  *  (c) neither `clip.source` (when present; a non-string value returns false) nor any entry's source is disabled
  *      (trimmed, case-insensitive).
  * Never throws: any error while inspecting the clip returns false.
@@ -95,6 +103,9 @@ export interface ClipSourceInfo {
 export function isClipServable(clip: ClipSourceInfo, env: NodeJS.ProcessEnv = process.env): boolean {
   try {
     if (clip === null || typeof clip !== "object") return false;
+    if (clip.status === PROTOTYPE_CLIP_STATUS) return false;
+    const rp = clip.render_params;
+    if (rp !== null && typeof rp === "object" && (rp as { prototype?: unknown }).prototype === true) return false;
     const disabled = disabledSources(env);
     const own = clip.source;
     if (own !== undefined && own !== null) {
@@ -116,3 +127,7 @@ export function isClipServable(clip: ClipSourceInfo, env: NodeJS.ProcessEnv = pr
     return false;
   }
 }
+
+/** Canonical `frames.source` labels. Code must pass one of these explicitly on every insert (D10); the column default is a safety net only. */
+export const MAPILLARY_SOURCE = "mapillary" as const;
+export const OWN_CAPTURE_SOURCE = "own_capture";

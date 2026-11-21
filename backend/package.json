@@ -14,7 +14,10 @@
     "route": "tsx scripts/valhalla-route.ts",
     "serve": "tsx scripts/serve-approach.ts",
     "validate": "tsx scripts/validate.ts",
-    "audit:coverage": "tsx scripts/coverage-audit.ts"
+    "audit:coverage": "tsx scripts/coverage-audit.ts",
+    "clips:plan": "tsx scripts/plan-clips.ts",
+    "clips:register": "tsx scripts/register-clips.ts",
+    "clips:report": "tsx scripts/clips-report.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

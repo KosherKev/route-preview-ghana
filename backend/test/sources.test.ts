@@ -238,3 +238,16 @@ describe("suspicious IMAGERY_SOURCES_DISABLED entries", () => {
     expect(r.status).not.toBe(4); // not disabled: it got past the switch (and stopped at the missing token)
   });
 });
+
+import { isClipServable as servable, PROTOTYPE_CLIP_STATUS } from "../src/imagery/sources";
+describe("prototype clips are never servable", () => {
+  const summary = [{ source: "mapillary", creators: ["a"], license: "CC-BY-SA-4.0", sourceUrls: [] }];
+  it("fails on status prototype even with nothing disabled", () => {
+    expect(servable({ source_summary: summary }, {})).toBe(true);
+    expect(servable({ source_summary: summary, status: PROTOTYPE_CLIP_STATUS }, {})).toBe(false);
+  });
+  it("fails on render_params.prototype true", () => {
+    expect(servable({ source_summary: summary, render_params: { prototype: true } }, {})).toBe(false);
+    expect(servable({ source_summary: summary, render_params: { prototype: false } }, {})).toBe(true);
+  });
+});

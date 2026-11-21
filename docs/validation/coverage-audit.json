@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-21T05:34:49.787Z",
+  "generatedAt": "2026-11-21T10:57:43.819Z",
   "killSwitchAtReport": null,
   "reconciliation": {
     "framesTotal": 50476,
@@ -87,7 +87,9 @@
       "rateLimitEvents": [],
       "backoffWaitMs": 18000
     },
-    "notes": []
+    "notes": [
+      "D9 gate run from stored frames, phase 4 (zero Mapillary calls)"
+    ]
   },
   "db": {
     "framesTotal": 50476,
@@ -4171,6 +4173,431 @@
         }
       }
     }
+  },
+  "gate": {
+    "config": {
+      "threshold": 0.35,
+      "minCaptureYear": 2022
+    },
+    "rows": [
+      {
+        "routeId": "r01",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "share": 0.25768782925347306,
+        "pass": false
+      },
+      {
+        "routeId": "r01",
+        "costing": "auto",
+        "approachLengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r02",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r02",
+        "costing": "auto",
+        "approachLengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r03",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0146045442799,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r03",
+        "costing": "auto",
+        "approachLengthM": 499.97817778789755,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r04",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r04",
+        "costing": "auto",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r05",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.9494080454463,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r05",
+        "costing": "auto",
+        "approachLengthM": 499.9494080454463,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r06",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0146045442799,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r06",
+        "costing": "auto",
+        "approachLengthM": 499.97817778789755,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r07",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0103167945377,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r07",
+        "costing": "auto",
+        "approachLengthM": 500.0103167945377,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r08",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "share": 0.25768782925347306,
+        "pass": false
+      },
+      {
+        "routeId": "r08",
+        "costing": "auto",
+        "approachLengthM": 500.0095723761194,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r09",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r09",
+        "costing": "auto",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r10",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "share": 0.25768782925347306,
+        "pass": false
+      },
+      {
+        "routeId": "r10",
+        "costing": "auto",
+        "approachLengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r11",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.9605160532376,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r11",
+        "costing": "auto",
+        "approachLengthM": 499.9605160532376,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r12",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0440925509014,
+        "streetVideoM": 340.885,
+        "share": 0.6817098833445373,
+        "pass": true
+      },
+      {
+        "routeId": "r12",
+        "costing": "auto",
+        "approachLengthM": 500.0440925509014,
+        "streetVideoM": 340.885,
+        "share": 0.6817098833445373,
+        "pass": true
+      },
+      {
+        "routeId": "r13",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r13",
+        "costing": "auto",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r14",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r14",
+        "costing": "auto",
+        "approachLengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r15",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.95939482419806,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r15",
+        "costing": "auto",
+        "approachLengthM": 499.95939482419806,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r16",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r16",
+        "costing": "auto",
+        "approachLengthM": 499.96071678540704,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r17",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r17",
+        "costing": "auto",
+        "approachLengthM": 499.99980548542936,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r18",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.95939482419806,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r18",
+        "costing": "auto",
+        "approachLengthM": 499.95939482419806,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r19",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r19",
+        "costing": "auto",
+        "approachLengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r20",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.98355478980085,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r20",
+        "costing": "auto",
+        "approachLengthM": 500.0440925509014,
+        "streetVideoM": 340.885,
+        "share": 0.6817098833445373,
+        "pass": true
+      },
+      {
+        "routeId": "r21",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0585412718452,
+        "streetVideoM": 128.85900000000004,
+        "share": 0.25768782925347306,
+        "pass": false
+      },
+      {
+        "routeId": "r21",
+        "costing": "auto",
+        "approachLengthM": 499.95828461165536,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r22",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.0044520872604,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r22",
+        "costing": "auto",
+        "approachLengthM": 500.0044520872604,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r23",
+        "costing": "motor_scooter",
+        "approachLengthM": 500.06199005935525,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r23",
+        "costing": "auto",
+        "approachLengthM": 500.0802477035482,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r24",
+        "costing": "motor_scooter",
+        "approachLengthM": 499.98148332913456,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r24",
+        "costing": "auto",
+        "approachLengthM": 499.98148332913456,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      },
+      {
+        "routeId": "r25",
+        "costing": "auto",
+        "approachLengthM": 500.06413946702185,
+        "streetVideoM": 0,
+        "share": 0,
+        "pass": false
+      }
+    ],
+    "totals": {
+      "motor_scooter": {
+        "routes": 24,
+        "approachLengthM": 12000.222613165251,
+        "streetVideoM": 856.3210000000001,
+        "share": 0.07135875955005569,
+        "pass": false
+      },
+      "auto": {
+        "routes": 25,
+        "approachLengthM": 12499.979470936894,
+        "streetVideoM": 681.77,
+        "share": 0.054541689575182975,
+        "pass": false
+      },
+      "all": {
+        "routes": 49,
+        "approachLengthM": 24500.20208410214,
+        "streetVideoM": 1538.0910000000003,
+        "share": 0.06277870667026242,
+        "pass": false
+      }
+    },
+    "routesPassing": 3,
+    "routesTotal": 49
   },
   "limitations": [
     "Mapillary image metadata only. No image, thumbnail or pixel data was fetched, so nothing here says whether a frame is sharp, usable, correctly exposed, free of obstruction, or shows what the metadata claims.",

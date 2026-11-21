@@ -1,6 +1,6 @@
 // Metadata-only real-coverage audit (Phase 3 follow-up D).
 //   npm run audit:coverage -- ingest [--note "text"] [--half-width-m 30] [--interval-ms 500]
-//   npm run audit:coverage -- report [--out <dir>] [--note "text"]
+//   npm run audit:coverage -- report [--out <dir>] [--note "text"] [--gate-threshold 0.35] [--gate-min-year 2022]   (report always includes the D9 gate, from stored frames only)
 //   npm run audit:coverage -- run [--skip-ingestion] [ingest and report options]   (ingest, then report; --skip-ingestion makes it exactly "report": no token used, no Mapillary call)
 // ingest: routes the 25 validated pairs (Valhalla), ingests Mapillary IMAGE METADATA ONLY for cells covering a corridor
 //   around those routes into the local PostGIS frames table, and writes aggregate counts to data/coverage-audit/ingest-stats.json.
@@ -24,7 +24,7 @@ import { upsertFrames } from "../src/ingest/store";
 import { DEFAULT_APPROACH_LENGTH_M, extractApproach, type ApproachResult } from "../src/routing/approach";
 import { decodePolyline6, type Costing } from "../src/routing/valhalla";
 import type { LatLon } from "../src/geo/local";
-import { levelUncertainNear, routeInputs, sumSummaries, summariseSegments, usableFrames } from "../src/validation/coverage";
+import { DEFAULT_GATE_CONFIG, framesFromYear, gateResult, gateRow, levelUncertainNear, routeInputs, sumSummaries, summariseSegments, usableFrames } from "../src/validation/coverage";
 import { COSTINGS, renderCoverageMarkdown, type AuditRow, type CoverageAudit, type CostingTotals, type DbStats, type FrameReconciliation, type IngestStats } from "../src/validation/coverageReport";
 import { addImage, emptyFieldStats } from "../src/validation/ingestStats";
 import { NAMED_POINTS, NEAR_NAMED_M, ROUTE_PAIRS, type NamedKey } from "../src/validation/routes";
@@ -146,6 +146,9 @@ async function report() {
     for (const r of dbq.rows) { db.framesTotal += r.n; db.qualityScoreNull += r.nulls; db.qualityScoreBelow05 += r.low; db.bySource[r.source as string] = r.n; }
 
     const rows: AuditRow[] = [];
+    const gateCfg = { threshold: Number(opt("--gate-threshold") ?? DEFAULT_GATE_CONFIG.threshold), minCaptureYear: Number(opt("--gate-min-year") ?? DEFAULT_GATE_CONFIG.minCaptureYear) };
+    if (!(gateCfg.threshold >= 0 && gateCfg.threshold <= 1) || !Number.isInteger(gateCfg.minCaptureYear)) throw new Error("--gate-threshold must be within 0..1 and --gate-min-year an integer");
+    const gateRows: ReturnType<typeof gateRow>[] = [];
     const { results } = await routeAll();
     const reconciliation = await reconcileFrames(client, results, ingestStats, db.framesTotal);
     const cfg = DEFAULT_CLASSIFY_CONFIG;
@@ -160,6 +163,9 @@ async function report() {
       const ap = approachInputs(r);
       const pa = classifyFrames(ap.axis, ap.edges, frames, undefined, cfg, sourcesExcluded);
       const approachSummary = summariseSegments(pa.classification, usableFrames(ap.axis, ap.edges, frames), pa.candidateFrames, pa.dropped, cfg);
+      const gf = framesFromYear(frames, gateCfg.minCaptureYear);
+      const pg = classifyFrames(ap.axis, ap.edges, gf, undefined, cfg, sourcesExcluded);
+      gateRows.push(gateRow(pair.id, costing, ap.axis.lengthM, pg.classification.summary.streetVideoM, gateCfg));
       const near = namedProximity(r);
       const interchanges = {} as NonNullable<AuditRow["interchanges"]>;
       for (const k of Object.keys(NAMED_POINTS) as NamedKey[]) {
@@ -194,7 +200,7 @@ async function report() {
       nullScoreHandling: m.allowMissingQuality
         ? "frames with a null quality_score are KEPT (allowMissingQuality is true)."
         : `frames with a null (or non-finite) quality_score are DROPPED by the matcher with reason low_quality (allowMissingQuality is false), the same reason used for scores below ${m.minQualityScore}. The classifier therefore never counts an unscored frame as usable street imagery.`,
-      rows, totals,
+      rows, totals, gate: gateResult(gateRows, gateCfg, COSTINGS),
       limitations: [
         "Mapillary image metadata only. No image, thumbnail or pixel data was fetched, so nothing here says whether a frame is sharp, usable, correctly exposed, free of obstruction, or shows what the metadata claims.",
         "quality_score is Mapillary's own number; it is used as reported. There is no independent image-quality check.",
