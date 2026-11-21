@@ -66,7 +66,8 @@ export function canonicalJson(x: unknown): string {
   return JSON.stringify(norm(x));
 }
 
-/** sha256 over the canonical manifest and, for each clip sorted by key, `key bytes sha256(clip)`. Excludes every timestamp. */
+/** sha256 over the canonical manifest and, for each clip sorted by key, `key bytes sha256(clip)`. Excludes every timestamp.
+ *  Stored in the bundle.json envelope, never in the manifest it covers (that would be circular). Spec for clients: docs/api/bundle-content-hash.md. */
 export function contentHash(manifest: unknown, clips: readonly { key: string; bytes: number; sha256: string }[]): string {
   const lines = [...clips].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)).map((c) => `${c.key} ${c.bytes} ${c.sha256}`);
   return sha256(["rpg-bundle-v1", canonicalJson(manifest), ...lines].join("\n"));

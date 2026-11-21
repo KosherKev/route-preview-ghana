@@ -128,7 +128,9 @@ Same request body, errors and disambiguation as `POST /preview`. It builds the p
 - **Expiry**: `expiresAt` is `createdAt` + 7 days by default (`BUNDLE_TTL_DAYS`). A client must discard an expired bundle.
 - **Content hash**: sha256 over the canonical (key-sorted) preview manifest and, for each clip sorted by key, `key bytes sha256(clip)`. It
   contains no timestamp, so it is stable for the same manifest and clips and changes if either changes, even by one byte of one clip. The
-  envelope records it so a client can detect changed imagery.
+  envelope records it so a client can detect changed imagery. It lives in the `bundle.json` envelope, not in `preview.json` (a hash
+  inside the manifest it covers would be circular). Exact algorithm, client verification steps, mismatch handling and a worked
+  example: [bundle-content-hash.md](bundle-content-hash.md).
 - **Kill switch**: a clip whose recorded sources include one disabled by `IMAGERY_SOURCES_DISABLED` is refused (403), as is a manifest whose
   attribution names a disabled source. Unregistered or uncached clips are refused (409).
 - A bundle is a prototype artefact and not shareable. Prototype clips are bundled (never published) only because this is a local file for
