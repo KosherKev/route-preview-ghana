@@ -8,7 +8,12 @@ Phase 5B-1: scaffold, offline fixture and the flyover player. iOS simulator firs
 **Pre-trip preview only. The app is never synced to live GPS.** It does not request location permission, has no
 location plugin, and no code reads a device position. `test/product_boundary_test.dart` fails if `Info.plist` or any
 entitlements file gains an `NSLocation*` key, if a location package appears in `pubspec.yaml` / `pubspec.lock`, or if
-app source reads or requests a position. The camera is driven only by the manifest's keyframes.
+app source reads or requests a position. The map widget is built in one place (`lib/flyover_map.dart`) with
+`myLocationEnabled: false` and `myLocationTrackingMode: MyLocationTrackingMode.none` set explicitly (a widget test asserts
+both), and the boundary test also fails on `LocationPuckMapView`, `UserLocation`, `Geolocator`, a tracking mode other than
+none, a location permission request, or a map widget that leaves either setting implicit. MapLibre.framework links the
+system location library and the plugin ships a location-puck view; neither is used. The camera is driven only by the
+manifest's keyframes.
 
 ## Toolchain (pinned)
 

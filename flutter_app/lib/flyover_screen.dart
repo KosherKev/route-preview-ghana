@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'fixture.dart';
+import 'flyover_map.dart';
 import 'flyover/player_controller.dart';
 import 'flyover/timeline.dart';
 import 'player_controls.dart';
@@ -126,7 +127,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
     return Scaffold(
       body: Stack(
         children: [
-          MapLibreMap(
+          buildFlyoverMap(
             styleString: f.styleJson,
             initialCameraPosition: CameraPosition(
               target: LatLng(first.lat, first.lon),
@@ -136,13 +137,6 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
             ),
             onMapCreated: (c) => _map = c,
             onStyleLoadedCallback: _onStyleLoaded,
-            // The player owns the camera; the user scrubs with the slider.
-            rotateGesturesEnabled: false,
-            scrollGesturesEnabled: false,
-            zoomGesturesEnabled: false,
-            tiltGesturesEnabled: false,
-            compassEnabled: false,
-            myLocationEnabled: false,
           ),
           SafeArea(
             child: Align(
