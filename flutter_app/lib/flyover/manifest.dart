@@ -67,12 +67,22 @@ class PreviewManifest {
   final double approachEndM;
   final List<Segment> segments;
 
+  /// The whole route: its length in metres and its polyline6 (offsets everywhere in the manifest are metres along it).
+  final double routeLengthM;
+  final String routePolyline6;
+
+  /// Destination as [lat, lon]; null only for hand-built manifests in tests.
+  final List<double>? destination;
+
   const PreviewManifest({
     required this.timelineStartM,
     required this.timelineEndM,
     required this.approachStartM,
     required this.approachEndM,
     required this.segments,
+    this.routeLengthM = 0,
+    this.routePolyline6 = '',
+    this.destination,
   });
 
   static const _topKeys = {
@@ -105,6 +115,14 @@ class PreviewManifest {
     _noUnknown(timeline, const {'startM', 'endM', 'lengthM'}, 'timeline');
     final approach = _obj(root['approach'], 'approach');
     _noUnknown(approach, const {'requestedLengthM', 'lengthM', 'startM', 'endM', 'wholeRoute'}, 'approach');
+    final route = _obj(root['route'], 'route');
+    _noUnknown(route, const {'lengthM', 'timeSec', 'polyline6'}, 'route');
+    final polyline = route['polyline6'];
+    if (polyline is! String) {
+      throw const ManifestFormatException('route.polyline6 must be a string');
+    }
+    final dest = _obj(root['destination'], 'destination');
+    _noUnknown(dest, const {'lat', 'lon'}, 'destination');
     final segs = root['segments'];
     if (segs is! List || segs.isEmpty) {
       throw const ManifestFormatException('segments must be a non-empty array');
@@ -115,6 +133,12 @@ class PreviewManifest {
       approachStartM: _num(approach['startM'], 'approach.startM', min: 0),
       approachEndM: _num(approach['endM'], 'approach.endM', min: 0),
       segments: [for (var i = 0; i < segs.length; i++) _segment(segs[i], i)],
+      routeLengthM: _num(route['lengthM'], 'route.lengthM', min: 0),
+      routePolyline6: polyline,
+      destination: [
+        _num(dest['lat'], 'destination.lat', min: -90, max: 90),
+        _num(dest['lon'], 'destination.lon', min: -180, max: 180),
+      ],
     );
     if (manifest.timelineEndM < manifest.timelineStartM) {
       throw const ManifestFormatException('timeline ends before it starts');

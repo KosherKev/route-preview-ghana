@@ -39,6 +39,24 @@ keyframes are never changed. On the fixture's 670.3 m timeline that is about 67 
 (0.5x, 1x, 2x) multiplies the playback clock on top of that; scrubbing is unaffected. `--dart-define=PLAYBACK_SPEED=2`
 sets the starting speed.
 
+## Real map (5B-2a)
+
+The app draws the real Accra map from two dev tile files read at runtime from `Documents/tiles/` in its own sandbox:
+`accra.pmtiles` (OSM vector tiles: building, road, water) and `accra-terrain.pmtiles` (Copernicus GLO-30 Terrarium
+raster-dem). They are never in the repo or the app assets. `tool/push_dev_tiles.sh` copies them from
+`~/dev/.scratch/tiles/` into the simulator container and refuses if a SHA-256 differs from `SHA256SUMS`. If either file is
+missing or invalid the app shows a message and falls back to the synthetic fixture, never a blank map.
+
+- Style: `assets/style/route_preview_style.json` (template; no remote URLs, glyphs or sprites, so no text labels). Layers
+  `landuse` and `sea` are optional: absent from today's tiles, they draw nothing and appear once the tiles gain them.
+- Buildings: height from the data where tagged (`height`, or `building:levels` times 3 m); otherwise an ESTIMATE of 4 to
+  14 m from a stable hash of the feature id (MapLibre expressions cannot read footprint area). The banner and info panel say
+  heights are estimated. `lib/style/building_height.dart` is the reference; a test runs the real style expression against it.
+- Route: `assets/fixtures/accra-real-manifest.json`, one manifest fetched from the preview API (OSM routing and camera
+  keyframes only), validated against the manifest schema in the tests.
+- Terrain: hillshade only. `setTerrain` and `setSky` are unsupported by `maplibre_gl` 0.28.0 on iOS (see the D3 note).
+- Attribution: the info button shows OpenStreetMap and the Copernicus string from the tile metadata.
+
 ## Run and test
 
 ```
