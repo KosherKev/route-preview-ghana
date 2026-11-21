@@ -5,7 +5,7 @@
     "comment": "Offline style template. Double-curly-brace placeholders are substituted at runtime: two pmtiles:// URLs (vector and terrain tiles, which live in the app sandbox and never in the repo) and three GeoJSON objects (route, completed route, destination). No remote URLs, no glyphs, no sprites: text labels are out of scope. Source layers listed under optionalSourceLayers may be absent from the tiles and then simply draw nothing.",
     "optionalSourceLayers": ["landuse", "sea"]
   },
-  "light": { "anchor": "map", "color": "#fff3e2", "intensity": 0.55, "position": [1.2, 235, 42] },
+  "light": { "anchor": "map", "color": "#fff3e2", "intensity": 0.3, "position": [1.2, 235, 38] },
   "sources": {
     "osm": {
       "type": "vector",
@@ -232,8 +232,8 @@
       "paint": {
         "fill-extrusion-height": 45,
         "fill-extrusion-base": 0,
-        "fill-extrusion-color": "#ff1f66",
-        "fill-extrusion-vertical-gradient": true
+        "fill-extrusion-color": "#ff3d7f",
+        "fill-extrusion-vertical-gradient": false
       }
     },
     {

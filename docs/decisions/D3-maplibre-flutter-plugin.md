@@ -92,3 +92,15 @@ boundary test only needs `UserLocationLayer` added to its forbidden names.
    toolchain has SwiftPM enabled by default (no global setting change needed).
 
 Re-check at the start of Phase 6 even if none has fired.
+
+## 5B-2a findings: style features in `maplibre_gl` 0.28.0 on iOS (2026-11-21)
+
+| Feature | Result |
+| --- | --- |
+| 3D terrain (`setTerrain`) | **No.** Throws `UnsupportedError` on iOS ("MapLibre Native does not implement 3D terrain yet"). Web only. Hillshade only is shipped. |
+| Sky / atmosphere (`setSky`) | **No.** Same `UnsupportedError`. |
+| Fog | **No** API in the plugin. Fallback: a Flutter gradient at the top of the screen that fades in with camera pitch. |
+| Ambient occlusion | **No** API. Fallback: the style `light` (softened to 0.3 intensity) and `fill-extrusion-vertical-gradient`. |
+| Hillshade from `raster-dem` PMTiles | **Yes.** Loads from the app sandbox; effect is subtle on flat Accra (surface model, so it shows urban texture). |
+| `pmtiles://file:///` from the app sandbox | **Yes**, vector and Terrarium raster-dem. Real device not tested. |
+| Feature ids in expressions | **Yes**: `["id"]` works on the real tiles (every feature carries an id), used for the stable height estimate. |
