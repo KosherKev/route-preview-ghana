@@ -31,6 +31,10 @@ Nothing is uploaded or served (D1).
   downloaded file. The wheel ships no ffprobe.
 - ffprobe substitute (stated plainly: real ffprobe was NOT available): `ffmpeg -i` stream-line parse for codec, pixel format, size,
   fps and duration, plus a pure-Python top-level MP4 box walk for moov-before-mdat (faststart). See `ffmpeg.stream_info`.
+- Real ffprobe has NOT been run on the three clips. `python -m rpg_worker.cli --verify` (worker/, venv) runs a real-ffprobe check of codec h264,
+  1280x720 and faststart per mp4 when `RPG_FFPROBE` or PATH has an ffprobe; here it prints "ffprobe not available, skipped" for all three.
+  The other two checks above were used instead. The step is unit tested with a fake binary, present and absent.
+- The D9 gate reads stored frames and makes zero Mapillary API calls; no skip flag exists or is needed.
 
 ## Interpolation benchmark and choice
 

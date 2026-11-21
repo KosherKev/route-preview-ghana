@@ -88,7 +88,7 @@ Share of the usable frames that sit inside STREET_VIDEO segments, by UTC capture
 
 ## Coverage gate (D9): last-500 m STREET_VIDEO share, frames captured 2022 or later only
 
-Pass means the share is at least 35.0% (configurable). The approach is classified again from the stored frames after removing every frame captured before 2022 (and frames with no capture date); quality, heading and gap rules are unchanged. Computed from stored frames only: no Mapillary call, no token. The gate result is a measurement against the owner's rule, not a change to any classifier threshold.
+Pass means the share is at least 35.0% (configurable). The approach is classified again from the stored frames after removing every frame captured before 2022 (and frames with no capture date); quality, heading and gap rules are unchanged. Computed from stored frames only: no Mapillary call, no token. The gate makes zero Mapillary API calls, so it has no skip flag and needs none. The gate result is a measurement against the owner's rule, not a change to any classifier threshold.
 
 | Scope | Routes | Approach km | STREET_VIDEO km | Share | Result |
 | --- | ---: | ---: | ---: | ---: | --- |

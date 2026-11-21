@@ -19,6 +19,15 @@ before route classification (affected routes fall back to `BIRDS_EYE_3D`, report
 not servable (`isClipServable`). It does not delete stored data, recall anything already served elsewhere, or add authentication. Details,
 attribution fields (`creator_username`, `source_url`, `clips.source_summary`) and the migration rollback SQL: [backend/README.md](backend/README.md).
 
+## Phase 4 clip verification and the D9 gate
+
+- Real ffprobe has NOT been run on the three prototype clips: this machine has no ffprobe (the pip ffmpeg wheel ships none and no unverified
+  binary was installed). The clips were checked with the other two methods instead: `ffmpeg -i` stream parsing and a pure-Python MP4 box walk
+  (faststart). `python -m rpg_worker.cli --verify` (from `worker/`) runs the ffprobe step (h264, 1280x720, faststart) when `RPG_FFPROBE` or
+  PATH has an ffprobe, and otherwise prints "ffprobe not available, skipped".
+- The D9 coverage gate reads stored frames and makes zero Mapillary API calls, so it has no skip flag.
+- Per-clip numbers: [docs/validation/phase4-clips.md](docs/validation/phase4-clips.md), regenerated with `npm run clips:report` in `backend/`.
+
 ## Layout
 
 - `backend/` API and pattern stubs

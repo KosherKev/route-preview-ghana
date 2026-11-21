@@ -203,7 +203,7 @@ export function renderCoverageMarkdown(a: CoverageAudit): string {
   if (a.gate) {
     const g = a.gate;
     L.push(`## Coverage gate (D9): last-${a.config.approachLengthM} m STREET_VIDEO share, frames captured ${g.config.minCaptureYear} or later only`, "");
-    L.push(`Pass means the share is at least ${pct(g.config.threshold)} (configurable). The approach is classified again from the stored frames after removing every frame captured before ${g.config.minCaptureYear} (and frames with no capture date); quality, heading and gap rules are unchanged. Computed from stored frames only: no Mapillary call, no token. The gate result is a measurement against the owner's rule, not a change to any classifier threshold.`, "");
+    L.push(`Pass means the share is at least ${pct(g.config.threshold)} (configurable). The approach is classified again from the stored frames after removing every frame captured before ${g.config.minCaptureYear} (and frames with no capture date); quality, heading and gap rules are unchanged. Computed from stored frames only: no Mapillary call, no token. The gate makes zero Mapillary API calls, so it has no skip flag and needs none. The gate result is a measurement against the owner's rule, not a change to any classifier threshold.`, "");
     L.push("| Scope | Routes | Approach km | STREET_VIDEO km | Share | Result |", "| --- | ---: | ---: | ---: | ---: | --- |");
     for (const [k, t] of Object.entries(g.totals)) L.push(`| total ${k} | ${t.routes} | ${km(t.approachLengthM)} | ${km(t.streetVideoM)} | ${pct(t.share)} | **${t.pass ? "PASS" : "FAIL"}** |`);
     L.push("", `Routes passing individually: ${g.routesPassing} of ${g.routesTotal}.`, "");
