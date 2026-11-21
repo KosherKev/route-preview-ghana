@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'fixture.dart';
+import 'flyover_map.dart';
 import 'flyover/player_controller.dart';
 import 'flyover/timeline.dart';
 import 'player_controls.dart';
@@ -13,7 +14,16 @@ class FlyoverScreen extends StatefulWidget {
   final Fixture fixture;
   final bool autoplay;
   final Duration autoplayDelay;
-  const FlyoverScreen({super.key, required this.fixture, this.autoplay = false, this.autoplayDelay = Duration.zero});
+
+  /// Starting playback speed, one of [kPlaybackSpeeds] (the on-screen speed control changes it).
+  final double initialSpeed;
+  const FlyoverScreen({
+    super.key,
+    required this.fixture,
+    this.autoplay = false,
+    this.autoplayDelay = Duration.zero,
+    this.initialSpeed = 1.0,
+  });
 
   @override
   State<FlyoverScreen> createState() => _FlyoverScreenState();
@@ -30,7 +40,9 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(widget.fixture.manifest))..addListener(_onPlayer);
+    _player = FlyoverPlayerController(FlyoverTimeline.fromManifest(widget.fixture.manifest))
+      ..setSpeed(widget.initialSpeed)
+      ..addListener(_onPlayer);
     _ticker = createTicker((elapsed) {
       _player.advance((elapsed - _last).inMicroseconds / 1e6);
       _last = elapsed;
@@ -115,7 +127,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
     return Scaffold(
       body: Stack(
         children: [
-          MapLibreMap(
+          buildFlyoverMap(
             styleString: f.styleJson,
             initialCameraPosition: CameraPosition(
               target: LatLng(first.lat, first.lon),
@@ -125,13 +137,6 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
             ),
             onMapCreated: (c) => _map = c,
             onStyleLoadedCallback: _onStyleLoaded,
-            // The player owns the camera; the user scrubs with the slider.
-            rotateGesturesEnabled: false,
-            scrollGesturesEnabled: false,
-            zoomGesturesEnabled: false,
-            tiltGesturesEnabled: false,
-            compassEnabled: false,
-            myLocationEnabled: false,
           ),
           SafeArea(
             child: Align(

@@ -14,6 +14,9 @@ class PlayerControls extends StatelessWidget {
     required this.timelineEndM,
   });
 
+  /// '0.5x', '1x', '2x'.
+  static String formatSpeed(double v) => '${v == v.roundToDouble() ? v.toInt() : v}x';
+
   static String formatClock(double s) => '${s.floor().toString().padLeft(2, '0')}.${((s % 1) * 10).floor()}s';
 
   @override
@@ -45,6 +48,24 @@ class PlayerControls extends StatelessWidget {
                 ),
                 Text('${formatClock(controller.positionSec)} / ${formatClock(controller.durationSec)}',
                     key: const Key('clock'), style: const TextStyle(color: Colors.white, fontSize: 12)),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('speed', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                const SizedBox(width: 8),
+                for (final v in kPlaybackSpeeds)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: ChoiceChip(
+                      key: Key('speed-$v'),
+                      label: Text(formatSpeed(v), style: const TextStyle(fontSize: 12)),
+                      selected: controller.speed == v,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (_) => controller.setSpeed(v),
+                    ),
+                  ),
               ],
             ),
             Text(

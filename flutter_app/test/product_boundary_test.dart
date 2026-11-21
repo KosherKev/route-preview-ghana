@@ -31,10 +31,51 @@ void main() {
       expect(sourceViolations('A.swift', 'import CoreLocation\nlet m = CLLocationManager()'), isNotEmpty);
     });
 
+    test('plugin location features and tracking modes', () {
+      for (final bad in [
+        'MapLibreMap(myLocationTrackingMode: MyLocationTrackingMode.tracking)',
+        'myLocationTrackingMode: MyLocationTrackingMode.trackingGps',
+        'final mode = MyLocationTrackingMode.trackingCompass;',
+        'myLocationTrackingMode: someVariable',
+        'const LocationPuckMapView()',
+        'final UserLocation u;',
+        'onUserLocationUpdated: (l) {}',
+      ]) {
+        expect(sourceViolations('a.dart', bad), isNotEmpty, reason: bad);
+      }
+    });
+
+    test('location permission requests', () {
+      for (final bad in [
+        'await Permission.location.request()',
+        'Permission.locationWhenInUse.request()',
+        'await Geolocator.requestPermission()',
+        'manager.requestWhenInUseAuthorization()',
+        'manager.requestAlwaysAuthorization()',
+        'requestLocationPermission()',
+      ]) {
+        expect(sourceViolations('a.dart', bad), isNotEmpty, reason: bad);
+      }
+    });
+
+    test('a map widget must set both location settings explicitly', () {
+      expect(mapWidgetViolations('a.dart', 'MapLibreMap(styleString: s)'), hasLength(2));
+      expect(mapWidgetViolations('a.dart', 'MapLibreMap(myLocationEnabled: false)'), hasLength(1));
+      expect(
+          mapWidgetViolations('a.dart', 'MapLibreMap(myLocationEnabled: true, myLocationTrackingMode: MyLocationTrackingMode.none)'),
+          hasLength(1));
+      expect(
+          mapWidgetViolations(
+              'a.dart', 'MapLibreMap(styleString: f(x), myLocationEnabled: false, myLocationTrackingMode: MyLocationTrackingMode.none)'),
+          isEmpty);
+      expect(mapWidgetViolations('a.dart', 'no map here'), isEmpty);
+    });
+
     test('a clean file passes', () {
       expect(plistViolations('<dict><key>CFBundleName</key><string>route_preview</string></dict>'), isEmpty);
       expect(packageViolations('dependencies:\n  flutter:\n    sdk: flutter\n  maplibre_gl: 0.28.0\n'), isEmpty);
       expect(sourceViolations('a.dart', 'MapLibreMap(myLocationEnabled: false)'), isEmpty);
+      expect(sourceViolations('a.dart', 'myLocationTrackingMode: MyLocationTrackingMode.none'), isEmpty);
     });
   });
 
@@ -70,6 +111,16 @@ void main() {
       for (final f in sources) {
         expect(sourceViolations(f.path, f.readAsStringSync()), isEmpty, reason: f.path);
       }
+    });
+
+    test('every map widget in lib/ sets location off and tracking none explicitly', () {
+      var maps = 0;
+      for (final f in files('lib', (p) => p.endsWith('.dart'))) {
+        final src = f.readAsStringSync();
+        maps += RegExp(r'\bMapLibreMap\(').allMatches(src).length;
+        expect(mapWidgetViolations(f.path, src), isEmpty, reason: f.path);
+      }
+      expect(maps, greaterThanOrEqualTo(2), reason: 'the scan must actually see the map widgets (flyover and probe)');
     });
 
     test('the README states the boundary', () {

@@ -9,6 +9,9 @@ const bool _autoplay = bool.fromEnvironment('AUTOPLAY');
 /// `--dart-define=AUTOPLAY_DELAY_SEC=n` waits n seconds (paused at the start) before autoplay begins.
 const int _autoplayDelaySec = int.fromEnvironment('AUTOPLAY_DELAY_SEC');
 
+/// `--dart-define=PLAYBACK_SPEED=0.5|1|2` sets the starting playback speed (default 1).
+const String _playbackSpeed = String.fromEnvironment('PLAYBACK_SPEED', defaultValue: '1');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final fixture = await Fixture.load();
@@ -25,7 +28,12 @@ class RoutePreviewApp extends StatelessWidget {
       title: 'Route preview',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: const Color(0xFFD6336C), useMaterial3: true),
-      home: FlyoverScreen(fixture: fixture, autoplay: _autoplay, autoplayDelay: const Duration(seconds: _autoplayDelaySec)),
+      home: FlyoverScreen(
+        fixture: fixture,
+        autoplay: _autoplay,
+        autoplayDelay: const Duration(seconds: _autoplayDelaySec),
+        initialSpeed: double.parse(_playbackSpeed),
+      ),
     );
   }
 }

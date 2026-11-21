@@ -73,6 +73,7 @@ class _ProbeState extends State<_Probe> {
           onMapCreated: (c) => _map = c,
           onMapIdle: () => Future<void>.delayed(const Duration(seconds: 2), _query),
           myLocationEnabled: false,
+          myLocationTrackingMode: MyLocationTrackingMode.none,
           compassEnabled: false,
         ),
         SafeArea(

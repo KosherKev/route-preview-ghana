@@ -11,7 +11,8 @@ void main() {
   late FlyoverPlayerController player;
 
   Future<void> pumpControls(WidgetTester tester) async {
-    player = FlyoverPlayerController(FlyoverTimeline.fromManifest(PreviewManifest.parse(manifestString())));
+    player = FlyoverPlayerController(
+        FlyoverTimeline.fromManifest(PreviewManifest.parse(manifestString()), effectiveSpeedMps: null));
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: Align(
@@ -66,5 +67,25 @@ void main() {
     await tester.pump();
     expect(player.positionSec, 0);
     expect(player.playing, isTrue);
+  });
+
+  testWidgets('speed chips show 0.5x / 1x / 2x with 1x selected, and tapping one sets the speed', (tester) async {
+    await pumpControls(tester);
+    expect(find.text('0.5x'), findsOneWidget);
+    expect(find.text('1x'), findsOneWidget);
+    expect(find.text('2x'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('speed-1.0'))).selected, isTrue);
+    await tester.tap(find.byKey(const Key('speed-2.0')));
+    await tester.pump();
+    expect(player.speed, 2.0);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('speed-2.0'))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('speed-1.0'))).selected, isFalse);
+    player.play();
+    player.advance(3);
+    await tester.pump();
+    expect(find.text('06.0s / 30.0s'), findsOneWidget); // 3 s of wall time at 2x
+    await tester.tap(find.byKey(const Key('speed-0.5')));
+    await tester.pump();
+    expect(player.speed, 0.5);
   });
 }
