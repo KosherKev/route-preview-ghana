@@ -21,6 +21,10 @@ A successful response is `video/mp4` with `X-Prototype: true`, `Accept-Ranges: b
 (`206` with `Content-Range`; closed, open-ended and suffix ranges; `416` for unsatisfiable, malformed or multiple ranges). `HEAD` returns
 the headers only.
 
+The flag counts only when it is passed on the command line (or otherwise set in the real environment) when the API process starts. A
+`PROTOTYPE_CLIP_SERVING` entry in `.env` is removed by `loadApiEnv()` and never enables the door; `MAPILLARY_TOKEN` is removed from the
+API process whatever its source. `scripts/dev-api.sh` unsets both explicitly.
+
 ```
 PROTOTYPE_CLIP_SERVING=1 npm run serve        # in backend/, loopback only
 curl -sI http://127.0.0.1:8787/clips/<edge_id>/forward.mp4
