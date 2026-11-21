@@ -24,6 +24,16 @@ loads from the network. Regenerate with `python3 tool/make_fixture.py`.
 Only a small share of real Accra buildings have measured heights, so the app shades default-height buildings
 differently and says so on screen: extrusions are approximate, never an accurate building height.
 
+## Flyover speed
+
+The manifest's flyover durations assume a nominal 30 m/s, which is too fast to read an approach (22.3 s for the
+fixture). The player slows each segment to `kFlyoverEffectiveSpeedMps = 10.0` m/s (`lib/flyover/timeline.dart`), the
+street-clip nominal speed, so the later hybrid timeline moves at one pace. It scales each segment's keyframe times by one
+factor (route metres the keyframes cover / 10 / manifest duration); easing is kept as given, and the manifest and
+keyframes are never changed. On the fixture's 670.3 m timeline that is about 67 s. The on-screen speed control
+(0.5x, 1x, 2x) multiplies the playback clock on top of that; scrubbing is unaffected. `--dart-define=PLAYBACK_SPEED=2`
+sets the starting speed.
+
 ## Run and test
 
 ```

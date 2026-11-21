@@ -18,19 +18,29 @@ class CameraState {
   });
 }
 
+/// Default effective flyover speed, metres of route per second of preview clock. It matches the nominal street-clip
+/// speed so the later hybrid (clip + flyover) timeline moves at one consistent pace. The manifest's own flyover
+/// durations assume a nominal 30 m/s, which is too fast to read an approach, so the player slows each segment to this
+/// speed by scaling its keyframe times. The manifest and its keyframes are never changed.
+const double kFlyoverEffectiveSpeedMps = 10.0;
+
 class _TimedSegment {
   final double startT;
   final FlyoverPlan plan;
-  const _TimedSegment(this.startT, this.plan);
-  double get endT => startT + plan.durationSec;
+
+  /// Multiplier from manifest keyframe time to preview-clock time (1 = as the manifest says).
+  final double scale;
+  const _TimedSegment(this.startT, this.plan, this.scale);
+  double get durationSec => plan.durationSec * scale;
 }
 
 /// Plays the manifest's flyover segments back to back on a preview clock (seconds).
 ///
 /// The timeline is driven by the manifest's own offsets: [startOffsetM] is `timeline.startM`, which can be before
 /// `approach.startM` (a ready clip is never cut, so a timeline may begin ahead of the nominal approach window).
-/// Nothing here assumes a 500 m window. Speed comes only from the keyframes: time maps to the camera linearly
-/// through each keyframe pair (with that pair's easing); there are no extra speed ramps.
+/// Nothing here assumes a 500 m window. Speed comes only from the keyframes and one constant factor per segment
+/// ([kFlyoverEffectiveSpeedMps]): time maps to the camera linearly through each keyframe pair (with that pair's
+/// easing); there are no extra speed ramps.
 class FlyoverTimeline {
   final double startOffsetM;
   final double endOffsetM;
@@ -41,7 +51,15 @@ class FlyoverTimeline {
   FlyoverTimeline._(this.startOffsetM, this.endOffsetM, this.approachStartM, this._segments, this.totalDurationSec);
 
   /// Street-video segments are Phase 5B-2; a manifest with a `clip` segment is refused here, not silently skipped.
-  factory FlyoverTimeline.fromManifest(PreviewManifest m) {
+  ///
+  /// [effectiveSpeedMps] is the speed the camera should cover the route at (default [kFlyoverEffectiveSpeedMps]):
+  /// each segment's keyframe times are scaled so (route metres the keyframes cover) / (segment duration) equals it.
+  /// Easing is kept as given. Pass null to play at the manifest's own nominal timing. A segment whose keyframes do
+  /// not advance along the route (zero metres) keeps the manifest timing.
+  factory FlyoverTimeline.fromManifest(PreviewManifest m, {double? effectiveSpeedMps = kFlyoverEffectiveSpeedMps}) {
+    if (effectiveSpeedMps != null && !(effectiveSpeedMps > 0)) {
+      throw ArgumentError.value(effectiveSpeedMps, 'effectiveSpeedMps', 'must be > 0');
+    }
     final timed = <_TimedSegment>[];
     var t = 0.0;
     for (final s in m.segments) {
@@ -49,8 +67,11 @@ class FlyoverTimeline {
       if (s.playback != 'flyover' || plan == null) {
         throw StateError('segment ${s.index} plays a clip; street-video playback is Phase 5B-2');
       }
-      timed.add(_TimedSegment(t, plan));
-      t += plan.durationSec;
+      final spanM = plan.keyframes.last.offsetM - plan.keyframes.first.offsetM;
+      final scale = (effectiveSpeedMps == null || spanM <= 0) ? 1.0 : spanM / effectiveSpeedMps / plan.durationSec;
+      final seg = _TimedSegment(t, plan, scale);
+      timed.add(seg);
+      t += seg.durationSec;
     }
     return FlyoverTimeline._(m.timelineStartM, m.timelineEndM, m.approachStartM, List.unmodifiable(timed), t);
   }
@@ -65,7 +86,7 @@ class FlyoverTimeline {
     for (final s in _segments) {
       if (s.startT <= t) seg = s;
     }
-    return _interpolate(seg.plan.keyframes, t - seg.startT);
+    return _interpolate(seg.plan.keyframes, (t - seg.startT) / seg.scale);
   }
 
   static CameraState _interpolate(List<Keyframe> k, double local) {
