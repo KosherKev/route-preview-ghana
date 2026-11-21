@@ -59,6 +59,13 @@ describe("POST /preview manifest builder", () => {
     expect(k.at(-1)!.offsetM).toBeCloseTo(scene.axis.lengthM);
   });
 
+  it("drops a sub-metre flyover sliver at the route end", async () => {
+    const m = await createPreviewBuilder(depsFixture({ frames: [...streetFrames(1400, 1495), ...scene.frames([1499.7]).map((f) => ({ ...f, source: "mapillary" }))] }))(REQ);
+    expect(manifestErrors(m)).toEqual([]);
+    expect(m.segments.every((s) => s.lengthM >= 1)).toBe(true);
+    expect(m.segments.at(-1)!.mode).toBe("STREET_VIDEO");
+  });
+
   it("kill switch: frames of a disabled source are excluded, the segment becomes flyover and sourcesExcluded says so", async () => {
     process.env.IMAGERY_SOURCES_DISABLED = "mapillary";
     const m = await createPreviewBuilder(depsFixture({ frames: streetFrames(1100, 1250), clips: [clipRecord(1011, 150)] }))(REQ);

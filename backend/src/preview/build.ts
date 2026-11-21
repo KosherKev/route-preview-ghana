@@ -23,6 +23,8 @@ export const NOMINAL_STREET_SPEED_MPS = 10;
 /** A stored clip matches a segment only if its length is within this many metres of the segment length. */
 export const CLIP_LENGTH_TOLERANCE_M = 5;
 export const CLIP_DIRECTION = "forward";
+/** Flyover segments shorter than this (after clipping to the timeline) are dropped from the manifest. */
+export const MIN_FLYOVER_SEGMENT_M = 1;
 
 export interface PreviewRequest {
   origin: LatLon; destination: LatLon; costing: Costing;
@@ -163,7 +165,9 @@ export function assembleManifest(i: AssembleInput): PreviewManifest {
     ...(i.request.landmarkMaxPer100m !== undefined ? { maxPer100m: i.request.landmarkMaxPer100m } : {}),
   };
   const segments: ManifestSegment[] = [];
-  tl.included.forEach((seg, index) => {
+  // a flyover sliver under 1 m (the classifier can leave one at a route end after rounding) is not worth a segment
+  const shown = tl.included.filter((s) => s.mode === "STREET_VIDEO" || Math.min(s.endM, total) - Math.max(s.startM, tl.startM) >= MIN_FLYOVER_SEGMENT_M);
+  shown.forEach((seg, index) => {
     const startM = Math.max(seg.startM, tl.startM), endM = Math.min(seg.endM, total);
     const lengthM = endM - startM;
     const polyline6 = encodePolyline6(sliceAxis(axis, startM, endM).map((p) => [p.lat, p.lon] as [number, number]));

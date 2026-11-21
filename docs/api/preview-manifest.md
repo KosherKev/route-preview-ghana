@@ -44,7 +44,7 @@ publicly), `degraded`, `costing`, `unpavedFallback`, `warnings`, `origin`, `dest
 - `degraded: true` means a place-name lookup ran without its Photon stage (same meaning as `/geocode`). The route is unaffected.
 - `approach` is the last `approach_length_m` of the route. `timeline` is the span the segments actually cover: it starts at
   `approach.startM`, or earlier when a street segment with a ready clip overlaps the window, because a clip is played whole and is never cut.
-- `segments` are ordered, contiguous and cover `timeline` exactly. Offsets are metres along the route polyline.
+- `segments` are ordered and contiguous, and cover `timeline` (a flyover sliver shorter than 1 m is dropped). Offsets are metres along the route polyline.
 
 ### Segments
 

@@ -2,6 +2,7 @@
 //   GET  /health
 //   GET  /landmarks/search?q=..&near=lat,lon&limit=..   (only when a landmarkSearch function is supplied; errors are RFC 9457 problem JSON)
 //   GET  /geocode?q=..&near=lat,lon&limit=..   (only when a geocode function is supplied; same validation and problem JSON; Photon trouble => degraded:true, never 5xx)
+//   POST /preview  (only when a preview builder is supplied; same input rules, disambiguation and problem JSON as /approach; see docs/api/preview-manifest.md)
 //   POST /approach  (every error is RFC 9457 problem JSON: type, title, status, detail; a 422 adds field, query, degraded, candidates)  {"origin":{"lat":..,"lon":..} | "origin_query":"place name","destination":{..} | "destination_query":"..","costing":"motor_scooter"|"auto",
 //                    "approach_length_m"?: 50..5000, "decision_window_m"?: 10..500}
 import http from "node:http";
@@ -10,6 +11,7 @@ import type { Costing, LatLon } from "./valhalla";
 import { parseSearchParams, SearchInputError, type LandmarkMatch, type SearchParams } from "../geo/landmarkSearch";
 import type { Candidate, GeocodeFn } from "../geo/geocode";
 import { DEFAULT_DISAMBIGUATION_MARGIN, resolvePlace } from "./resolve";
+import type { NamedEnd, PreviewBuilder, PreviewRequest } from "../preview/build";
 
 export const MAX_BODY_BYTES = 4096;
 export const REQUEST_DEADLINE_MS = 60_000;
@@ -51,6 +53,30 @@ export function parseApproachRequest(body: unknown): ApproachRequest {
     approachLengthM: ranged(b.approach_length_m, "approach_length_m", 50, 5000),
     decisionWindowM: ranged(b.decision_window_m, "decision_window_m", 10, 500),
   };
+}
+
+/** The only body fields POST /preview accepts. Anything else is a 400: there is deliberately no field for any live or device position. */
+export const PREVIEW_REQUEST_FIELDS = [
+  "origin", "destination", "origin_query", "destination_query", "costing",
+  "approach_length_m", "decision_window_m", "landmark_max_distance_m", "landmark_max_per_100m",
+] as const;
+
+function parsePreviewFields(body: unknown): void {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return; // reported by the normal parser
+  const allowed: readonly string[] = PREVIEW_REQUEST_FIELDS;
+  for (const k of Object.keys(body)) {
+    if (!allowed.includes(k)) throw new ValidationError(`unknown field ${JSON.stringify(k.slice(0, 40))}`);
+  }
+}
+
+export function parsePreviewRequest(body: unknown): PreviewRequest {
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new ValidationError("body must be a JSON object");
+  const b = body as Record<string, unknown>;
+  parsePreviewFields(b);
+  const base = parseApproachRequest(b);
+  const per100 = ranged(b.landmark_max_per_100m, "landmark_max_per_100m", 1, 10);
+  if (per100 !== undefined && !Number.isInteger(per100)) throw new ValidationError("landmark_max_per_100m must be an integer between 1 and 10");
+  return { ...base, landmarkMaxDistanceM: ranged(b.landmark_max_distance_m, "landmark_max_distance_m", 5, 200), landmarkMaxPer100m: per100 };
 }
 
 const publicCandidate = (c: Candidate) => ({ name: c.name, lat: c.lat, lon: c.lon, source: c.source, score: c.score });
@@ -103,6 +129,8 @@ export interface ServerOptions {
   landmarkSearch?: (p: SearchParams) => Promise<LandmarkMatch[]>;
   /** Enables GET /geocode (coordinates, landmarks, then Photon). Injected like landmarkSearch. */
   geocode?: GeocodeFn;
+  /** Enables POST /preview. Injected like the others so the server holds no database connection. */
+  preview?: PreviewBuilder;
   /** Name-based routing: top two candidates with scores closer than this (and > 500 m apart) are returned for disambiguation. Default 0.05. */
   disambiguationMargin?: number;
   /** Receives full error details for every non-2xx outcome. Clients only ever see generic messages. Default: console.error (message only). */
@@ -192,7 +220,8 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
           return sendProblem(res, 500, "Internal Server Error");
         }
       }
-      if (url.pathname !== "/approach") return sendProblem(res, 404, TITLES[404]!);
+      const isPreview = url.pathname === "/preview" && !!opts.preview;
+      if (url.pathname !== "/approach" && !isPreview) return sendProblem(res, 404, TITLES[404]!);
       if (req.method !== "POST") return sendProblem(res, 405, TITLES[405]!, "use POST");
       const ct = String(req.headers["content-type"] ?? "").split(";")[0]!.trim().toLowerCase();
       if (ct !== "application/json") {
@@ -209,18 +238,30 @@ export function createApproachServer(opts: ServerOptions = {}): http.Server {
         }
         return sendProblem(res, 400, TITLES[400]!, "body is not valid JSON");
       }
+      if (isPreview) {
+        // unknown fields are refused before any name lookup, so a stray field can never be silently ignored
+        parsePreviewFields(parsed);
+      }
       const named = await resolveQueries(parsed, opts.geocode, margin);
-      const r = parseApproachRequest(named.body);
       const ac = new AbortController();
       // abort() also cancels the in-flight Valhalla fetches (signal passed to the extractor)
       const timer = setTimeout(() => ac.abort(), deadline);
-      try {
-        const work = extractor(r.costing, r.origin, r.destination, {
-          ...opts.extractOptions, signal: ac.signal, approachLengthM: r.approachLengthM, decisionWindowM: r.decisionWindowM,
-        });
+      const race = async <T>(work: Promise<T>): Promise<T> => {
         const timeout = new Promise<never>((_, rej) => ac.signal.addEventListener("abort", () => rej(Object.assign(new Error("deadline exceeded"), { status: 504 }))));
-        work.catch(() => {}); // an aborted extractor rejects after the race is settled: do not leave it unhandled
-        const result = await Promise.race([work, timeout]);
+        work.catch(() => {}); // an aborted worker rejects after the race is settled: do not leave it unhandled
+        return Promise.race([work, timeout]);
+      };
+      try {
+        if (isPreview) {
+          const r = parsePreviewRequest(named.body);
+          const resolved = named.resolved as Record<string, NamedEnd>;
+          const degraded = Object.values(resolved).some((v) => v.degraded === true);
+          return send(res, 200, await race(opts.preview!(r, { signal: ac.signal, resolved, degraded })));
+        }
+        const r = parseApproachRequest(named.body);
+        const result = await race(extractor(r.costing, r.origin, r.destination, {
+          ...opts.extractOptions, signal: ac.signal, approachLengthM: r.approachLengthM, decisionWindowM: r.decisionWindowM,
+        }));
         return send(res, 200, Object.keys(named.resolved).length > 0 ? { ...result, resolved: named.resolved } : result);
       } finally {
         clearTimeout(timer);

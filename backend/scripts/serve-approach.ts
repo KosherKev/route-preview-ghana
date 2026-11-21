@@ -5,6 +5,8 @@ import { searchLandmarks } from "../src/geo/landmarkSearch";
 import { createGeocoder } from "../src/geo/geocode";
 import { photonClient } from "../src/geo/photon";
 import { createApproachServer, listenLoopback } from "../src/routing/server";
+import { createPreviewBuilder } from "../src/preview/build";
+import { createPgPreviewDeps } from "../src/preview/deps";
 
 loadEnv();
 const pool = new pg.Pool({ ...dbConfig(), max: 4, statement_timeout: 5000 });
@@ -13,8 +15,9 @@ const port = Number(process.env.PORT ?? 8787);
 const server = createApproachServer({
   landmarkSearch: (p) => searchLandmarks(pool, p),
   geocode: createGeocoder({ db: pool, photon: photonClient() }),
+  preview: createPreviewBuilder(createPgPreviewDeps(pool)),
   ...(process.env.GEOCODE_DISAMBIGUATION_MARGIN ? { disambiguationMargin: Number(process.env.GEOCODE_DISAMBIGUATION_MARGIN) } : {}),
 });
 server.on("close", () => void pool.end());
 await listenLoopback(server, port);
-console.log(`approach service on http://127.0.0.1:${port} (POST /approach, GET /geocode, GET /landmarks/search, GET /health)`);
+console.log(`approach service on http://127.0.0.1:${port} (POST /approach, POST /preview, GET /geocode, GET /landmarks/search, GET /health)`);
