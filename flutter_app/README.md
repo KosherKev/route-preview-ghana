@@ -57,6 +57,30 @@ missing or invalid the app shows a message and falls back to the synthetic fixtu
 - Terrain: hillshade only. `setTerrain` and `setSky` are unsupported by `maplibre_gl` 0.28.0 on iOS (see the D3 note).
 - Attribution: the info button shows OpenStreetMap and the Copernicus string from the tile metadata.
 
+## Live preview (5B-2b)
+
+The first screen asks the preview API for a manifest and plays it as a hybrid timeline.
+
+- **API address** (default the tailnet dev API, stored locally; no secret, no auth header yet), a Test connection button
+  (`GET /health`), three saved presets (long-press to save the form into one), typed latitude/longitude with a Ghana sanity
+  check, and the costing. No device location and no map-tap picking. If the API is unreachable the screen offers the bundled
+  fixture route, labelled as a saved example.
+- **Client** (`lib/api/preview_api.dart`): timeouts, one retry for connection failures only, a 4xx problem+json shown by its
+  title and detail, 5xx, and every manifest validated by the same parser the player uses before it is played.
+- **Hybrid timeline**: each manifest segment plays in order. BIRDS_EYE_3D is a flyover; STREET_VIDEO plays its clip if the file
+  is in `Documents/clips/<clip key>`, else its flyover keyframes if it has them ("flyover fallback"), else a clear "no preview
+  for this section" state while the timeline continues at the segment's length. A segment strip and a source label show what is
+  playing; scrub, pause and speed work across boundaries; the start offset before the approach window is kept.
+- **Overlays**: turn cues (shown inside each turn's decision window) and landmark callouts (80 m before to 20 m after), at most
+  three at once, with text only from the manifest. A PROTOTYPE badge shows while the manifest says `prototype: true`, and the info
+  panel lists the manifest's imagery sources.
+- **Clips are dev-only and local**: `tool/push_dev_clips.sh` (hash and size checked) copies them into the simulator sandbox; they are
+  never fetched, bundled or committed. See `docs/decisions/D4-video-playback.md`. `tool/make_test_clip.swift` makes a synthetic clip.
+- **Fixtures**: `assets/fixtures/mixed-manifest.json` (synthetic, all four segment cases; `tool/make_mixed_fixture.py`) and the
+  real Accra route.
+- Dev switches (`--dart-define`): `API_BASE_URL`, `PRESET`, `AUTO_PREVIEW_SEC`, plus the earlier `AUTOPLAY`, `AUTOPLAY_DELAY_SEC`,
+  `PLAYBACK_SPEED`, `HILLSHADE`.
+
 ## Run and test
 
 ```

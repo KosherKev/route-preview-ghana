@@ -13,11 +13,15 @@ import 'scene/scene_loader.dart';
 ///   PLAYBACK_SPEED=0.5|1|2 starting playback speed (default 1)
 ///   HILLSHADE=off          hide the terrain hillshade
 ///   API_BASE_URL=url       override the stored API address for this run
+///   PRESET=0|1|2           start with this preset filled in
+///   AUTO_PREVIEW_SEC=n     press Preview n seconds after launch (hands-free evidence runs)
 const bool _autoplay = bool.fromEnvironment('AUTOPLAY');
 const int _autoplayDelaySec = int.fromEnvironment('AUTOPLAY_DELAY_SEC');
 const String _playbackSpeed = String.fromEnvironment('PLAYBACK_SPEED', defaultValue: '1');
 const String _hillshade = String.fromEnvironment('HILLSHADE', defaultValue: 'on');
 const String _apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+const int _preset = int.fromEnvironment('PRESET');
+const int _autoPreviewSec = int.fromEnvironment('AUTO_PREVIEW_SEC', defaultValue: -1);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +62,8 @@ class RoutePreviewApp extends StatelessWidget {
         autoplay: _autoplay,
         autoplayDelay: const Duration(seconds: _autoplayDelaySec),
         initialSpeed: double.parse(_playbackSpeed),
+        initialPreset: _preset,
+        autoPreviewDelay: _autoPreviewSec >= 0 ? const Duration(seconds: _autoPreviewSec) : null,
       ),
     );
   }

@@ -32,6 +32,10 @@ class RequestScreen extends StatefulWidget {
   final Duration autoplayDelay;
   final double initialSpeed;
 
+  /// Dev evidence switches: fill the form from this preset, and press Preview after [autoPreviewDelay] (null = never).
+  final int initialPreset;
+  final Duration? autoPreviewDelay;
+
   const RequestScreen({
     super.key,
     required this.settings,
@@ -43,6 +47,8 @@ class RequestScreen extends StatefulWidget {
     this.autoplay = false,
     this.autoplayDelay = Duration.zero,
     this.initialSpeed = 1.0,
+    this.initialPreset = 0,
+    this.autoPreviewDelay,
   });
 
   @override
@@ -53,6 +59,8 @@ enum _Phase { idle, loading, error }
 
 class _RequestScreenState extends State<RequestScreen> {
   final _form = GlobalKey<FormState>();
+  final _scroll = ScrollController();
+  final _statusKey = GlobalKey();
   late final TextEditingController _baseUrl;
   late final TextEditingController _oLat, _oLon, _dLat, _dLon;
   late List<RoutePreset> _presets;
@@ -69,11 +77,13 @@ class _RequestScreenState extends State<RequestScreen> {
     _baseUrl = TextEditingController(text: s.baseUrl);
     _presets = s.presets;
     _costing = s.costing;
-    final first = _presets.first;
+    final first = _presets[widget.initialPreset.clamp(0, kPresetCount - 1)];
     _oLat = TextEditingController(text: first.originLat);
     _oLon = TextEditingController(text: first.originLon);
     _dLat = TextEditingController(text: first.destLat);
     _dLon = TextEditingController(text: first.destLon);
+    final auto = widget.autoPreviewDelay;
+    if (auto != null) Future<void>.delayed(auto, () => mounted ? _preview() : null);
   }
 
   @override
@@ -81,6 +91,7 @@ class _RequestScreenState extends State<RequestScreen> {
     for (final c in [_baseUrl, _oLat, _oLon, _dLat, _dLon]) {
       c.dispose();
     }
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -103,6 +114,14 @@ class _RequestScreenState extends State<RequestScreen> {
     if (!mounted) return;
     setState(() => _presets = widget.settings.presets);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved to preset ${slot + 1}.')));
+  }
+
+  /// Brings the loading or error card into view (it sits below the form).
+  void _showStatus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _statusKey.currentContext;
+      if (ctx != null && mounted) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 250), alignment: 1.0);
+    });
   }
 
   Future<void> _testConnection() async {
@@ -145,6 +164,7 @@ class _RequestScreenState extends State<RequestScreen> {
       _phase = _Phase.loading;
       _error = null;
     });
+    _showStatus();
     final api = widget.apiFactory(_baseUrl.text);
     try {
       final result = await api.preview(PreviewRequest(originLat: o.lat, originLon: o.lon, destLat: d.lat, destLon: d.lon, costing: _costing));
@@ -158,6 +178,7 @@ class _RequestScreenState extends State<RequestScreen> {
           _phase = _Phase.error;
           _error = e;
         });
+        _showStatus();
       }
     } finally {
       api.close();
@@ -206,6 +227,7 @@ class _RequestScreenState extends State<RequestScreen> {
       appBar: AppBar(title: const Text('Route preview')),
       body: SafeArea(
         child: ListView(
+          controller: _scroll,
           padding: const EdgeInsets.all(16),
           children: [
             Text('Pre-trip preview only. It is never synced to live GPS, and it never asks for your location.', style: theme.textTheme.bodySmall),
@@ -279,7 +301,7 @@ class _RequestScreenState extends State<RequestScreen> {
               child: const Text('Preview'),
             ),
             const SizedBox(height: 16),
-            _status(theme),
+            KeyedSubtree(key: _statusKey, child: _status(theme)),
           ],
         ),
       ),
