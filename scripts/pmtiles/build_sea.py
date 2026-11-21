@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-"""Build sea polygons for the Accra tiles from the Copernicus GLO-30 DEM and write them as a GeoPackage Planetiler can read.
+"""Build sea polygons for the Accra tiles and write them as a GeoPackage Planetiler can read.
 
-Method: ocean candidates are DEM cells with elevation <= 0 m or nodata. Only the candidates that are 4-connected to the open sea
+Two methods. COASTLINE (used by build-accra.sh): the OSM natural=coastline ways extracted by osm_coast.py are the authority for the
+land/sea boundary. OSM puts land on the LEFT of a coastline way, so the sea is the region to its right: the west to east coast chain is
+closed through the southern edge of the crop, and closed counter-clockwise coastline rings (islands) are holes. The DEM is not used.
+DEM (kept for comparison, `--method dem`): Copernicus GLO-30 DEM, as follows.
+
+DEM method: ocean candidates are DEM cells with elevation <= 0 m or nodata. Only the candidates that are 4-connected to the open sea
 (flood fill seeded from the southern edge of the crop) are kept, so inland 0 m pits and lagoons that are cut off from the sea by
 land are not marked as sea. The mask is vectorised along cell edges, rings are simplified (Douglas-Peucker) and written as WKB.
-Usage: build_sea.py SRC_DIR OUT.gpkg [--tolerance-m 40]        (deterministic: same inputs give the same bytes)
+Usage: build_sea.py COAST.json OUT.gpkg                           (coastline method)
+       build_sea.py SRC_DIR OUT.gpkg --method dem [--tolerance-m 40]
+Deterministic: same inputs give the same bytes. Dropped rings are counted and reported; the script exits 1 (and writes no GeoPackage) if
+any HOLE was dropped (degenerate or without an outer ring), because a dropped hole would turn land into sea.
 """
-import glob, math, os, sqlite3, struct, sys, time
+import glob, json, math, os, sqlite3, struct, sys, time
 import numpy as np
-import tifffile
 
 # build-accra.sh bounds: lon_min,lat_min,lon_max,lat_max. The crop is wider so the sea does not end inside a border tile.
 BBOX = (-0.40, 5.45, 0.05, 5.80)
@@ -16,6 +23,7 @@ CROP = (-0.90, 5.00, 0.55, 6.00)  # lon_min, lat_min, lon_max, lat_max (the DEM 
 
 
 def load_mosaic(src):
+    import tifffile  # only the DEM method needs it
     cells = []
     for p in sorted(glob.glob(os.path.join(src, "*.tif"))):
         with tifffile.TiffFile(p) as t:
@@ -134,7 +142,7 @@ def wkb_multipolygon(polys):
     return out
 
 
-def write_gpkg(path, wkb, bounds):
+def write_gpkg(path, wkb, bounds, description='sea polygons'):
     if os.path.exists(path):
         os.remove(path)
     db = sqlite3.connect(path)
@@ -154,11 +162,96 @@ CREATE TABLE sea (fid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom BLOB, cla
         ("WGS 84 geodetic", 4326, "EPSG", 4326,
          'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]]', None)])
     # 'last_change' is fixed so the file is reproducible
-    db.execute("INSERT INTO gpkg_contents VALUES ('sea','features','sea','Copernicus GLO-30 derived sea mask','2026-01-01T00:00:00.000Z',?,?,?,?,4326)", bounds)
+    db.execute("INSERT INTO gpkg_contents VALUES ('sea','features','sea',?,'2026-01-01T00:00:00.000Z',?,?,?,?,4326)", (description,) + tuple(bounds))
     db.execute("INSERT INTO gpkg_geometry_columns VALUES ('sea','geom','MULTIPOLYGON',4326,0,0)")
     header = b"GP" + struct.pack("<BBi", 0, 1, 4326)  # version 0, flags: little-endian, no envelope
     db.execute("INSERT INTO sea (geom, class) VALUES (?, 'ocean')", (header + wkb,))
     db.commit(); db.close()
+
+
+def assemble(outers, holes, stats):
+    """Group lon/lat rings into polygons (outer rings largest first, outer CCW, holes CW). A hole is assigned to the first outer ring that
+    contains its first vertex; holes that no outer ring contains are counted in stats["orphan_hole"] (and never written)."""
+    stats = dict(stats); stats["orphan_hole"] = 0
+    outers = sorted(outers, key=lambda p: -abs(area(p)))
+    polys = [[o] for o in outers]
+    for h in holes:
+        for poly in polys:
+            if pip(h[0], poly[0]):
+                poly.append(h); break
+        else:
+            stats["orphan_hole"] += 1
+    fixed = []
+    for poly in polys:
+        fixed.append([np.ascontiguousarray(r if (area(r) > 0) == (i == 0) else r[::-1]) for i, r in enumerate(poly)])
+    return fixed, stats
+
+
+def finish(fixed, stats, out, description="sea polygons"):
+    """Report dropped rings; exit 1 without writing a GeoPackage if a hole was dropped (it would turn land into sea)."""
+    print(f"dropped degenerate rings: outer {stats['degenerate_outer']}, hole {stats['degenerate_hole']}; orphan holes (no outer ring): {stats['orphan_hole']}")
+    if stats["degenerate_hole"] or stats["orphan_hole"]:
+        if os.path.exists(out):
+            os.remove(out)
+        sys.exit(f"ERROR: {stats['degenerate_hole'] + stats['orphan_hole']} hole(s) dropped, which would turn land into sea: no GeoPackage written")
+    write_gpkg(out, wkb_multipolygon(fixed), (CROP[0], CROP[1], CROP[2], CROP[3]), description)
+
+
+def join_chains(segments):
+    """Join coastline segments (lists of [lon, lat]) end to start (shared node coordinates). Returns (open chains, closed rings) as arrays."""
+    key = lambda p: (round(p[0], 9), round(p[1], 9))
+    by_start = {}
+    for i, sg in enumerate(segments):
+        by_start.setdefault(key(sg[0]), []).append(i)
+    ends = {key(sg[-1]) for sg in segments}
+    used, chains, rings = set(), [], []
+    def follow(i):
+        pts = list(segments[i]); used.add(i)
+        while True:
+            nxt = [j for j in by_start.get(key(pts[-1]), []) if j not in used]
+            if not nxt:
+                return pts
+            j = nxt[0]; used.add(j); pts += segments[j][1:]
+            if key(pts[-1]) == key(pts[0]):
+                return pts
+    for i, sg in enumerate(segments):  # open chains first: start at a segment whose start is nobody's end
+        if i not in used and key(sg[0]) not in ends:
+            chains.append(np.array(follow(i), float))
+    for i in range(len(segments)):  # whatever is left is a cycle
+        if i not in used:
+            rings.append(np.array(follow(i), float))
+    closed = [r for r in rings + chains if len(r) > 3 and tuple(r[0]) == tuple(r[-1])]
+    open_ = [c for c in chains if not (len(c) > 3 and tuple(c[0]) == tuple(c[-1]))]
+    return open_, closed
+
+
+def main_coast(coast_json, out, south=4.90):
+    t0 = time.time()
+    segs = json.load(open(coast_json))["coast"]
+    open_, closed = join_chains(segs)
+    span = [c for c in open_ if c[:, 0].min() < CROP[0] + 0.05 and c[:, 0].max() > CROP[2] - 0.05]
+    others = [c for c in open_ if not any(c is s for s in span) and c[:, 0].max() > CROP[0] and c[:, 0].min() < CROP[2] and c[:, 1].max() > CROP[1] and c[:, 1].min() < CROP[3]]
+    print(f"coastline segments {len(segs)}, joined into {len(open_)} open chains and {len(closed)} closed rings; chains spanning the crop {len(span)}, other open chains touching it {len(others)}")
+    if len(span) != 1 or others:
+        sys.exit("ERROR: expected exactly one open coast chain across the crop and none touching it otherwise (a gap in the extracted coastline): refusing to guess")
+    chain = span[0]
+    if chain[0, 0] > chain[-1, 0]:
+        sys.exit("ERROR: the coast chain runs east to west: the land-on-the-left rule would put the sea north of it; refusing to continue")
+    main_ring = np.vstack([chain, [chain[-1, 0], south], [chain[0, 0], south], chain[:1]])  # clockwise: sea on the right
+    outers, holes, stats = [main_ring], [], {"degenerate_outer": 0, "degenerate_hole": 0}
+    nwater = 0
+    for r in closed:
+        if not (r[:, 0].max() > CROP[0] and r[:, 0].min() < CROP[2] and r[:, 1].max() > CROP[1] and r[:, 1].min() < CROP[3]):
+            continue
+        if len(r) < 4:
+            stats["degenerate_outer"] += 1; continue
+        if area(r) > 0:   # counter-clockwise, land on the left = island: a hole in the sea
+            holes.append(r)
+        else:             # clockwise: water inside (a coastline-mapped water body): its own sea polygon
+            outers.append(r); nwater += 1
+    fixed, stats = assemble(outers, holes, stats)
+    finish(fixed, stats, out, "sea polygons from the OSM natural=coastline ways (land on the left)")
+    print(f"polygons {len(fixed)} (clockwise water-body rings {nwater}), island holes {sum(len(p) - 1 for p in fixed)}, vertices {sum(len(r) for p in fixed for r in p)}, bytes {os.path.getsize(out)}, seconds {time.time() - t0:.1f}")
 
 
 def main(src, out, tol_m=40.0):
@@ -175,32 +268,26 @@ def main(src, out, tol_m=40.0):
     eps = tol_m / 111320.0 / dx  # tolerance in cell units (about 1 cell = 30 m)
     rings = trace_rings(boundary_edges(sea))
     to_lonlat = lambda p: np.stack([lon0 + (c0 + p[:, 0] - 0.5) * dx, lat0 - (r0 + p[:, 1] - 0.5) * dy], axis=1)
-    outers, holes = [], []
+    outers, holes, stats = [], [], {"degenerate_outer": 0, "degenerate_hole": 0}
     for r in rings:
-        s = simplify_ring(r, eps)
-        if s is None:
+        is_outer = area(np.array(r, float)) > 0
+        sr = simplify_ring(r, eps)
+        if sr is None:
+            stats["degenerate_outer" if is_outer else "degenerate_hole"] += 1
             continue
-        s = to_lonlat(s)
-        (outers if area(np.array(r, float)) > 0 else holes).append(s)
-    outers.sort(key=lambda p: -abs(area(p)))
-    polys = [[o] for o in outers]
-    for h in holes:
-        for poly in polys:
-            if pip(h[0], poly[0]):
-                poly.append(h); break
-    # outer rings counter-clockwise in lon/lat (y up), holes clockwise: rings were traced y down, so the lon/lat conversion flips them
-    fixed = []
-    for poly in polys:
-        fixed.append([np.ascontiguousarray(r if (area(r) > 0) == (i == 0) else r[::-1]) for i, r in enumerate(poly)])
-    wkb = wkb_multipolygon(fixed)
-    write_gpkg(out, wkb, (CROP[0], CROP[1], CROP[2], CROP[3]))
+        (outers if is_outer else holes).append(to_lonlat(sr))
+    fixed, stats = assemble(outers, holes, stats)
+    finish(fixed, stats, out, 'Copernicus GLO-30 derived sea mask')
     nv = sum(len(r) for p in fixed for r in p)
     print(f"polygons {len(fixed)}, holes {sum(len(p) - 1 for p in fixed)}, vertices {nv}, bytes {os.path.getsize(out)}, seconds {time.time() - t0:.1f}")
 
 
 if __name__ == "__main__":
-    args = [x for x in sys.argv[1:] if not x.startswith("--")]
-    tol = float(sys.argv[sys.argv.index("--tolerance-m") + 1]) if "--tolerance-m" in sys.argv else 40.0
-    if "--tolerance-m" in sys.argv:
-        args.remove(sys.argv[sys.argv.index("--tolerance-m") + 1])
-    main(args[0], args[1], tol)
+    a = sys.argv[1:]
+    method = a[a.index("--method") + 1] if "--method" in a else "coast"
+    tol = float(a[a.index("--tolerance-m") + 1]) if "--tolerance-m" in a else 40.0
+    pos = [x for i, x in enumerate(a) if not x.startswith("--") and (i == 0 or not a[i - 1].startswith("--"))]
+    if method == "dem":
+        main(pos[0], pos[1], tol)
+    else:
+        main_coast(pos[0], pos[1])

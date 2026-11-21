@@ -1,12 +1,12 @@
 # Planetiler custom schema for Accra tiles v2 (docs/data/tiles.md): everything in accra-buildings.yml (building, road and water
 # layers, unchanged: same attributes, zooms and the same building height rule) plus two layers:
 #   landuse: OSM polygons mapped to a small class set (see the class table in docs/data/tiles.md), from zoom 10.
-#   sea: ocean polygons derived from the Copernicus GLO-30 DEM by scripts/pmtiles/build_sea.py (a GeoPackage, built before the tiles).
+#   sea: ocean polygons derived from the OSM natural=coastline ways by scripts/pmtiles/build_sea.py (a GeoPackage, built before the tiles).
 # Still no OpenMapTiles profile and no download without a verifiable checksum.
 schema_name: Accra base (landuse and sea)
-schema_description: OSM buildings, roads, water and landuse for the Accra metropolitan area, plus a DEM-derived sea layer
+schema_description: OSM buildings, roads, water and landuse for the Accra metropolitan area, plus a sea layer derived from the OSM coastline
 version: 0.2.0
-attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a> | sea mask produced using Copernicus WorldDEM-30 &copy; DLR e.V. 2010-2014 and &copy; Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved
+attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>
 sources:
   osm:
     type: osm
