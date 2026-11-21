@@ -241,3 +241,10 @@ cells that cover a 30 m corridor around those routes, keeping only images inside
 `../data/coverage-audit/ingest-stats.json` (git-ignored). `npm run audit:coverage -- report` classifies each route (whole route and last 500 m) from the
 stored frames and writes `../docs/validation/coverage-audit.{md,json}`. It needs `MAPILLARY_TOKEN` in `.env` for `ingest` only and honours
 `IMAGERY_SOURCES_DISABLED`. It reports measurements only, with no verdict.
+
+The audit uses the Phase 2 library directly (`MapillarySource`, `convertImage`, `upsertFrames`) and not the ingestion CLI (`npm run ingest:mapillary`).
+The CLI takes one bbox or one named corridor, and a bbox around 49 routes spread across Accra would cover far more area than the roads (and trip the
+per-run tile cap); the audit instead requests only the 0.002 degree cells along the route polylines, drops images outside the 30 m corridor before
+storage, meters every API call (`CallMeter`: counts, status codes, 429s, back-off) and records field-presence statistics, none of which the CLI does.
+Both paths write the same `frames` rows through the same idempotent store. The audit's `run --skip-ingestion` (or `report`) reuses the stored frames:
+it never reads the token and makes no Mapillary call.
