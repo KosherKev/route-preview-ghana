@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Loads fuel / amenity / junction / tro-tro-stop POIs for Greater Accra from data/ghana-latest.osm.pbf
+# Loads fuel / amenity / junction / tro-tro-stop POIs for Greater Accra from data/valhalla/ghana-latest.osm.pbf
 # into PostGIS `landmarks` via a throwaway GDAL (ogr2ogr) container. No data is committed.
 # Prereqs: `docker compose up -d postgis`, `npm run db:migrate` (in backend/), .env present.
 set -euo pipefail
@@ -14,13 +14,13 @@ LANDMARK_SQL="SELECT osm_id, name, amenity, highway, public_transport FROM point
   OR highway IN ('bus_stop','motorway_junction','traffic_signals','mini_roundabout')
   OR public_transport = 'stop_position'"
 
-[ -f data/ghana-latest.osm.pbf ] || { echo "missing data/ghana-latest.osm.pbf" >&2; exit 1; }
+[ -f data/valhalla/ghana-latest.osm.pbf ] || { echo "missing data/valhalla/ghana-latest.osm.pbf" >&2; exit 1; }
 [ -f .env ] || { echo "missing .env (copy .env.example)" >&2; exit 1; }
 
 # --env-file passes the DB password to the container without putting it on a command line.
 docker run --rm --network "$NETWORK" --memory 1g --env-file .env \
   -e BBOX="$BBOX" -e LANDMARK_SQL="$LANDMARK_SQL" \
-  -v "$PWD/data:/data:ro" -v "$PWD/docker/landmarks/extract.sh:/extract.sh:ro" \
+  -v "$PWD/data/valhalla:/data:ro" -v "$PWD/docker/landmarks/extract.sh:/extract.sh:ro" \
   "$GDAL_IMAGE" bash /extract.sh
 
 docker compose exec -T postgis sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < docker/landmarks/classify.sql
