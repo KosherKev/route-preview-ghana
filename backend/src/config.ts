@@ -9,6 +9,19 @@ export function loadEnv(file = path.join(repoRoot, ".env")): void {
   if (existsSync(file)) process.loadEnvFile(file);
 }
 
+/** Variables an API process must never hold, whatever the environment or .env says: the dev clip door switch and the imagery token. */
+export const API_FORBIDDEN_ENV = ["PROTOTYPE_CLIP_SERVING", "MAPILLARY_TOKEN"] as const;
+
+/**
+ * loadEnv() for API (HTTP server) entry points: after reading .env, deletes API_FORBIDDEN_ENV from process.env, so a .env entry cannot
+ * switch on clip serving or put the Mapillary token in the API process. Entry points that are NOT the API (ingest CLI, plan/register-clips,
+ * validate, coverage-audit, migrate) keep plain loadEnv(); only the ingest CLI needs the token.
+ */
+export function loadApiEnv(file?: string, env: NodeJS.ProcessEnv = process.env): void {
+  if (file === undefined) loadEnv(); else loadEnv(file);
+  for (const k of API_FORBIDDEN_ENV) delete env[k];
+}
+
 export interface DbConfig { host: string; port: number; user: string; password: string; database: string }
 
 export function dbConfig(env: NodeJS.ProcessEnv = process.env): DbConfig {
