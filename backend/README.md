@@ -222,7 +222,7 @@ BIRDS_EYE_3D segments have `bridges: []`, `crossfades: []` and `internalMaxGapM:
 
 The 3 m left-offset limit (`maxLeftOffsetM`) is a builder-chosen, configurable parameter that is not in the spec.
 
-- **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. It may over-flag on dense real data; no real imagery has been measured yet.
+- **`level_uncertain` is conservative.** Any road-class change and every sequence handover at an edge transition triggers it, and the +/-20 m span is absorbed into the surrounding BIRDS_EYE_3D segment. Real-data coverage is described in `../docs/validation/coverage-audit.md`, which also counts `level_uncertain` segments at the three interchanges; whether it over-flags is not judged there.
 
 Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunnel`, `use` (ramp) and `road_class` stand in for it
 (`EdgeSpan.layer` is honoured when a source provides it).
@@ -230,8 +230,9 @@ Valhalla 3.9.3 `trace_attributes` exposes no OSM `layer` tag, so `bridge`, `tunn
 ### Validation harness
 
 `npm run validate` runs 25 real Accra pairs with both costings against the live Valhalla and PostGIS and writes
-`../docs/validation/route-validation.{md,json}`. It never calls Mapillary. With the empty `frames` table every routed row is BIRDS_EYE_3D and the
-report says plainly that live coverage was NOT measured. A separate SYNTHETIC section demonstrates each classifier outcome.
+`../docs/validation/route-validation.{md,json}`. It never calls Mapillary. It classifies the last 500 m of each route against whatever the local `frames` table holds and says in its
+report how many frames that was. Real coverage (Mapillary metadata for a 30 m corridor around the same 25 pairs, ingested 2026-11-20) is measured in
+`../docs/validation/coverage-audit.md`. A separate SYNTHETIC section demonstrates each classifier outcome.
 
 ### Coverage audit (metadata only)
 

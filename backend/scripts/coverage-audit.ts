@@ -201,11 +201,11 @@ async function report() {
         "Thresholds (60 m minimum run, 15 m RIFE ceiling, 30 m bridge ceiling, 2 bridges per segment, 25 degree heading tolerance, 0.5 quality, 15 m lateral) are the Phase 3 defaults and are untuned against this data.",
         "A 'street' share is a geometric statement about usable frame spacing along a Valhalla route, not a statement that a rider-facing preview would look acceptable.",
         "Capture-age buckets describe the frames inside STREET_VIDEO segments. Old imagery may show a road that has since changed; no age filter is applied and none is recommended or rejected here.",
-        `Only a ${ingestStats?.corridor.halfWidthM ?? DEFAULT_CORRIDOR.halfWidthM} m corridor around the 25 validated pairs (both costings) was ingested. Coverage elsewhere in Accra is not measured, and 25 pairs are a sample of trips, not of the road network.`,
+        `Only a ${ingestStats?.corridor.halfWidthM ?? DEFAULT_CORRIDOR.halfWidthM} m corridor around the 25 validated pairs (both costings) was ingested. Coverage outside that corridor was not sampled, and 25 pairs are a sample of trips, not of the road network.`,
         "Last-500 m approach figures use the existing approach window; very short routes use the whole route as the approach.",
         "Frames are matched with one sequence per edge (the Phase 3 rule); a corridor with several overlapping sequences is reduced to one, so frame counts are lower than raw image counts.",
         "Where a route-costing pair failed to route, it contributes nothing to totals (see the Routes column of the totals table).",
-        "The existing docs/validation/route-validation.md is the earlier no-imagery run (empty frames table) and is left unchanged; its 'not measured' statement predates this audit.",
+        "docs/validation/route-validation.md classifies the same 25 pairs (last 500 m only) and points here for the coverage measurement.",
       ],
     };
     mkdirSync(outDir, { recursive: true });

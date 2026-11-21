@@ -7,10 +7,18 @@ import type { Costing } from "../routing/valhalla";
 import { NAMED_POINTS, NEAR_NAMED_M, type NamedKey } from "./routes";
 import type { SyntheticScenario } from "./synthetic";
 
-export const NO_IMAGERY_STATEMENT =
-  "Live Mapillary coverage was NOT measured: no Mapillary token is configured, no frames were ingested, and this run made no Mapillary call. " +
-  "Every routed real-route row below classifies as BIRDS_EYE_3D because the `frames` table has no rows, not because any road was found to lack imagery. " +
-  "No coverage figure for real roads exists in this report, and none should be inferred from it.";
+export const COVERAGE_AUDIT_DOC = "docs/validation/coverage-audit.md";
+
+/** Pointer to the real-coverage audit: what it measured and when. Used by the statement for any frames-table size. */
+export const COVERAGE_AUDIT_POINTER =
+  `Real coverage was measured separately: see ${COVERAGE_AUDIT_DOC} (Mapillary image metadata, no image files, for a 30 m corridor around these same 25 pairs under both costings, ingested 2026-11-20).`;
+
+/** The coverage statement for this report, which depends on how many frames the table held at run time. */
+export function coverageStatement(frameRows: number): string {
+  return frameRows === 0
+    ? "This run's `frames` table was empty, so every routed real-route row below classifies as BIRDS_EYE_3D because no imagery was loaded, not because any road was found to lack imagery. " + COVERAGE_AUDIT_POINTER
+    : `This run classified against the ${frameRows} frames then in the \`frames\` table (the coverage-audit data); no Mapillary call was made. Rows below describe the last-500 m approach only. ` + COVERAGE_AUDIT_POINTER;
+}
 
 export const NOT_MERGED_NOTICE =
   "This branch is intentionally NOT merged to main: it is cut from the unmerged Phase 2 branch, which carries SQL migrations, " +
@@ -49,8 +57,6 @@ export interface ValidationReport {
   generatedAt: string;
   /** Why this branch is not merged (see NOT_MERGED_NOTICE). */
   branchStatus: string;
-  /** Always false in Phase 3. */
-  liveImageryMeasured: false;
   mapillaryTokenConfigured: boolean;
   statement: string;
   frameRowsInDatabase: number;
@@ -91,7 +97,7 @@ export function renderMarkdown(r: ValidationReport): string {
   L.push("# Route preview validation (Phase 3)", "");
   L.push(`Generated: ${r.generatedAt}`, "");
   L.push("## Branch status", "", `**${r.branchStatus}**`, "");
-  L.push("## Statement: live imagery was NOT measured", "");
+  L.push("## Imagery coverage", "");
   L.push(`**${r.statement}**`, "");
   L.push(`- Mapillary token configured: ${r.mapillaryTokenConfigured ? "yes (never used by this tool)" : "no"}`);
   L.push(`- Rows in the \`frames\` table at run time: ${r.frameRowsInDatabase}`, "");
