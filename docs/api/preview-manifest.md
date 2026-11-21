@@ -55,9 +55,14 @@ capture-date indicator; null for flyover) and:
 
 | Case | `status` | `clip` | `clipRef` | `flyover` | `playback` |
 | --- | --- | --- | --- | --- | --- |
-| Street segment, clip rendered and cached | `ready` | clip detail (below) | `{edge_id, direction, key}` | null | `clip` |
+| Street segment, clip rendered and cached | `ready` | clip detail (below) | `{edge_id, direction, key}` | camera plan (fallback) | `clip` |
 | Street segment, no usable clip | `not_rendered` | **null** | `{edge_id, direction, key}` | camera plan | `flyover` (reason `clip_not_rendered`) |
 | Flyover segment | null | null | null | camera plan | `flyover` (reason from the classifier: `no_frames`, `run_too_short`, `gap_too_large`, `level_uncertain`) |
+
+`flyover` is present on EVERY segment. For a street segment with a ready clip it is the fallback: **a client plays the clip when it can
+fetch it, and otherwise plays the flyover for that segment.** Over the tailnet the clip door is shut (403), so tailnet clients always take the
+flyover path. No new field and no `manifestVersion` bump: the schema only tightens `flyover` from "null for a ready clip" to "always a camera
+plan" (a client that ignored `flyover` on clip segments keeps working; a client that rejected non-null `flyover` there must be updated).
 
 A clip is `ready` only when a `clips` row exists for the segment's first edge and direction `forward`, the file is in the local clip cache and
 the stored length is within 5 m of the segment length. `POST /preview` never triggers rendering. `clip` detail: `edge_id`, `direction`, `key`,
@@ -102,7 +107,7 @@ classifier, so affected stretches become flyover segments.
   "approach": {"requestedLengthM": 500, "lengthM": 500, "startM": 2689.4, "endM": 3189.4, "wholeRoute": false},
   "timeline": {"startM": 2653.7, "endM": 3189.4, "lengthM": 535.7},
   "segments": [
-    {"index": 0, "mode": "STREET_VIDEO", "playback": "clip", "status": "ready", "clip": {"key": "671625527824/forward.mp4", "status": "ready"}, "flyover": null},
+    {"index": 0, "mode": "STREET_VIDEO", "playback": "clip", "status": "ready", "clip": {"key": "671625527824/forward.mp4", "status": "ready"}, "flyover": {"keyframes": ["..."]}},
     {"index": 1, "mode": "BIRDS_EYE_3D", "playback": "flyover", "status": null, "clip": null, "flyover": {"keyframes": ["..."]}}
   ],
   "overlays": {"turns": [{"offsetM": 2800.1, "maneuver": "left", "direction": "left"}], "landmarks": ["..."]},

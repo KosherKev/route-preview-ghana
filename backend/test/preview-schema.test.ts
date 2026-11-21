@@ -51,8 +51,14 @@ describe("preview manifest JSON Schema", () => {
     t!.playback = "clip";
     expect(manifestErrors(n).length).toBeGreaterThan(0);
     const n2 = clone(await notRendered());
-    n2.segments.find((x) => x.mode === "STREET_VIDEO")!.flyover = null;
+    n2.segments.find((x) => x.mode === "STREET_VIDEO")!.flyover = null as any;
     expect(manifestErrors(n2).length).toBeGreaterThan(0);
+    const r2 = clone(await ready());
+    r2.segments.find((x) => x.mode === "STREET_VIDEO")!.flyover = null as any;
+    expect(manifestErrors(r2).length).toBeGreaterThan(0); // a ready clip must carry the flyover fallback too
+    const r3 = clone(await ready());
+    r3.segments.find((x) => x.mode === "STREET_VIDEO")!.flyover.keyframes = [];
+    expect(manifestErrors(r3).length).toBeGreaterThan(0);
   });
   it("a flyover segment cannot carry a clip", async () => {
     const m = clone(await flyover());
