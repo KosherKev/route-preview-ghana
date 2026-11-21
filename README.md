@@ -37,9 +37,11 @@ attribution fields (`creator_username`, `source_url`, `clips.source_summary`) an
   Photon has no score, so photon-local candidates carry a local bigram similarity between the query and the returned name (candidates
   below 0.3 are dropped, so nonsense gives an empty list). `distance_m` appears only when `near` is given. `q` is at most 100 characters,
   no control characters; `limit` is 1 to 20 (default 5). Bad input returns RFC 9457 problem JSON (`application/problem+json`, 400).
-- `degraded: true` means Photon is stopped, unreachable, slow (3 s hard timeout) or answered badly. The response is then local-only
-  (landmarks and coordinates) and is still a 200, never a 5xx. A query that needs Photon (for example "Kotoka International Airport")
-  returns an empty list in that state rather than a wrong landmark.
+- `degraded: true` means the Photon stage was unavailable for this request: Photon is stopped, unreachable, slow (3 s hard timeout) or
+  answered badly. It says nothing about the quality of the answer: a `degraded: true` landmark or coordinate answer is exactly the answer
+  the full chain would give, because those stages run before Photon. What is lost is the Photon fallback, so a name that is not in the
+  local landmarks (for example "Kotoka International Airport") returns an empty list in that state rather than a wrong landmark.
+  The response is still a 200, never a 5xx. `degraded: false` means Photon was reachable (or no Photon client is configured).
 - `POST /approach` accepts `origin_query` and/or `destination_query` (a place name) instead of `origin` / `destination` (lat/lon);
   give one form per end. Lat/lon requests behave exactly as before. A name is resolved through the same chain and the response gains a
   `resolved` object saying which candidate was used for each named end (`query`, `name`, `lat`, `lon`, `source`, `score`, `degraded`).
