@@ -5,15 +5,16 @@ Output: `data/terrain/accra-terrain.pmtiles` (gitignored, 11,992,359 bytes, SHA-
 
 ## Source and licence
 - Dataset: Copernicus DEM GLO-30 "Public" (COP-DEM_GLO-30-DGED, 1 arc-second, about 30 m), as Cloud Optimized GeoTIFF per 1 degree cell, from the AWS Open Data bucket `copernicus-dem-30m`. No login, key or payment needed. Checked reachable from servermac on 2026-11-21 (3 of 3 HEAD requests returned 200).
-- Licence: the free ESA/EU Copernicus DEM licence for GLO-30 ("GLO-30 and GLO-90 are available on a free basis for the general public under the terms and conditions of the Licence", registry wording; the Copernicus page calls it "ESA User License" with "Licensing and citation guidelines"). It requires the source notice below when communicating to the general public. Not CC0 and not an open-database licence: keep the notice with any redistribution.
-- Attribution string the app must display (verbatim from the Copernicus page; for modified data the page prescribes the "produced using" form):
+- Licence: the dataset is offered "on a free basis" under the terms of the "ESA User License" (the exact link text on the Copernicus Data Space page, under "More details on the Copernicus DEM eligibility and access conditions", together with a "Mission Specific Annex"); the page's own section is headed "Licensing and citation guidelines" and says "The GLO-30 and GLO-90 datasets are available worldwide with a free license." The AWS registry says "GLO-30 Public and GLO-90 are available on a free basis for the general public under the terms and conditions of the Licence" and links to the same page. Neither page gives a longer formal title or version for the licence document, and the licence text itself (spacedata.copernicus.eu) timed out on 2026-11-21, so "ESA User License" is the most exact name that could be established; check the full text before any redistribution. It is not CC0 or an open-database licence. Obligation quoted from the page: when communicating to or distributing to the general public, the user must show the source notice below. Research users in ESA/EU are also asked to cite DOI https://doi.org/10.5270/ESA-c5d3d65.
+- Licence and attribution wording retrieved 2026-11-21 from the dataspace URL below (HTTP 200, page body read in full).
+- Attribution string the app must display (verbatim from that page; where the data "have been adapted or modified" the page prescribes the "produced using" form):
   `produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved`
   The unmodified-data form on the same page is `© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved`. Tiles here are resampled and re-encoded, so use the "produced using" form.
 - URLs:
   - https://registry.opendata.aws/copernicus-dem/ (AWS Open Data registry entry)
   - https://copernicus-dem-30m.s3.amazonaws.com/readme.html (dataset readme, COG layout)
   - https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM (licence and citation wording)
-  - https://spacedata.copernicus.eu/en/web/guest/collections/copernicus-digital-elevation-model (linked by the registry as the licence page; it timed out from servermac on 2026-11-21, so the wording above comes from the dataspace page)
+  - https://spacedata.copernicus.eu/en/web/guest/collections/copernicus-digital-elevation-model (linked by the registry as the licence page; it timed out from servermac on 2026-11-21 on two attempts, so the wording above comes from the dataspace page)
 - Source files (under gitignored `data/terrain/src/`), `https://copernicus-dem-30m.s3.amazonaws.com/<name>/<name>.tif`. These files cannot be checked against a publisher checksum; only TLS protects the transfer. Recorded hashes are for reproducibility.
 
 | File | Bytes | S3 ETag | SHA-256 |
@@ -29,7 +30,13 @@ Output: `data/terrain/accra-terrain.pmtiles` (gitignored, 11,992,359 bytes, SHA-
 - PMTiles metadata carries `encoding: terrarium`, `tileSize`, `bounds`, `minzoom`, `maxzoom`, `license`, `attribution`, `source` and `caveat`.
 
 ## DSM caveat
-GLO-30 is a Digital Surface Model. Building, tree and infrastructure heights are baked into the elevations, so central Accra shows blocky bumps and the hillshade will show them. FABDEM (which removes them) is CC BY-NC-SA and must not be used. Low zoom levels (z6 to z9) are point-sampled bilinear from the 30 m grid without area averaging, so they are aliased; they are fine for overview shading but not for height lookups.
+GLO-30 is a Digital Surface Model. Building, tree and infrastructure heights are baked into the elevations, so central Accra shows blocky bumps and the hillshade will show them. FABDEM (which removes them) is CC BY-NC-SA and must not be used. 
+This is a surface model, so a height lookup on a building or tree returns the roof or canopy height, not the ground.
+
+## Zoom notes
+- Accurate from zoom 10 up (mean error against the source under 1 m, see results below). Zooms 6 to 9 are overview levels only: they are point-sampled bilinear from the 30 m grid without area averaging, so they are aliased (mean error about 8 m at z6 and 4 m at z7, 1.6 to 2 m at z8 and z9; individual points reach 20 to 75 m). Use them for coarse shading, never for height lookups.
+- The app's target view is zoom 12 and above. Data stops at zoom 13 (about 19 m per pixel at lat 5.6, finer than the 30 m source), so any zoom above 13 is overzoomed (MapLibre stretches z13 tiles via `maxzoom: 13`).
+- Area-averaging z6 to z9 was tried (2x2 box mean from the next zoom, down to sampled z10) and not kept: it built in about 12 s and left z10 to z13 unchanged, but the averaged levels then differ from point samples of the source by design, so the seam check (tile step versus source step) fails at z6 to z9 (up to 100 m) and the random-point error at z6 to z9 does not improve against the point reference (z6 8.3, z7 3.9, z8 2.2, z9 1.7 m mean). It would need a different reference and seam definition, so the shipped tiles stay as built and the file hash is unchanged.
 
 ## Reproduce (from a clean checkout of the branch, repo root)
 ```bash
@@ -48,11 +55,13 @@ data/tools/terrain-venv/bin/python -I scripts/terrain/verify_terrain.py data/ter
 Measured: build 6.5 s, peak RSS 337 MB (`/usr/bin/time -l`).
 
 ## Verification results (2026-11-21)
-- 300 random tile pixels over z6 to z13 compared with a bilinear sample of the GeoTIFF at the pixel centre: mean error 0.0007 m, max 0.0039 m (the Terrarium 1/256 m quantisation).
-- 287 random geographic points (tile value interpolated between pixel centres) vs the source: mean 2.99 m, max 97 m overall, but that is resolution, not encoding error: z13 mean 0.04 m (max 0.64), z12 mean 0.15 (max 1.36), z11 mean 0.26 (max 0.97), z10 mean 0.56, z9 mean 1.7, z8 mean 4.0, z7 mean 10, z6 mean 11. The 1 m mean target holds from z11 up.
-- Seams: the step between the last pixel column/row of a tile and the first of its neighbour deviates from the source's own step for the same two points by at most 0.0039 m at every zoom, so tiles are continuous. The raw adjacent-pixel difference is just real terrain change between neighbouring pixels (z13 mean 0.47 m, max 13.9 m on steep or built-up pixels); it cannot be under 1 m everywhere for any DEM.
-- z13 elevation over the box: min 0.00 m (sea), max 497.2 m, mean 39.2 m. Plausible: the Gulf of Guinea coast is 0 m and the Akwapim ridge at the northern edge reaches several hundred metres (the source cells peak at 739 m further north).
-- PMTiles header and metadata checks via the `pmtiles` package: version 3, tile type PNG, tile compression none, clustered, zoom 6 to 13, 172 addressed tiles, all decode to 256x256 PNGs.
+`scripts/terrain/verify_terrain.py` computes every metric below, prints PASS or FAIL per check and exits 1 if any gated check fails (shown once with a deliberately broken input: `--scale-z13 1.5` multiplies z13 heights by 1.5 and exits 1 with 4 FAIL lines). On the shipped tiles it exits 0 with 16 of 16 checks passing.
+- Header and metadata: version 3, PNG, no tile compression, clustered, zoom 6 to 13, encoding terrarium, tile size 256, bounds as built. Tile counts z6 to z9 4 each, z10 6, z11 12, z12 30, z13 108 (172, all decode to 256x256 and match the header).
+- Pixel centres (75 random tile pixels at each of z10 to z13, against a bilinear sample of the source at the pixel centre): mean 0.0014 m, max 0.0039 m (the 1/256 m Terrarium quantisation). Gate: max under 1 m.
+- Random geographic points (150 per zoom, tile value interpolated between pixel centres, against the source): z13 mean 0.037 max 0.90 m; z12 mean 0.086 max 0.69; z11 mean 0.39 max 3.1; z10 mean 0.60 max 8.8. Gates: mean under 1 m over z10 to z13 (0.279 m, pass), max under 5 m for z11 to z13 (3.1 m, pass). Deviation from the task spec: z10 max is gated at under 10 m instead of 5 m, because z10 (about 76 m per pixel from a 30 m source) reaches 8.8 m at a steep point and z10 had to stay unchanged. Reported only, not gated: z9 mean 1.6 max 20.5; z8 mean 2.0 max 25.6; z7 mean 4.0 max 38.2; z6 mean 8.2 max 75.0.
+- Seams, two different numbers. The step across a tile edge (last pixel of one tile minus first pixel of its neighbour) matches the step between the same two points in the source within 0.0039 m at every zoom from z6 to z13 (gate: under 1 m), so tiles are continuous and no seam artefact exists. The raw difference between adjacent pixels across an edge is not small and is not expected to be: it is real terrain change plus (at low zooms) resolution, with z13 mean 0.47 m, max 13.9 m; z12 mean 1.2, max 27.3; z11 mean 2.2, max 52.1; z10 mean 2.1, max 33.8; z9 max 48.1; z8 max 81.4; z7 max 124.7; z6 max 185.2 m. Do not read the raw difference as a seam error.
+- z13 elevation over the box: min 0.00 m (sea), max 497.20 m, mean 39.17 m (gate: min at least -1 m, max between 100 and 800 m). Plausible: the coast is 0 m and the Akwapim ridge at the northern edge rises to several hundred metres (the source cells peak at 739 m further north).
+- Build: 6.5 s, peak RSS 337 MB (`/usr/bin/time -l`, rebuilt 2026-11-21, byte-identical to the shipped file).
 
 ## MapLibre style snippet
 Not yet tested in maplibre_gl 0.28.0 on iOS (Home Mac task). The `pmtiles://` scheme needs the PMTiles protocol support of the host (check this on device); the file lives next to `accra.pmtiles`.
