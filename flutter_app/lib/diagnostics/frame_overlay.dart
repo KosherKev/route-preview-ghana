@@ -34,14 +34,15 @@ class FrameOverlay extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('view: $presetLabel', key: const Key('frame-preset'), style: _style),
-                Text('avg ${s.avgMs.toStringAsFixed(1)} ms · p99 ${s.p99Ms.toStringAsFixed(1)} ms', key: const Key('frame-times'), style: _style),
-                Text('build ${s.avgBuildMs.toStringAsFixed(1)} · raster ${s.avgRasterMs.toStringAsFixed(1)} ms', style: _style),
-                Text('dropped: ${s.over16} >16.7 ms · ${s.over33} >33 ms of ${s.frames}', key: const Key('frame-dropped'), style: _style),
+                Text('avg ${s.avgMs.toStringAsFixed(1)} · p99 ${s.p99Ms.toStringAsFixed(1)} ms', key: const Key('frame-times'), style: _style),
+                Text('b ${s.avgBuildMs.toStringAsFixed(1)} · r ${s.avgRasterMs.toStringAsFixed(1)} ms', style: _style),
+                Text('>16.7 ms: ${s.over16} · >33 ms: ${s.over33}', key: const Key('frame-dropped'), style: _style),
+                Text('of ${s.frames} frames', style: _style),
                 SizedBox(
                   height: 28,
                   child: TextButton(
                     key: const Key('frame-copy'),
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 24), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                    style: TextButton.styleFrom(foregroundColor: Colors.lightBlueAccent, padding: EdgeInsets.zero, minimumSize: const Size(0, 24), tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                     onPressed: () async {
                       await Clipboard.setData(ClipboardData(text: s.report(preset: presetLabel)));
                       onCopied?.call();

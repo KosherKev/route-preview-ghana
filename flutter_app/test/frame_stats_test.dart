@@ -83,8 +83,8 @@ void main() {
         home: Scaffold(body: FrameOverlay(monitor: monitor, presetLabel: 'Close', onCopied: () => done++)),
       ));
       expect(find.text('view: Close'), findsOneWidget);
-      expect(find.text('avg 24.0 ms · p99 40.0 ms'), findsOneWidget);
-      expect(find.textContaining('1 >33 ms of 2'), findsOneWidget);
+      expect(find.text('avg 24.0 · p99 40.0 ms'), findsOneWidget);
+      expect(find.text('>16.7 ms: 1 · >33 ms: 1'), findsOneWidget);
       await tester.tap(find.byKey(const Key('frame-copy')));
       await tester.pump();
       expect(done, 1);

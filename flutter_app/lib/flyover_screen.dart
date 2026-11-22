@@ -65,6 +65,10 @@ class FlyoverScreen extends StatefulWidget {
 /// debug console when the flyover ends (never written to a file).
 const bool kFrameLog = bool.fromEnvironment('FRAME_LOG');
 
+/// Dev switch for evidence runs: `--dart-define=FRAME_OVERLAY=true` opens with the frame overlay already showing (the
+/// overlay is otherwise OFF until a long-press on the segment strip).
+const bool kFrameOverlayAtStart = bool.fromEnvironment('FRAME_OVERLAY');
+
 class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProviderStateMixin {
   /// The route progress highlight is re-sent at most this often (it re-uploads geometry).
   static const Duration _progressEvery = Duration(milliseconds: 100);
@@ -91,7 +95,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
   CameraState? _sent;
   final FrameMonitor _frames = FrameMonitor();
   int _cameraCalls = 0;
-  bool _showFrames = false;
+  bool _showFrames = kFrameOverlayAtStart;
 
   /// What changes every frame, each behind its own listenable so only the widget that shows it rebuilds.
   final ValueNotifier<double> _overlayOffset = ValueNotifier<double>(0);
@@ -109,7 +113,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
     final route = _player.timeline.route;
     _chase = (route != null && route.points.length >= 2) ? ChaseCamera(route) : null;
     _ticker = createTicker(_onTick)..start();
-    if (kFrameLog) _frames.enabled = true;
+    if (kFrameLog || kFrameOverlayAtStart) _frames.enabled = true;
   }
 
   @override

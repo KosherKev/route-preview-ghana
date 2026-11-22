@@ -14,6 +14,7 @@ import 'scene/scene_loader.dart';
 ///   PLAYBACK_SPEED=0.5|1|2|4starting playback speed (default 1)
 ///   CAMERA_PRESET=close|standard|high  camera view for this run (otherwise the saved choice, Close by default)
 ///   FRAME_LOG=true         record frame timings and print the summary when the flyover ends
+///   FRAME_OVERLAY=true     open with the frame overlay showing (otherwise a long-press on the segment strip toggles it)
 ///   HILLSHADE=off          hide the terrain hillshade
 ///   API_BASE_URL=url       override the stored API address for this run
 ///   PRESET=0|1|2           start with this preset filled in
