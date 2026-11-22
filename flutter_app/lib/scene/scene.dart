@@ -44,6 +44,38 @@ List<Attribution> manifestAttributions(PreviewManifest m) {
   ];
 }
 
+/// The landmarks of [m] that carry their own position (the manifest's `lat` and `lon`), as GeoJSON points for a small map marker.
+Map<String, dynamic> landmarkCollection(PreviewManifest m) => {
+      'type': 'FeatureCollection',
+      'features': [
+        for (final l in m.overlays.landmarks)
+          if (l.lat != null && l.lon != null)
+            {
+              'type': 'Feature',
+              'properties': <String, dynamic>{'name': l.name},
+              'geometry': {'type': 'Point', 'coordinates': [l.lon, l.lat]},
+            },
+      ],
+    };
+
+/// Draws a small amber dot at each landmark's position so the rider can match a card to a place on the map. No text
+/// labels (no glyph fonts in the style). Does nothing when no landmark has a position.
+Future<void> addLandmarkMarkers(MapLibreMapController map, PreviewManifest m) async {
+  final fc = landmarkCollection(m);
+  if ((fc['features'] as List).isEmpty) return;
+  try {
+    await map.addGeoJsonSource('landmarks', fc);
+    await map.addCircleLayer(
+      'landmarks',
+      'landmark-dots',
+      const CircleLayerProperties(circleRadius: 6, circleColor: '#ffb300', circleStrokeColor: '#ffffff', circleStrokeWidth: 2),
+    );
+  } on Object catch (e) {
+    // The markers are cosmetic: never let them stop the preview.
+    debugPrint('[flyover] landmark markers failed: $e');
+  }
+}
+
 /// What the flyover screen plays: a manifest, the style to draw it on, and the few hooks the map needs. Two kinds:
 /// [TileScene] (real OSM vector tiles plus Copernicus terrain from the app sandbox, the real Accra route) and
 /// [FixtureScene] (the 5B-1 synthetic fixture, used when the tiles are not there).
@@ -245,6 +277,7 @@ class TileScene implements Scene {
       }
       _probeResult = out.join(' · ');
     }
+    await addLandmarkMarkers(map, manifest);
   }
 
   /// The completed part of the route (from where the flyover starts to the camera) is drawn brighter. Updates are
@@ -342,6 +375,7 @@ class RouteOnlyScene implements Scene {
   @override
   Future<void> onStyleLoaded(MapLibreMapController map) async {
     debugPrint('[flyover] route-only style ready');
+    await addLandmarkMarkers(map, manifest);
   }
 
   @override
