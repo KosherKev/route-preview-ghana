@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/preview_api.dart';
+import '../flyover/camera_preset.dart';
 
 /// A saved route: name and the four coordinate texts (kept as text so the form shows exactly what was typed).
 class RoutePreset {
@@ -46,6 +47,7 @@ class SettingsStore {
   static const _kBaseUrl = 'api_base_url';
   static const _kPresets = 'route_presets';
   static const _kCosting = 'costing';
+  static const _kCameraPreset = 'camera_preset';
 
   final SharedPreferences _p;
   SettingsStore(this._p);
@@ -65,6 +67,10 @@ class SettingsStore {
 
   String get costing => _p.getString(_kCosting) == 'auto' ? 'auto' : 'motor_scooter';
   Future<void> setCosting(String c) => _p.setString(_kCosting, c == 'auto' ? 'auto' : 'motor_scooter');
+
+  /// The camera view last chosen on the flyover screen ([CameraPreset.close] until then, and for any unknown value).
+  CameraPreset get cameraPreset => CameraPreset.parse(_p.getString(_kCameraPreset));
+  Future<void> setCameraPreset(CameraPreset preset) => _p.setString(_kCameraPreset, preset.name);
 
   /// Always [kPresetCount] presets: saved ones where valid, the defaults otherwise.
   List<RoutePreset> get presets {

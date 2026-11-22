@@ -7,7 +7,7 @@ import '../flyover/manifest.dart';
 /// How many overlays are on screen at once at most.
 const int kMaxOverlays = 3;
 
-/// A landmark shows from this far before its offset until a little after it.
+/// A landmark shows from this far before its offset until a little after it. This is the one place to change it.
 const double kLandmarkLeadM = 80;
 const double kLandmarkTrailM = 20;
 
@@ -24,6 +24,10 @@ class OverlayItem {
   /// Metres from the camera to the marker (negative once passed).
   final double distanceM;
   final String? direction; // turns only: left | right | straight | uturn
+
+  /// Which side of the screen the card sits on: a landmark on its own side of the road, a turn on the side it turns to
+  /// (straight and u-turns on the left). Cards stay in the left and right columns so the route line down the middle is clear.
+  final bool onRight;
   const OverlayItem({
     required this.kind,
     required this.id,
@@ -31,6 +35,7 @@ class OverlayItem {
     required this.subtitle,
     required this.distanceM,
     this.direction,
+    this.onRight = false,
   });
 }
 
@@ -66,6 +71,7 @@ List<OverlayItem> visibleOverlays(Overlays overlays, double offsetM, {int max = 
       subtitle: _distance(d),
       distanceM: d,
       direction: t.direction,
+      onRight: t.direction == 'right',
     ));
   }
   final marks = <OverlayItem>[];
@@ -79,6 +85,7 @@ List<OverlayItem> visibleOverlays(Overlays overlays, double offsetM, {int max = 
       title: l.name,
       subtitle: '${humanize(l.kind ?? l.category)} · on the ${l.side}',
       distanceM: d,
+      onRight: l.side == 'right',
     ));
   }
   int byDistance(OverlayItem a, OverlayItem b) => a.distanceM.abs().compareTo(b.distanceM.abs());

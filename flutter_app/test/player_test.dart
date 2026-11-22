@@ -153,25 +153,29 @@ void main() {
     test('notifies listeners on changes only', () {
       var n = 0;
       p.addListener(() => n++);
+      var ticks = 0;
+      p.position.addListener(() => ticks++);
       p.play(); // 1
       p.play(); // no change
-      p.advance(1); // 2
+      p.advance(1); // a per-tick move: the position listenable only, not a structural notification
       p.seek(1); // no change (already 1)
-      p.seek(2); // 3
-      p.pause(); // 4
+      p.seek(2); // 2
+      p.pause(); // 3
       p.pause(); // no change
-      expect(n, 4);
+      expect(n, 3);
+      expect(ticks, 2, reason: 'advance and the seek to 2 moved the position');
     });
   });
 
-  group('effective speed (default 10 m/s)', () {
-    FlyoverTimeline scaled([Map<String, dynamic>? m, double? speed = kFlyoverEffectiveSpeedMps]) => _timeline(m, speed);
+  group('effective speed (scaling maths, checked at 10 m/s)', () {
+    FlyoverTimeline scaled([Map<String, dynamic>? m, double? speed = 10.0]) => _timeline(m, speed);
 
-    test('the default is a named constant of 10 m/s (the street-clip nominal speed)', () {
-      expect(kFlyoverEffectiveSpeedMps, 10.0);
+    test('the default is a named constant of 14 m/s', () {
+      expect(kFlyoverEffectiveSpeedMps, 14.0);
       // fromManifest with no argument uses it.
       final byDefault = FlyoverTimeline.fromManifest(PreviewManifest.parse(manifestString()));
-      expect(byDefault.totalDurationSec, scaled().totalDurationSec);
+      expect(byDefault.totalDurationSec, scaled(null, 14.0).totalDurationSec);
+      expect(byDefault.totalDurationSec, closeTo(500 / 14, 1e-9));
     });
 
     test('segment durations become metres / 10 m/s (200 m -> 20 s, 300 m -> 30 s)', () {
@@ -231,7 +235,7 @@ void main() {
     test('the committed fixture: ~10 m/s over its 670.3 m timeline (about 67 s, not the nominal 22.3 s)', () {
       final m = PreviewManifest.parse(File('assets/fixtures/manifest.json').readAsStringSync());
       final nominal = FlyoverTimeline.fromManifest(m, effectiveSpeedMps: null);
-      final slowed = FlyoverTimeline.fromManifest(m);
+      final slowed = FlyoverTimeline.fromManifest(m, effectiveSpeedMps: 10);
       final lengthM = m.timelineEndM - m.timelineStartM;
       expect(nominal.totalDurationSec, closeTo(22.3, 0.05));
       expect(slowed.totalDurationSec, closeTo(lengthM / 10, 0.05));
@@ -245,10 +249,10 @@ void main() {
 
   group('playback speed control', () {
     late FlyoverPlayerController p;
-    setUp(() => p = FlyoverPlayerController(_timeline(null, kFlyoverEffectiveSpeedMps)));
+    setUp(() => p = FlyoverPlayerController(_timeline(null, 10)));
 
-    test('speeds are 0.5x, 1x and 2x; the default is 1x', () {
-      expect(kPlaybackSpeeds, [0.5, 1.0, 2.0]);
+    test('speeds are 0.5x, 1x, 2x and 4x; the default is 1x', () {
+      expect(kPlaybackSpeeds, [0.5, 1.0, 2.0, 4.0]);
       expect(p.speed, 1.0);
     });
 

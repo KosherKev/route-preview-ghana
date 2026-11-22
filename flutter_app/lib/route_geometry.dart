@@ -71,10 +71,19 @@ class RouteGeometry {
   List<double> pointAt(double offsetM) {
     if (points.isEmpty) throw StateError('empty route');
     final o = offsetM.clamp(0.0, lengthM).toDouble();
-    for (var i = 1; i < points.length; i++) {
-      if (cumulativeM[i] >= o) return _lerp(i, o);
+    if (points.length < 2) return points.first;
+    // Binary search for the first point at or past [o]: called every frame by the chase camera.
+    var lo = 1, hi = points.length - 1;
+    if (cumulativeM[hi] < o) return points.last;
+    while (lo < hi) {
+      final mid = (lo + hi) >> 1;
+      if (cumulativeM[mid] >= o) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
     }
-    return points.last;
+    return _lerp(lo, o);
   }
 
   List<double> _lerp(int i, double o) {

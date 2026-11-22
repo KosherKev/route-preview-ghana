@@ -32,12 +32,51 @@ differently and says so on screen: extrusions are approximate, never an accurate
 ## Flyover speed
 
 The manifest's flyover durations assume a nominal 30 m/s, which is too fast to read an approach (22.3 s for the
-fixture). The player slows each segment to `kFlyoverEffectiveSpeedMps = 10.0` m/s (`lib/flyover/timeline.dart`), the
-street-clip nominal speed, so the later hybrid timeline moves at one pace. It scales each segment's keyframe times by one
-factor (route metres the keyframes cover / 10 / manifest duration); easing is kept as given, and the manifest and
-keyframes are never changed. On the fixture's 670.3 m timeline that is about 67 s. The on-screen speed control
-(0.5x, 1x, 2x) multiplies the playback clock on top of that; scrubbing is unaffected. `--dart-define=PLAYBACK_SPEED=2`
-sets the starting speed.
+fixture). The player slows each segment to `kFlyoverEffectiveSpeedMps = 14.0` m/s (`lib/flyover/timeline.dart`, the one
+place the 1x speed is set; it was 10 until 5B-2c). It scales each segment's keyframe times by one factor (route metres
+the keyframes cover / 14 / manifest duration); easing is kept as given, and the manifest and keyframes are never changed.
+The on-screen speed control (0.5x, 1x, 2x, 4x) multiplies the playback clock on top of that; scrubbing is unaffected.
+`--dart-define=PLAYBACK_SPEED=2` sets the starting speed. The real Osu to Korle Gonno approach (500 m) plays in
+71.4 s at 0.5x, 35.7 s at 1x, 17.9 s at 2x and 8.9 s at 4x.
+
+## Camera (5B-2c)
+
+Three views, chosen with the "view" chips and remembered locally (`camera_preset` in shared_preferences; Close until you pick):
+
+| View | Zoom | Pitch | Centre ahead of the route position | Heading from |
+|---|---|---|---|---|
+| Close (default) | 17.25 | 62 | 35 m | route direction over the next 40 m |
+| Standard | 16 | 55 | 70 m | route direction over the next 70 m |
+| High | manifest keyframes (the old overhead view) | | | |
+
+Close and Standard are a chase camera computed from the route polyline (`lib/flyover/chase_camera.dart`): the rider
+position moves at a constant speed along the route (no easing stops at keyframes), the heading is a weighted average of the
+route direction ahead, so it leans into a corner and never snaps at a vertex. Every frame the camera is smoothed with a
+critically damped spring (`lib/flyover/camera_smoother.dart`: position, heading on the shortest arc, pitch, zoom), from
+elapsed time, so it is frame-rate independent. The camera is applied with one `moveCamera` per vsync-aligned frame; a
+scrub or a section change snaps instead of gliding. The manifest keyframes remain the fallback when there is no route
+polyline, and are the High view. `maplibre_gl` 0.28.0 on iOS accepted a 62 degree tilt unclamped (checked by reading
+`cameraPosition` back after the first move), and the fill-extrusion buildings (layer minzoom 13, no maxzoom; tiles overzoomed
+above z14) stay visible at zoom 17.25.
+
+Landmark cards show 80 m before the landmark (`kLandmarkLeadM`), at most three at once, in a left and a right column (a card
+sits on the side of the road its landmark is on, or the side of its turn), so the route line down the middle is clear. A
+landmark that has `lat` and `lon` in the manifest also gets a small amber dot on the map.
+
+## Frame overlay (diagnostics)
+
+Long-press the segment strip to show or hide a small overlay: average and 99th percentile frame time of the last 300 frames,
+average build and raster time, counts of frames over 16.7 ms and 33.4 ms, and the current view. "Copy report" puts a
+plain-text summary on the clipboard. It is off by default, compiled into release builds, keeps everything in memory, and never
+writes a file, sends data or touches location. Dev switches: `FRAME_OVERLAY=true` opens with it showing, and
+`FRAME_LOG=true` prints the summary to the debug console when the flyover ends.
+
+## Connection diagnostics
+
+The request screen shows per-step elapsed time for Test connection and Preview (name lookup, connect, first byte, total) and
+"Waking the Tailscale connection, still trying" once a step has run over 5 seconds. Each request is cut at 20 seconds
+(6 s for `/health`) with a readable message. The lookup and connect are small probes of the same host and port on the real
+network client; the existing single connection retry is unchanged and nothing new is retried.
 
 ## Real map (5B-2a)
 
@@ -79,7 +118,7 @@ The first screen asks the preview API for a manifest and plays it as a hybrid ti
 - **Fixtures**: `assets/fixtures/mixed-manifest.json` (synthetic, all four segment cases; `tool/make_mixed_fixture.py`) and the
   real Accra route.
 - Dev switches (`--dart-define`): `API_BASE_URL`, `PRESET`, `AUTO_PREVIEW_SEC`, plus the earlier `AUTOPLAY`, `AUTOPLAY_DELAY_SEC`,
-  `PLAYBACK_SPEED`, `HILLSHADE`.
+  `PLAYBACK_SPEED`, `HILLSHADE`, `CAMERA_PRESET=close|standard|high`, `FRAME_LOG`, `FRAME_OVERLAY`.
 
 ## Run and test
 

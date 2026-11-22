@@ -83,6 +83,10 @@ class LandmarkOverlay {
   final String? kind;
   final String side; // left | right
   final double distanceM;
+
+  /// The landmark's own position, when the manifest gives it (schema fields `lat` and `lon`); used for the map marker.
+  final double? lat;
+  final double? lon;
   const LandmarkOverlay({
     required this.offsetM,
     required this.name,
@@ -90,6 +94,8 @@ class LandmarkOverlay {
     required this.kind,
     required this.side,
     required this.distanceM,
+    this.lat,
+    this.lon,
   });
 }
 
@@ -390,6 +396,8 @@ class PreviewManifest {
               kind: kind as String?,
               side: side as String,
               distanceM: _num(l['distanceM'], '$w.distanceM', min: 0),
+              lat: l['lat'] is num ? (l['lat'] as num).toDouble() : null,
+              lon: l['lon'] is num ? (l['lon'] as num).toDouble() : null,
             );
           }(),
       ],

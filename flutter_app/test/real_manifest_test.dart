@@ -48,12 +48,12 @@ void main() {
     }
   });
 
-  test('parses, and plays from the manifest offsets at about 10 m/s', () {
+  test('parses, and plays from the manifest offsets at about 14 m/s', () {
     final m = PreviewManifest.parse(text);
     final t = FlyoverTimeline.fromManifest(m);
     final lengthM = m.timelineEndM - m.timelineStartM;
     expect(lengthM, closeTo(500, 1e-6));
-    expect(t.totalDurationSec, closeTo(lengthM / 10, 0.05));
+    expect(t.totalDurationSec, closeTo(lengthM / 14, 0.05));
     expect(t.cameraAt(0).offsetM, closeTo(m.timelineStartM, 1e-6));
     expect(t.cameraAt(t.totalDurationSec).offsetM, closeTo(m.timelineEndM, 1e-6));
     // The existing rule: the timeline may start before the approach window; here it does not need to, and must not start after it.

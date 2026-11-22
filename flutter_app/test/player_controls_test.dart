@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:route_preview/flyover/camera_preset.dart';
 import 'package:route_preview/flyover/manifest.dart';
 import 'package:route_preview/flyover/player_controller.dart';
 import 'package:route_preview/flyover/timeline.dart';
@@ -8,6 +9,7 @@ import 'package:route_preview/player_controls.dart';
 import 'support/manifest_builder.dart';
 
 void main() {
+  presetControlTests();
   late FlyoverPlayerController player;
 
   Future<void> pumpControls(WidgetTester tester) async {
@@ -87,5 +89,48 @@ void main() {
     await tester.tap(find.byKey(const Key('speed-0.5')));
     await tester.pump();
     expect(player.speed, 0.5);
+  });
+}
+
+void presetControlTests() {
+  testWidgets('speed control offers 0.5x, 1x, 2x and 4x; the view control offers Close, Standard and High and reports the choice', (tester) async {
+    final player = FlyoverPlayerController(FlyoverTimeline.fromManifest(PreviewManifest.parse(manifestString()), effectiveSpeedMps: null));
+    CameraPreset? picked;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.bottomCenter,
+          child: PlayerControls(
+            controller: player,
+            timelineStartM: 600,
+            timelineEndM: 1100,
+            cameraPreset: CameraPreset.close,
+            onCameraPreset: (p) => picked = p,
+          ),
+        ),
+      ),
+    ));
+    for (final k in ['speed-0.5', 'speed-1.0', 'speed-2.0', 'speed-4.0']) {
+      expect(find.byKey(Key(k)), findsOneWidget);
+    }
+    expect(find.text('4x'), findsOneWidget);
+    expect(tester.widget<ChoiceChip>(find.byKey(const Key('preset-close'))).selected, isTrue);
+    await tester.tap(find.byKey(const Key('preset-high')));
+    expect(picked, CameraPreset.high);
+    await tester.tap(find.byKey(const Key('speed-4.0')));
+    await tester.pump();
+    expect(player.speed, 4.0);
+  });
+
+  testWidgets('a clock tick moves the slider and clock without a structural rebuild of the buttons', (tester) async {
+    final player = FlyoverPlayerController(FlyoverTimeline.fromManifest(PreviewManifest.parse(manifestString()), effectiveSpeedMps: null));
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: Align(alignment: Alignment.bottomCenter, child: PlayerControls(controller: player, timelineStartM: 600, timelineEndM: 1100))),
+    ));
+    player.play();
+    await tester.pump();
+    player.advance(2.0);
+    await tester.pump();
+    expect(find.text('02.0s / 30.0s'), findsOneWidget);
   });
 }
