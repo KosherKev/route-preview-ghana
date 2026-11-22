@@ -32,15 +32,22 @@
       "source": "osm",
       "source-layer": "landuse",
       "paint": {
+        "fill-antialias": false,
         "fill-color": [
           "match", ["get", "class"],
-          ["park", "garden", "recreation_ground", "grass", "meadow", "village_green"], "#d3e4c3",
-          ["forest", "wood"], "#bcd7a6",
-          ["farmland", "farmyard", "orchard", "vineyard", "allotments"], "#e4e8cb",
-          ["cemetery"], "#d8e2cf",
-          ["residential"], "#eae3d6",
-          ["commercial", "retail"], "#efe1d3",
-          ["industrial"], "#e3dfe4",
+          "park", "#d2e5c1",
+          "pitch", "#c9e0b6",
+          "forest", "#b9d5a3",
+          "grass", "#d8e7c6",
+          "farmland", "#e6e9cd",
+          "wetland", "#d0e1d6",
+          "beach", "#f1e7c8",
+          "cemetery", "#dae3d1",
+          "residential", "#eae3d6",
+          "commercial", "#f0e2d4",
+          "industrial", "#e4e0e5",
+          "institution", "#ebe5e0",
+          "airport", "#e2e2e0",
           "#ece8dd"
         ],
         "fill-opacity": 0.9
@@ -51,14 +58,15 @@
       "type": "fill",
       "source": "osm",
       "source-layer": "sea",
-      "paint": { "fill-color": "#b9d6ea" }
+      "paint": { "fill-color": "#b0d1e9", "fill-antialias": false }
     },
     {
-      "id": "water",
-      "type": "fill",
+      "id": "sea-shore",
+      "type": "line",
       "source": "osm",
-      "source-layer": "water",
-      "paint": { "fill-color": "#bcd8ec", "fill-outline-color": "#a6c8e0" }
+      "source-layer": "sea",
+      "layout": { "line-join": "round" },
+      "paint": { "line-color": "#d9ecf7", "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 16, 1.6], "line-opacity": 0.9 }
     },
 
     {
@@ -73,6 +81,14 @@
         "hillshade-highlight-color": "#ffffff",
         "hillshade-accent-color": "#76736a"
       }
+    },
+
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "osm",
+      "source-layer": "water",
+      "paint": { "fill-color": "#b0d1e9", "fill-outline-color": "#9dc2dc" }
     },
 
     {

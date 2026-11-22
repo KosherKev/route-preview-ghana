@@ -10,12 +10,16 @@ Map<String, dynamic> _template() =>
 
 List<Map<String, dynamic>> _layers(Map<String, dynamic> s) => (s['layers'] as List).cast<Map<String, dynamic>>();
 
-/// Layers and fields of the real accra.pmtiles, from its metadata (planetiler). The tiles themselves are not in the repo.
-const _tileFields = <String, Set<String>>{
-  'building': {'building', 'building:levels', 'height', 'height_source', 'min_height', 'name'},
-  'road': {'bridge', 'highway', 'name', 'tunnel'},
-  'water': {'name', 'natural'},
-};
+/// Layers and fields of accra-v2.pmtiles, from the small committed JSON made from its metadata (never from the tile file).
+final Map<String, Set<String>> _tileFields = () {
+  final j = jsonDecode(File('test/fixtures/v2_layers.json').readAsStringSync()) as Map<String, dynamic>;
+  return {
+    for (final l in (j['layers'] as List).cast<Map<String, dynamic>>()) l['id'] as String: (l['fields'] as List).cast<String>().toSet(),
+  };
+}();
+
+final List<String> _landuseClasses =
+    ((jsonDecode(File('test/fixtures/v2_layers.json').readAsStringSync()) as Map)['landuseClasses'] as List).cast<String>();
 
 void main() {
   late Map<String, dynamic> style;
@@ -39,6 +43,14 @@ void main() {
     }
   });
 
+  test('every referenced source-layer exists in the v2 layer list', () {
+    for (final l in _layers(style)) {
+      final sl = l['source-layer'];
+      if (sl != null) expect(_tileFields.keys, contains(sl), reason: 'layer ${l['id']} uses source-layer $sl');
+    }
+    expect(_tileFields.keys.toSet(), {'building', 'road', 'water', 'landuse', 'sea'});
+  });
+
   test('every source-layer exists in the tiles or is on the explicit optional list', () {
     final optional = ((style['metadata'] as Map)['optionalSourceLayers'] as List).cast<String>().toSet();
     expect(optional, {'landuse', 'sea'}, reason: 'the optional list is explicit and names exactly the layers the tiles may gain');
@@ -53,7 +65,7 @@ void main() {
   test('the layers that need absent tile layers are exactly the optional ones', () {
     final optional = ((style['metadata'] as Map)['optionalSourceLayers'] as List).cast<String>().toSet();
     final usesOptional = _layers(style).where((l) => optional.contains(l['source-layer'])).map((l) => l['id']).toSet();
-    expect(usesOptional, {'landuse', 'sea'});
+    expect(usesOptional, {'landuse', 'sea', 'sea-shore'});
   });
 
   test('attribute names used on real layers exist in the tile metadata', () {
@@ -96,7 +108,7 @@ void main() {
     final ids = [for (final l in _layers(style)) l['id'] as String];
     int at(String id) => ids.indexOf(id);
     final order = [
-      'land', 'landuse', 'sea', 'water', 'hillshade',
+      'land', 'landuse', 'sea', 'sea-shore', 'hillshade', 'water',
       'road-minor-casing', 'road-minor', 'road-tertiary-casing', 'road-tertiary',
       'road-main-casing', 'road-main', 'road-highway-casing', 'road-highway',
       'route-glow', 'route-casing', 'route-line', 'route-done', 'buildings-3d', 'destination-pole',
@@ -106,6 +118,63 @@ void main() {
       if (i > 0) expect(at(order[i]), greaterThan(at(order[i - 1])), reason: '${order[i]} after ${order[i - 1]}');
     }
     expect(at('land'), 0);
+  });
+
+  test('roads, buildings and the route are all above sea, sea-shore and hillshade (harbour piers and port buildings stay visible)', () {
+    final ids = [for (final l in _layers(style)) l['id'] as String];
+    final topOfBase = [ids.indexOf('sea'), ids.indexOf('sea-shore'), ids.indexOf('hillshade')].reduce(math.max);
+    for (final id in ids) {
+      if (id.startsWith('road-') || id.startsWith('route-') || id.startsWith('buildings-') || id.startsWith('destination-')) {
+        expect(ids.indexOf(id), greaterThan(topOfBase), reason: id);
+      }
+    }
+    expect(ids.indexOf('landuse'), lessThan(ids.indexOf('sea')), reason: 'sea over landuse: OSM landuse runs into the shore');
+  });
+
+  test('landuse: one colour per v2 class, subtle (opacity at most 0.9, lighter than the roads), no antialias cost', () {
+    final l = _layers(style).firstWhere((l) => l['id'] == 'landuse');
+    expect(l['source-layer'], 'landuse');
+    expect(l['type'], 'fill');
+    final p = l['paint'] as Map<String, dynamic>;
+    final match = p['fill-color'] as List; // ["match", ["get","class"], k1, c1, ..., fallback]
+    expect(match[1], ['get', 'class']);
+    final keys = <String>[];
+    final colours = <String, String>{};
+    for (var i = 2; i + 1 < match.length; i += 2) {
+      for (final k in (match[i] is List ? match[i] as List : [match[i]])) {
+        keys.add(k as String);
+        colours[k] = match[i + 1] as String;
+      }
+    }
+    expect(keys.toSet(), _landuseClasses.toSet(), reason: 'exactly the classes the v2 tiles carry');
+    expect(keys.length, keys.toSet().length, reason: 'no class listed twice');
+    expect(match.last, isA<String>(), reason: 'a fallback colour for an unknown class');
+    expect(p['fill-opacity'] as num, lessThanOrEqualTo(0.9));
+    expect(p['fill-antialias'], false);
+    int channel(String hex, int i) => int.parse(hex.substring(1 + 2 * i, 3 + 2 * i), radix: 16);
+    for (final e in colours.entries) {
+      for (var i = 0; i < 3; i++) {
+        expect(channel(e.value, i), greaterThanOrEqualTo(0xa0), reason: '${e.key} is a light tint, so roads and buildings stay dominant');
+      }
+    }
+    for (final g in ['park', 'forest', 'grass', 'pitch']) {
+      expect(channel(colours[g]!, 1), greaterThan(channel(colours[g]!, 0)), reason: '$g is green');
+      expect(channel(colours[g]!, 1), greaterThan(channel(colours[g]!, 2)), reason: '$g is green');
+    }
+    expect(colours['airport'], isNot(colours['residential']));
+  });
+
+  test('sea: soft blue fill and a thin lighter shore line, both from the sea layer', () {
+    final sea = _layers(style).firstWhere((l) => l['id'] == 'sea');
+    final shore = _layers(style).firstWhere((l) => l['id'] == 'sea-shore');
+    expect([sea['source-layer'], shore['source-layer']], ['sea', 'sea']);
+    expect(shore['type'], 'line');
+    int sum(String hex) => [for (var i = 0; i < 3; i++) int.parse(hex.substring(1 + 2 * i, 3 + 2 * i), radix: 16)].reduce((a, b) => a + b);
+    final fill = (sea['paint'] as Map)['fill-color'] as String;
+    final edge = (shore['paint'] as Map)['line-color'] as String;
+    expect(sum(edge), greaterThan(sum(fill)), reason: 'the shore line is lighter than the sea');
+    final w = (shore['paint'] as Map)['line-width'] as List;
+    expect((w.last as num), lessThanOrEqualTo(2), reason: 'thin');
   });
 
   test('buildings: extrusion with vertical gradient, from zoom 13, over the style light', () {
@@ -180,9 +249,9 @@ void main() {
     const dest = {'type': 'FeatureCollection', 'features': <dynamic>[]};
     final template = File('assets/style/route_preview_style.json').readAsStringSync();
 
-    Map<String, dynamic> built({bool hillshade = true}) => jsonDecode(RoutePreviewStyle.build(
+    Map<String, dynamic> built({bool hillshade = true, String vectorUrl = 'pmtiles://file:///x/accra-v2.pmtiles'}) => jsonDecode(RoutePreviewStyle.build(
           template,
-          vectorUrl: 'pmtiles://file:///x/accra.pmtiles',
+          vectorUrl: vectorUrl,
           terrainUrl: 'pmtiles://file:///x/accra-terrain.pmtiles',
           route: route,
           destination: dest,
@@ -193,10 +262,20 @@ void main() {
       final out = jsonEncode(built());
       expect(out, isNot(contains('{{')));
       final src = built()['sources'] as Map;
-      expect((src['osm'] as Map)['url'], 'pmtiles://file:///x/accra.pmtiles');
+      expect((src['osm'] as Map)['url'], 'pmtiles://file:///x/accra-v2.pmtiles');
       expect((src['terrain'] as Map)['url'], 'pmtiles://file:///x/accra-terrain.pmtiles');
       expect((src['route'] as Map)['data'], route);
       expect(((src['route-done'] as Map)['data'] as Map)['features'], isEmpty);
+    });
+
+    test('a v1-only run (no landuse or sea in the tiles) still builds a valid style: same layers, only tile-dependent ones draw nothing', () {
+      final style = built(vectorUrl: 'pmtiles://file:///x/accra.pmtiles');
+      expect((style['sources'] as Map)['osm']['url'], 'pmtiles://file:///x/accra.pmtiles');
+      final ids = [for (final l in _layers(style)) l['id'] as String];
+      expect(ids, containsAll(['landuse', 'sea', 'sea-shore', 'water', 'buildings-3d', 'road-main']));
+      expect(jsonEncode(style), isNot(contains('{{')));
+      final optional = ((style['metadata'] as Map)['optionalSourceLayers'] as List).cast<String>().toSet();
+      expect(optional, {'landuse', 'sea'}, reason: 'the layers that may be absent are declared');
     });
 
     test('hillshade can be hidden without removing the layer', () {

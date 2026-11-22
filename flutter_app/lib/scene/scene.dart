@@ -243,8 +243,9 @@ class TileScene implements Scene {
           '${plainText(tiles.vector?.attribution ?? '© OpenStreetMap contributors')}\n'
           'https://www.openstreetmap.org/copyright',
         ),
-        // Exactly the string in the terrain tile file's metadata (docs/data/terrain.md is not on main yet).
+        // Exactly the string in the terrain tile file's metadata (docs/data/terrain.md).
         Attribution('Terrain', tiles.terrain?.attribution ?? ''),
+        Attribution('Tile file', tiles.note ?? ''),
         const Attribution(
           'Route and heights',
           'The route and camera keyframes come from the preview API and are derived from OpenStreetMap routing data. '

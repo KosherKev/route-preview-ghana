@@ -1,12 +1,12 @@
 #!/bin/bash
 # Copies the dev tile files into the iOS SIMULATOR app's sandbox (Documents/tiles) so the app can read them at runtime.
-# The tiles are OSM vector tiles and a Copernicus DEM: large, and never committed or bundled as assets.
+# The tiles are OSM vector tiles (v2 adds land use and sea; v1 stays as the app's fallback) and a Copernicus DEM: large, and never committed or bundled as assets.
 #
 # usage: tool/push_dev_tiles.sh [simulator-udid|booted]
-#   TILES_SRC=dir   where accra.pmtiles, accra-terrain.pmtiles and SHA256SUMS are (default ~/dev/.scratch/tiles)
+#   TILES_SRC=dir   where accra-v2.pmtiles, accra.pmtiles, accra-terrain.pmtiles and SHA256SUMS are (default ~/dev/.scratch/tiles)
 #   BUNDLE_ID=id    app bundle id (default: read from ios/Runner.xcodeproj, the Runner target)
 #
-# Refuses to run if a file's SHA-256 does not match SHA256SUMS (checked before the copy and again on the copy).
+# All three files are required. Refuses to run if a file's SHA-256 does not match SHA256SUMS (checked before the copy and again on the copy).
 # The app must have been installed once (flutter run) so its data container exists; then restart the app.
 # Real-device install is a separate step and is not done here.
 set -euo pipefail
@@ -14,7 +14,7 @@ set -euo pipefail
 SRC="${TILES_SRC:-$HOME/dev/.scratch/tiles}"
 UDID="${1:-booted}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-FILES=(accra.pmtiles accra-terrain.pmtiles)
+FILES=(accra-v2.pmtiles accra.pmtiles accra-terrain.pmtiles)
 
 BUNDLE_ID="${BUNDLE_ID:-$(grep -m1 'PRODUCT_BUNDLE_IDENTIFIER = ' "$HERE/../ios/Runner.xcodeproj/project.pbxproj" | grep -v RunnerTests | sed -E 's/.*= ([^;]+);.*/\1/')}"
 [ -n "$BUNDLE_ID" ] || { echo "cannot determine the bundle id; set BUNDLE_ID" >&2; exit 2; }
