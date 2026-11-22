@@ -57,19 +57,19 @@ void main() {
       expect(t.totalDurationSec, closeTo(at, 1e-9));
     });
 
-    test('durations: clip = its own length, flyover = metres / 10 m/s, no preview = segment length / 10 m/s', () {
+    test('durations: clip = its own length, flyover = metres / 14 m/s, no preview = segment length / 14 m/s', () {
       final t = _tl();
       expect(t.segments[0].durationSec, 8.0); // clip 900001
-      expect(t.segments[1].durationSec, closeTo(30.0, 0.05)); // 300 m
-      expect(t.segments[2].durationSec, closeTo(15.0, 0.05)); // 150 m
-      expect(t.segments[3].durationSec, closeTo((5727.4711 - 5550) / 10, 0.01)); // no preview, 177.47 m
+      expect(t.segments[1].durationSec, closeTo(300 / 14, 0.05)); // 300 m
+      expect(t.segments[2].durationSec, closeTo(150 / 14, 0.05)); // 150 m
+      expect(t.segments[3].durationSec, closeTo((5727.4711 - 5550) / 14, 0.01)); // no preview, 177.47 m
     });
 
     test('a segment with no clip and no flyover continues the timeline at its length / pace', () {
       final withClip = _tl(clips: const {kClipA, kClipB});
       final without = _tl();
       expect(withClip.segments[3].durationSec, 9.0, reason: 'clip B is 9 s');
-      expect(without.segments[3].durationSec, closeTo(17.75, 0.01));
+      expect(without.segments[3].durationSec, closeTo(177.4711 / 14, 0.01));
     });
 
     test('segmentAt: a boundary instant belongs to the next segment, the end to the last, below zero to the first', () {

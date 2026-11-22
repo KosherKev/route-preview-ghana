@@ -21,11 +21,11 @@ class CameraState {
   });
 }
 
-/// Default effective flyover speed, metres of route per second of preview clock. It matches the nominal street-clip
-/// speed so the later hybrid (clip + flyover) timeline moves at one consistent pace. The manifest's own flyover
+/// Default effective flyover speed, metres of route per second of preview clock. The manifest's own flyover
 /// durations assume a nominal 30 m/s, which is too fast to read an approach, so the player slows each segment to this
 /// speed by scaling its keyframe times. The manifest and its keyframes are never changed.
-const double kFlyoverEffectiveSpeedMps = 10.0;
+/// This is the ONE place the 1x speed is set: 14 m/s (was 10; Kevin found 10 too slow on long approaches).
+const double kFlyoverEffectiveSpeedMps = 14.0;
 
 /// What plays for one manifest segment.
 enum SegmentSource {
@@ -184,6 +184,20 @@ class FlyoverTimeline {
 
   /// Route offset (metres along the route) of the camera at [t].
   double offsetAt(double t) => cameraAt(t).offsetM;
+
+  /// The route polyline, when the manifest has one (the chase camera needs it).
+  RouteGeometry? get route => _route;
+
+  /// The rider's route position at [t] for the chase camera: constant speed within a flyover section (linear in time
+  /// between the section's first and last keyframe offsets), so the chase camera never slows to a stop at a keyframe
+  /// the way the eased keyframes do. Other sections already move linearly. Segment boundaries and offsets are unchanged.
+  double chaseOffsetAt(double t) {
+    t = clamp(t);
+    final seg = segmentAt(t);
+    if (seg.plan == null) return cameraAt(t).offsetM;
+    final f = ((t - seg.startT) / seg.durationSec).clamp(0.0, 1.0);
+    return seg.startOffsetM + (seg.endOffsetM - seg.startOffsetM) * f;
+  }
 
   /// Clamps [t] to the clock range.
   double clamp(double t) => t.isNaN ? 0 : t.clamp(0.0, totalDurationSec).toDouble();
