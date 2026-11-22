@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'clips/clip_player.dart';
+import 'diagnostics/frame_monitor.dart';
 import 'clips/clip_view.dart';
 import 'flyover_map.dart';
 import 'flyover/player_controller.dart';
@@ -43,6 +44,10 @@ class FlyoverScreen extends StatefulWidget {
   State<FlyoverScreen> createState() => _FlyoverScreenState();
 }
 
+/// Dev switch: `--dart-define=FRAME_LOG=true` records frame timings from the first frame and prints the summary to the
+/// debug console when the flyover ends (never written to a file).
+const bool kFrameLog = bool.fromEnvironment('FRAME_LOG');
+
 class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProviderStateMixin {
   late final FlyoverPlayerController _player;
   late final Ticker _ticker;
@@ -50,6 +55,8 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
   bool _styleReady = false;
   bool _cameraBusy = false;
   Duration _last = Duration.zero;
+  final FrameMonitor _frames = FrameMonitor();
+  int _cameraCalls = 0;
 
   Scene get _scene => widget.scene;
 
@@ -64,11 +71,14 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
       _last = elapsed;
     });
     _ticker.start();
+    if (kFrameLog) _frames.enabled = true;
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _frames.enabled = false;
+    _frames.dispose();
     _player
       ..removeListener(_onPlayer)
       ..dispose();
@@ -77,7 +87,10 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
 
   void _onPlayer() {
     _moveCamera();
-    if (_player.atEnd && !_player.playing) debugPrint('[flyover] reached end at ${_player.positionSec.toStringAsFixed(1)} s');
+    if (_player.atEnd && !_player.playing) {
+      debugPrint('[flyover] reached end at ${_player.positionSec.toStringAsFixed(1)} s');
+      if (kFrameLog) debugPrint('[framelog]\n${_frames.stats.report(note: 'moveCamera calls: $_cameraCalls')}');
+    }
     setState(() {});
   }
 
@@ -88,6 +101,7 @@ class _FlyoverScreenState extends State<FlyoverScreen> with SingleTickerProvider
     _cameraBusy = true;
     try {
       final c = _player.camera;
+      _cameraCalls++;
       await map.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
         target: LatLng(c.lat, c.lon),
         zoom: c.zoom,
