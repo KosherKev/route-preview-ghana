@@ -18,13 +18,13 @@ void main() {
     expect(result.isValid, isTrue, reason: result.errors.join('\n'));
   });
 
-  test('has all four segment cases', () {
+  test('has the segment cases the current schema allows (a flyover on every segment)', () {
     final segs = (json['segments'] as List).cast<Map<String, dynamic>>();
     expect([for (final s in segs) '${s['mode']}/${s['playback']}/${s['status']}/${s['flyover'] == null ? 'noflyover' : 'flyover'}'], [
-      'STREET_VIDEO/clip/ready/noflyover',
+      'STREET_VIDEO/clip/ready/flyover',
       'BIRDS_EYE_3D/flyover/null/flyover',
       'STREET_VIDEO/flyover/not_rendered/flyover',
-      'STREET_VIDEO/clip/ready/noflyover',
+      'STREET_VIDEO/clip/ready/flyover',
     ]);
   });
 

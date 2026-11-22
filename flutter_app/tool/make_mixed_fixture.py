@@ -1,12 +1,15 @@
-"""Author assets/fixtures/mixed-manifest.json: a SYNTHETIC manifest with all four segment cases, for tests and demos.
+"""Author assets/fixtures/mixed-manifest.json: a SYNTHETIC manifest with all the segment cases the schema still allows, for tests and demos.
 
 It reuses the real Accra route geometry from accra-real-manifest.json (OSM routing only) and invents everything else:
 clip keys, names, overlays and the attribution. No Mapillary data, no imagery.
 
-  seg 0  STREET_VIDEO  ready, clip 900001/forward.mp4 (the demo/test clip is pushed to the device), flyover null
+  seg 0  STREET_VIDEO  ready, clip 900001/forward.mp4 (the demo/test clip is pushed to the device), flyover keyframes
   seg 1  BIRDS_EYE_3D  flyover keyframes
   seg 2  STREET_VIDEO  not_rendered, flyover keyframes            (clip missing, flyover present)
-  seg 3  STREET_VIDEO  ready, clip 900002/forward.mp4 (never on the device), flyover null   (clip missing, no flyover)
+  seg 3  STREET_VIDEO  ready, clip 900002/forward.mp4 (never on the device), flyover keyframes   (clip file missing on the device: falls back to the flyover)
+
+The server schema (docs/api/preview-manifest.schema.json) now requires a flyover on EVERY segment, so "no flyover" is no
+longer a valid case here; an old server may still send it, which test/hybrid_timeline_test.dart feeds to the parser directly.
 
 Run from flutter_app/:  python3 tool/make_mixed_fixture.py
 """
@@ -116,10 +119,10 @@ CLIP_A, CLIP_B = '900001/forward.mp4', '900002/forward.mp4'
 ref = lambda k: {'edge_id': int(k.split('/')[0]), 'direction': 'forward', 'key': k}
 b1, b2, b3 = 5100.0, 5400.0, 5550.0
 segments = [
-    seg(0, 'STREET_VIDEO', 4800.0, b1, 'clip', 'clip_ready', 'ready', ref(CLIP_A), clip(CLIP_A, 8.0, b1 - 4800.0), None, {'min': 2024, 'max': 2024}),
+    seg(0, 'STREET_VIDEO', 4800.0, b1, 'clip', 'clip_ready', 'ready', ref(CLIP_A), clip(CLIP_A, 8.0, b1 - 4800.0), flyover(4800.0, b1), {'min': 2024, 'max': 2024}),
     seg(1, 'BIRDS_EYE_3D', b1, b2, 'flyover', 'no_frames', None, None, None, flyover(b1, b2), None),
     seg(2, 'STREET_VIDEO', b2, b3, 'flyover', 'clip_not_rendered', 'not_rendered', ref('900003/forward.mp4'), None, flyover(b2, b3), {'min': 2024, 'max': 2024}),
-    seg(3, 'STREET_VIDEO', b3, LENGTH, 'clip', 'clip_ready', 'ready', ref(CLIP_B), clip(CLIP_B, 9.0, LENGTH - b3), None, {'min': 2024, 'max': 2024}),
+    seg(3, 'STREET_VIDEO', b3, LENGTH, 'clip', 'clip_ready', 'ready', ref(CLIP_B), clip(CLIP_B, 9.0, LENGTH - b3), flyover(b3, LENGTH), {'min': 2024, 'max': 2024}),
 ]
 
 

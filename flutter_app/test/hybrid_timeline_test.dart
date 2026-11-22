@@ -8,23 +8,32 @@ import 'support/mixed.dart';
 FlyoverTimeline _tl({Set<String> clips = const {kClipA}, PreviewManifest? m}) =>
     FlyoverTimeline.fromManifest(m ?? mixedManifest(), availableClips: clips);
 
+/// What an OLD server may still send: the two ready-clip segments with `flyover: null`. The current schema forbids it
+/// (docs/api/preview-manifest.schema.json requires a flyover on every segment), so the fixture no longer has it and the
+/// parser and timeline are fed this edit directly.
+void _oldServerNoFlyover(Map<String, dynamic> j) {
+  for (final i in [0, 3]) {
+    ((j['segments'] as List)[i] as Map<String, dynamic>)['flyover'] = null;
+  }
+}
+
 void main() {
-  group('the four segment cases', () {
-    test('clip present, clip missing with flyover, clip missing without flyover, plain flyover', () {
+  group('the segment cases of the current schema (a flyover on every segment)', () {
+    test('clip present, clip missing with flyover (not_rendered and ready-but-absent), plain flyover', () {
       final t = _tl(); // only clip A is on the device
       expect([for (final s in t.segments) s.source], [
         SegmentSource.streetVideo, // 0: clip 900001 is local
         SegmentSource.flyover, // 1: BIRDS_EYE_3D
         SegmentSource.flyoverFallback, // 2: STREET_VIDEO not_rendered, has keyframes
-        SegmentSource.noPreview, // 3: clip 900002 is not local and there are no keyframes
+        SegmentSource.flyoverFallback, // 3: clip 900002 is not local, the ready clip carries keyframes
       ]);
       expect(t.segments[0].clipKey, kClipA);
       expect(t.segments[3].clipKey, isNull);
     });
 
-    test('no clips at all: the street sections fall back, the flyover section is unchanged', () {
+    test('no clips at all: the street sections fall back to their flyover, the flyover section is unchanged', () {
       final t = _tl(clips: const {});
-      expect([for (final s in t.segments) s.source], [SegmentSource.noPreview, SegmentSource.flyover, SegmentSource.flyoverFallback, SegmentSource.noPreview]);
+      expect([for (final s in t.segments) s.source], [SegmentSource.flyoverFallback, SegmentSource.flyover, SegmentSource.flyoverFallback, SegmentSource.flyoverFallback]);
     });
 
     test('both clips present: both play as street video', () {
@@ -42,7 +51,29 @@ void main() {
     });
 
     test('an unknown clip key on the device never counts (only the manifest\'s own keys)', () {
-      expect(_tl(clips: const {'900009/forward.mp4'}).segments[0].source, SegmentSource.noPreview);
+      expect(_tl(clips: const {'900009/forward.mp4'}).segments[0].source, SegmentSource.flyoverFallback);
+    });
+  });
+
+  group('NEGATIVE: an old server sends a ready clip segment with flyover null', () {
+    PreviewManifest old() => mixedManifest(_oldServerNoFlyover);
+
+    test('the parser still accepts it (the app handles both cases)', () {
+      final segs = old().segments;
+      expect([segs[0].flyover, segs[3].flyover], [null, null]);
+      expect(segs[1].flyover, isNotNull);
+    });
+
+    test('clip present plays; clip missing without flyover is a clear no-preview section, never a crash', () {
+      final t = _tl(m: old());
+      expect([for (final s in t.segments) s.source], [SegmentSource.streetVideo, SegmentSource.flyover, SegmentSource.flyoverFallback, SegmentSource.noPreview]);
+      expect(_tl(m: old(), clips: const {}).segments[0].source, SegmentSource.noPreview);
+    });
+
+    test('the current fixture really has no flyover-less segment (so this group is the only place that case lives)', () {
+      for (final s in mixedManifest().segments) {
+        expect(s.flyover, isNotNull, reason: 'segment ${s.index}');
+      }
     });
   });
 
@@ -108,7 +139,7 @@ void main() {
     });
 
     test('street-video and no-preview cameras ride the route at a fixed pitch and zoom', () {
-      final t = _tl();
+      final t = _tl(m: mixedManifest(_oldServerNoFlyover)); // segment 3 is a no-preview section only without keyframes
       for (final i in [0, 3]) {
         final s = t.segments[i];
         final c = t.cameraAt(s.startT + s.durationSec / 2);
