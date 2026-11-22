@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'address_check.dart';
+
 /// Per-step elapsed time of one API request: name lookup, connect, first byte, total. Pure bookkeeping with an injectable
 /// clock so the timing logic is testable; it never leaves memory and sends nothing anywhere.
 class StepTracker {
@@ -11,6 +15,17 @@ class StepTracker {
 
   /// The shown wording for a slow step. A request to the tailnet address can stall while Tailscale wakes up.
   static const String slowMessage = 'Waking the Tailscale connection, still trying';
+
+  /// What the host resolved to (diagnostic only), or why the lookup failed. Set by the API's lookup probe.
+  List<InternetAddress> resolved = const [];
+  String? lookupError;
+
+  /// `resolved to 100.101.2.3`, `name lookup failed: ...`, or null before the lookup finished.
+  String? get resolvedSummary =>
+      lookupError != null ? 'name lookup failed: $lookupError' : (resolved.isEmpty ? null : resolvedLine(resolved));
+
+  /// [kPublicAddressWarning] when a resolved address is neither tailnet nor private, else null.
+  String? get addressNote => resolved.isEmpty ? null : addressWarning(resolved);
 
   final Duration Function() _now;
   final Duration _start;

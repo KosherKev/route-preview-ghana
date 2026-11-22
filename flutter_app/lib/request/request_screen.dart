@@ -357,6 +357,9 @@ class _RequestScreenState extends State<RequestScreen> {
       padding: const EdgeInsets.only(top: 4),
       child: Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(t.summary(), key: const Key('step-timings'), style: theme.textTheme.bodySmall),
+        if (t.resolvedSummary != null) Text(t.resolvedSummary!, key: const Key('resolved-address'), style: theme.textTheme.bodySmall),
+        if (t.addressNote != null)
+          Text(t.addressNote!, key: const Key('address-warning'), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
         if (warn != null) Text(warn, key: const Key('slow-message'), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
       ]),
     );
