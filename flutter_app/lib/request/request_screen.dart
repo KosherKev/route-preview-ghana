@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../api/preview_api.dart';
+import '../api/step_tracker.dart';
 import '../clips/clip_player.dart';
 import '../flyover/camera_preset.dart';
 import '../flyover/manifest.dart';
@@ -75,6 +78,10 @@ class _RequestScreenState extends State<RequestScreen> {
   String? _health;
   bool _healthBusy = false;
 
+  /// Per-step timing of the request in flight (or the last one), refreshed once a second while one runs.
+  StepTracker? _tracker;
+  Timer? _tick;
+
   @override
   void initState() {
     super.initState();
@@ -96,8 +103,25 @@ class _RequestScreenState extends State<RequestScreen> {
     for (final c in [_baseUrl, _oLat, _oLon, _dLat, _dLon]) {
       c.dispose();
     }
+    _tick?.cancel();
     _scroll.dispose();
     super.dispose();
+  }
+
+  StepTracker _startTracker() {
+    _tick?.cancel();
+    final t = StepTracker();
+    _tracker = t;
+    _tick = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted) setState(() {});
+    });
+    return t;
+  }
+
+  void _stopTracker() {
+    _tick?.cancel();
+    _tick = null;
+    if (mounted) setState(() {});
   }
 
   void _applyPreset(RoutePreset p) {
@@ -140,14 +164,17 @@ class _RequestScreenState extends State<RequestScreen> {
       _health = null;
     });
     final api = widget.apiFactory(_baseUrl.text);
+    final tracker = _startTracker();
     try {
-      await api.health();
+      await api.health(tracker: tracker);
       await widget.settings.setBaseUrl(_baseUrl.text);
       if (mounted) setState(() => _health = 'Connected: the API answered /health.');
     } on ApiException catch (e) {
       if (mounted) setState(() => _health = 'Not connected: ${e.message}');
     } finally {
       api.close();
+      tracker.finish();
+      _stopTracker();
       if (mounted) setState(() => _healthBusy = false);
     }
   }
@@ -171,8 +198,11 @@ class _RequestScreenState extends State<RequestScreen> {
     });
     _showStatus();
     final api = widget.apiFactory(_baseUrl.text);
+    final tracker = _startTracker();
     try {
-      final result = await api.preview(PreviewRequest(originLat: o.lat, originLon: o.lon, destLat: d.lat, destLon: d.lon, costing: _costing));
+      final result = await api.preview(
+          PreviewRequest(originLat: o.lat, originLon: o.lon, destLat: d.lat, destLon: d.lon, costing: _costing),
+          tracker: tracker);
       final scene = await widget.sceneForManifest(result.manifest, 'Live preview API');
       if (!mounted) return;
       setState(() => _phase = _Phase.idle);
@@ -187,6 +217,8 @@ class _RequestScreenState extends State<RequestScreen> {
       }
     } finally {
       api.close();
+      tracker.finish();
+      _stopTracker();
     }
   }
 
@@ -263,6 +295,7 @@ class _RequestScreenState extends State<RequestScreen> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(_health!, key: const Key('health-result'), style: theme.textTheme.bodySmall),
               ),
+            if (_healthBusy || (_health != null && _phase == _Phase.idle)) _timing(theme, const Key('health-timing')),
             const Divider(height: 32),
             Text('Route', style: theme.textTheme.titleSmall),
             const SizedBox(height: 6),
@@ -315,16 +348,33 @@ class _RequestScreenState extends State<RequestScreen> {
     );
   }
 
+  /// The per-step timing line and, when a step has run over 5 seconds, the "still trying" message.
+  Widget _timing(ThemeData theme, Key key) {
+    final t = _tracker;
+    if (t == null) return const SizedBox.shrink();
+    final warn = t.warning;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(t.summary(), key: const Key('step-timings'), style: theme.textTheme.bodySmall),
+        if (warn != null) Text(warn, key: const Key('slow-message'), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+      ]),
+    );
+  }
+
   Widget _status(ThemeData theme) {
     switch (_phase) {
       case _Phase.idle:
         return Text('Enter two places in Ghana and press Preview. The route and its camera path come from the preview API.',
             key: const Key('empty-state'), style: theme.textTheme.bodySmall);
       case _Phase.loading:
-        return Row(key: const Key('loading'), children: const [
-          SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-          SizedBox(width: 12),
-          Expanded(child: Text('Asking the preview API for a route...')),
+        return Column(key: const Key('loading'), crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: const [
+            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 12),
+            Expanded(child: Text('Asking the preview API for a route...')),
+          ]),
+          _timing(theme, const Key('preview-timing')),
         ]);
       case _Phase.error:
         final e = _error!;
@@ -335,6 +385,7 @@ class _RequestScreenState extends State<RequestScreen> {
             padding: const EdgeInsets.all(12),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(e.message, key: const Key('error-message')),
+              _timing(theme, const Key('error-timing')),
               if (e.canOfferFixture) ...[
                 const SizedBox(height: 10),
                 Text('You can still try the app with the bundled fixture route. It is a saved example, not a live answer.',

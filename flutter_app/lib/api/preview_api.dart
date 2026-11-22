@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../flyover/manifest.dart';
+import 'step_tracker.dart';
 
 /// The tailnet dev API (docs/api/tailnet-dev.md). This is the app's default base URL; it is configurable in the app and
 /// is the only server URL in the code. There is no authentication yet (D5 is backlog), so no header is sent.
@@ -91,13 +92,18 @@ class PreviewApi {
   final Duration timeout;
   final Duration healthTimeout;
 
+  /// Lookup and connect are timed with small probes only on the real network client; a client injected for tests
+  /// (an in-memory mock) has no network to probe.
+  final bool _probe;
+
   PreviewApi(
     String baseUrl, {
     http.Client? client,
     this.timeout = const Duration(seconds: 20),
     this.healthTimeout = const Duration(seconds: 6),
   })  : baseUri = _parseBase(baseUrl),
-        _client = client ?? http.Client();
+        _client = client ?? http.Client(),
+        _probe = client == null;
 
   static Uri _parseBase(String raw) {
     final s = raw.trim().replaceAll(RegExp(r'/+$'), '');
@@ -127,7 +133,8 @@ class PreviewApi {
       try {
         return await call().timeout(limit);
       } on TimeoutException {
-        throw ApiException(ApiErrorKind.timeout, 'The API did not answer within ${limit.inSeconds} seconds.');
+        throw ApiException(ApiErrorKind.timeout,
+            'The API did not answer within ${limit.inSeconds} seconds. If you are on Tailscale, check that it is connected, then try again.');
       } on SocketException catch (e) {
         if (attempt == 0) continue;
         throw ApiException(ApiErrorKind.offline, 'Cannot reach the API (${e.message}).');
@@ -140,18 +147,52 @@ class PreviewApi {
     }
   }
 
-  /// True when `GET /health` answers 200 with `{"ok":true}`; otherwise throws an [ApiException].
-  Future<bool> health() async {
-    final res = await _send(() => _client.get(_uri('/health')), healthTimeout);
+  /// Times name lookup, connect and first byte for [req] into [tracker], then reads the whole answer. The 20 second cap and
+  /// the single connection retry are [_send]'s, unchanged; the lookup and connect are small probes of the same host and
+  /// port (the request itself is sent by the same client).
+  Future<http.Response> _timed(http.BaseRequest Function() make, StepTracker tracker) async {
+    final uri = baseUri;
+    final port = uri.hasPort ? uri.port : (uri.scheme == 'https' ? 443 : 80);
+    try {
+      if (_probe) {
+        tracker.begin(StepTracker.lookup);
+        final addrs = await InternetAddress.lookup(uri.host);
+        tracker.begin(StepTracker.connect);
+        final sock = await Socket.connect(addrs.first, port);
+        sock.destroy();
+      }
+      tracker.begin(StepTracker.firstByte);
+      final streamed = await _client.send(make());
+      tracker.begin('body');
+      return await http.Response.fromStream(streamed);
+    } finally {
+      tracker.finish();
+    }
+  }
+
+  /// True when `GET /health` answers 200 with `{"ok":true}`; otherwise throws an [ApiException]. Pass a [tracker] to get
+  /// per-step timing.
+  Future<bool> health({StepTracker? tracker}) async {
+    final res = await _send(
+      () => tracker == null ? _client.get(_uri('/health')) : _timed(() => http.Request('GET', _uri('/health')), tracker),
+      healthTimeout,
+    );
     _throwIfError(res);
     final Object? body = _tryJson(res.body);
     if (body is Map && body['ok'] == true) return true;
     throw const ApiException(ApiErrorKind.badResponse, 'The address answered, but it does not look like the preview API (no {"ok":true}).');
   }
 
-  Future<PreviewResult> preview(PreviewRequest request) async {
+  Future<PreviewResult> preview(PreviewRequest request, {StepTracker? tracker}) async {
+    final body = jsonEncode(request.toJson());
     final res = await _send(
-      () => _client.post(_uri('/preview'), headers: const {'content-type': 'application/json'}, body: jsonEncode(request.toJson())),
+      () => tracker == null
+          ? _client.post(_uri('/preview'), headers: const {'content-type': 'application/json'}, body: body)
+          : _timed(
+              () => http.Request('POST', _uri('/preview'))
+                ..headers['content-type'] = 'application/json'
+                ..body = body,
+              tracker),
       timeout,
     );
     _throwIfError(res);
