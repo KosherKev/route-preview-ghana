@@ -4,13 +4,16 @@
 Two methods. COASTLINE (used by build-accra.sh): the OSM natural=coastline ways extracted by osm_coast.py are the authority for the
 land/sea boundary. OSM puts land on the LEFT of a coastline way, so the sea is the region to its right: the west to east coast chain is
 closed through the southern edge of the crop, and closed counter-clockwise coastline rings (islands) are holes. The DEM is not used.
-DEM (kept for comparison, `--method dem`): Copernicus GLO-30 DEM, as follows.
+DEM (`--method dem`): comparison-only and NOT production-supported. It refuses to run (exit 1, no GeoPackage) because on the real
+Copernicus GLO-30 DEM it drops 12 inland pit holes, which the dropped-hole gate rightly refuses (a dropped hole turns land into sea), and
+its shoreline was measured wrong at Tema port (docs/data/tiles.md). The code below is kept only to document how the first v2 build's
+comparison sea was made.
 
-DEM method: ocean candidates are DEM cells with elevation <= 0 m or nodata. Only the candidates that are 4-connected to the open sea
+DEM method (disabled): ocean candidates are DEM cells with elevation <= 0 m or nodata. Only the candidates that are 4-connected to the open sea
 (flood fill seeded from the southern edge of the crop) are kept, so inland 0 m pits and lagoons that are cut off from the sea by
 land are not marked as sea. The mask is vectorised along cell edges, rings are simplified (Douglas-Peucker) and written as WKB.
-Usage: build_sea.py COAST.json OUT.gpkg                           (coastline method)
-       build_sea.py SRC_DIR OUT.gpkg --method dem [--tolerance-m 40]
+Usage: build_sea.py COAST.json OUT.gpkg                           (coastline method, the only supported one)
+       build_sea.py SRC_DIR OUT.gpkg --method dem                 (refuses at once, see above)
 Deterministic: same inputs give the same bytes. Dropped rings are counted and reported; the script exits 1 (and writes no GeoPackage) if
 any HOLE was dropped (degenerate or without an outer ring), because a dropped hole would turn land into sea.
 """
@@ -254,7 +257,13 @@ def main_coast(coast_json, out, south=4.90):
     print(f"polygons {len(fixed)} (clockwise water-body rings {nwater}), island holes {sum(len(p) - 1 for p in fixed)}, vertices {sum(len(r) for p in fixed for r in p)}, bytes {os.path.getsize(out)}, seconds {time.time() - t0:.1f}")
 
 
+DEM_REFUSAL = ("ERROR: --method dem is a comparison-only path and is not production-supported: on the real Copernicus DEM it drops 12 pit holes "
+               "(which would turn land into sea) and its shoreline is wrong at Tema port. Use the default coastline method: build_sea.py COAST.json OUT.gpkg. "
+               "No GeoPackage was written.")
+
+
 def main(src, out, tol_m=40.0):
+    sys.exit(DEM_REFUSAL)  # fail fast, before reading any DEM
     t0 = time.time()
     lon0, lat0, dx, dy, a = load_mosaic(src)
     c0 = int(round((CROP[0] - lon0) / dx)); c1 = int(round((CROP[2] - lon0) / dx)) + 1

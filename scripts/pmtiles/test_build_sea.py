@@ -4,6 +4,7 @@ import json, os, subprocess, sys, tempfile, unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import build_sea as bs
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 def sq(x0, y0, x1, y1, ccw=True):
     p = [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]
@@ -39,6 +40,22 @@ class Cli(unittest.TestCase):
     def test_gap_in_coast_is_refused(self):
         r, g = self.run_coast([self.main[:2], self.main[3:]])
         self.assertNotEqual(r.returncode, 0); self.assertFalse(os.path.exists(g))
+
+class DemMethod(unittest.TestCase):
+    """--method dem fails fast with a clear message and writes nothing, on the real DEM (data/terrain/src) when it is present and on a stub dir."""
+    def run_dem(self, src):
+        g = os.path.join(tempfile.mkdtemp(), "s.gpkg")
+        r = subprocess.run([sys.executable, "-I", os.path.join(HERE, "build_sea.py"), src, g, "--method", "dem"], capture_output=True, text=True, timeout=30)
+        return r, g
+    def check(self, src):
+        r, g = self.run_dem(src)
+        self.assertEqual(r.returncode, 1); self.assertIn("comparison-only", r.stderr); self.assertIn("not production-supported", r.stderr)
+        self.assertNotIn("dropped degenerate rings", r.stdout); self.assertFalse(os.path.exists(g))
+    def test_refuses_on_empty_dir(self): self.check(tempfile.mkdtemp())
+    def test_refuses_on_real_dem(self):
+        real = os.path.join(HERE, "..", "..", "data", "terrain", "src")
+        if not os.path.isdir(real): self.skipTest("real DEM not present: " + real)
+        self.check(real)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
