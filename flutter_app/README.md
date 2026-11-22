@@ -80,21 +80,28 @@ network client; the existing single connection retry is unchanged and nothing ne
 
 ## Real map (5B-2a)
 
-The app draws the real Accra map from two dev tile files read at runtime from `Documents/tiles/` in its own sandbox:
-`accra.pmtiles` (OSM vector tiles: building, road, water) and `accra-terrain.pmtiles` (Copernicus GLO-30 Terrarium
-raster-dem). They are never in the repo or the app assets. `tool/push_dev_tiles.sh` copies them from
-`~/dev/.scratch/tiles/` into the simulator container and refuses if a SHA-256 differs from `SHA256SUMS`. If either file is
-missing or invalid the app shows a message and falls back to the synthetic fixture, never a blank map.
+The app draws the real Accra map from dev tile files read at runtime from `Documents/tiles/` in its own sandbox:
+`accra-v2.pmtiles` (OSM vector tiles: building, road, water, landuse, sea; see `docs/data/tiles.md`), `accra.pmtiles`
+(v1, the same without landuse and sea, used when v2 is absent or unusable) and `accra-terrain.pmtiles` (Copernicus GLO-30
+Terrarium raster-dem). They are never in the repo or the app assets. `tool/push_dev_tiles.sh` copies all three from
+`~/dev/.scratch/tiles/` into the simulator container and refuses if a SHA-256 differs from `SHA256SUMS`. If no vector file or
+the terrain file is missing or invalid the app shows a message and falls back to the synthetic fixture, never a blank map.
+The info panel names the vector file in use (with a note that sea and land use need v2 when v1 is in use).
 
 - Style: `assets/style/route_preview_style.json` (template; no remote URLs, glyphs or sprites, so no text labels). Layers
-  `landuse` and `sea` are optional: absent from today's tiles, they draw nothing and appear once the tiles gain them.
+  `landuse` and `sea` come from v2; with v1 they draw nothing. Order, bottom to top: background, landuse, sea (and a thin
+  light shore line), hillshade, water, roads with casings, route, buildings, destination pin. Roads and buildings draw above
+  sea because piers and port buildings touch it.
 - Buildings: height from the data where tagged (`height`, or `building:levels` times 3 m); otherwise an ESTIMATE of 4 to
   14 m from a stable hash of the feature id (MapLibre expressions cannot read footprint area). The banner and info panel say
   heights are estimated. `lib/style/building_height.dart` is the reference; a test runs the real style expression against it.
 - Route: `assets/fixtures/accra-real-manifest.json`, one manifest fetched from the preview API (OSM routing and camera
   keyframes only), validated against the manifest schema in the tests.
 - Terrain: hillshade only. `setTerrain` and `setSky` are unsupported by `maplibre_gl` 0.28.0 on iOS (see the D3 note).
-- Attribution: the info button shows OpenStreetMap and the Copernicus string from the tile metadata.
+- Attribution: the info button shows OpenStreetMap (from the vector tile metadata) and the Copernicus string for the
+  terrain tiles (from the terrain tile metadata), plus which vector file is in use.
+- Tests that read the real tile files (`test/real_tiles_test.dart`, from `TILES_SRC`, default `~/dev/.scratch/tiles`) FAIL
+  when a file is missing; `ALLOW_MISSING_TILES=1` opts out explicitly (reported as skipped).
 
 ## Live preview (5B-2b)
 

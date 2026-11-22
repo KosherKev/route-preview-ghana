@@ -97,6 +97,20 @@ void main() {
     expect(byTitle['Route and heights'], allOf(contains('estimate'), contains('4 to 14 m'), contains('not a measurement')));
   });
 
+  test('attributions: the tile file in use is listed, with the v2 hint when only v1 is there', () async {
+    putBoth();
+    var s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
+    var byTitle = {for (final a in s.attributions) a.title: a.text};
+    expect(byTitle['Tile file'], allOf(contains(kVectorTilesFile), contains('Sea and land use need $kVectorV2TilesFile')));
+    writePmtiles(dir, kVectorV2TilesFile, pmtilesBytes(tileType: 1, gzipMetadata: true, metadata: {'attribution': 'osm'}));
+    s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
+    byTitle = {for (final a in s.attributions) a.title: a.text};
+    expect(byTitle['Tile file'], contains(kVectorV2TilesFile));
+    expect(byTitle['Tile file'], isNot(contains('need')));
+    final src = (jsonDecode(s.styleJson) as Map)['sources'] as Map;
+    expect((src['osm'] as Map)['url'], endsWith('/$kVectorV2TilesFile'));
+  });
+
   test('the banner says most building heights are estimated', () async {
     putBoth();
     final s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());

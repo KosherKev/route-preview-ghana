@@ -1,0 +1,69 @@
+{
+  "comment": "Layer names, fields and zoom ranges of accra-v2.pmtiles (vector_layers of its metadata). Generated; the tile file itself is never read by tests.",
+  "source": "accra-v2.pmtiles (21,812,103 bytes)",
+  "layers": [
+    {
+      "id": "building",
+      "fields": [
+        "building",
+        "building:levels",
+        "height",
+        "height_source",
+        "min_height",
+        "name"
+      ],
+      "minzoom": 13,
+      "maxzoom": 14
+    },
+    {
+      "id": "landuse",
+      "fields": [
+        "class",
+        "name"
+      ],
+      "minzoom": 10,
+      "maxzoom": 14
+    },
+    {
+      "id": "road",
+      "fields": [
+        "bridge",
+        "highway",
+        "name",
+        "tunnel"
+      ],
+      "minzoom": 8,
+      "maxzoom": 14
+    },
+    {
+      "id": "sea",
+      "fields": [],
+      "minzoom": 8,
+      "maxzoom": 14
+    },
+    {
+      "id": "water",
+      "fields": [
+        "name",
+        "natural"
+      ],
+      "minzoom": 6,
+      "maxzoom": 14
+    }
+  ],
+  "landuseClasses": [
+    "airport",
+    "beach",
+    "cemetery",
+    "commercial",
+    "farmland",
+    "forest",
+    "grass",
+    "industrial",
+    "institution",
+    "park",
+    "pitch",
+    "residential",
+    "wetland"
+  ]
+}

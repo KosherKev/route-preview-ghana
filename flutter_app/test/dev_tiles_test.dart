@@ -24,6 +24,19 @@ void main() {
           {'id': 'water'},
         ],
       }));
+  void putV2({int tileType = 1}) => writePmtiles(
+      dir,
+      kVectorV2TilesFile,
+      pmtilesBytes(tileType: tileType, minZoom: 0, maxZoom: 14, gzipMetadata: true, metadata: {
+        'attribution': _osm,
+        'vector_layers': [
+          {'id': 'building', 'minzoom': 13, 'maxzoom': 14},
+          {'id': 'landuse', 'minzoom': 10, 'maxzoom': 14},
+          {'id': 'road'},
+          {'id': 'sea', 'minzoom': 8, 'maxzoom': 14},
+          {'id': 'water'},
+        ],
+      }));
   void putTerrain() => writePmtiles(dir, kTerrainTilesFile,
       pmtilesBytes(tileType: 2, minZoom: 6, maxZoom: 13, metadata: {'attribution': 'produced using Copernicus WorldDEM-30', 'encoding': 'terrarium'}));
 
@@ -56,6 +69,63 @@ void main() {
       expect(r.terrainUrl, endsWith('/$kTerrainTilesFile'));
       expect(r.vector!.vectorLayers, ['building', 'road', 'water']);
       expect(r.terrain!.attribution, 'produced using Copernicus WorldDEM-30');
+    });
+
+    test('v2 present: v2 is used (even with v1 beside it), with a one-line note naming it', () async {
+      putV2();
+      putVector();
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.vectorFile, kVectorV2TilesFile);
+      expect(r.hasSeaAndLandUse, isTrue);
+      expect(r.vectorUrl, endsWith('/$kVectorV2TilesFile'));
+      expect(r.vector!.vectorLayers, containsAll(['landuse', 'sea']));
+      expect(r.note, allOf(contains(kVectorV2TilesFile), isNot(contains('\n'))));
+    });
+
+    test('v2 absent, v1 present: v1 is used, and the note says sea and land use need v2', () async {
+      putVector();
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.vectorFile, kVectorTilesFile);
+      expect(r.hasSeaAndLandUse, isFalse);
+      expect(r.vectorUrl, endsWith('/$kVectorTilesFile'));
+      expect(r.note, allOf(contains(kVectorTilesFile), contains('Sea and land use need $kVectorV2TilesFile'), isNot(contains('\n'))));
+    });
+
+    test('v2 present but broken, v1 fine: v1 is used and the note says why v2 is not', () async {
+      File('${dir.path}/$kVectorV2TilesFile').writeAsStringSync('garbage');
+      putVector();
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.vectorFile, kVectorTilesFile);
+      expect(r.note, contains('$kVectorV2TilesFile is not a valid PMTiles file'));
+    });
+
+    test('v2 present as the wrong kind of archive is not used', () async {
+      putV2(tileType: 2);
+      putVector();
+      putTerrain();
+      expect((await loadDevTiles(dir)).vectorFile, kVectorTilesFile);
+    });
+
+    test('neither v2 nor v1: not usable (the fixture takes over), and the message names both', () async {
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isFalse);
+      expect(r.vectorFile, isEmpty);
+      expect(r.message, allOf(contains('$kVectorV2TilesFile is missing'), contains('$kVectorTilesFile is missing'), contains('fixture')));
+    });
+
+    test('v2 alone with the terrain file is enough', () async {
+      putV2();
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.vectorFile, kVectorV2TilesFile);
     });
 
     test('a missing directory or no files: not usable, the message names both files and the fixture fallback', () async {
