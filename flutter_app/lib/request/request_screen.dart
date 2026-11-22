@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api/preview_api.dart';
 import '../clips/clip_player.dart';
+import '../flyover/camera_preset.dart';
 import '../flyover/manifest.dart';
 import '../flyover_screen.dart';
 import '../scene/scene.dart';
@@ -32,6 +33,9 @@ class RequestScreen extends StatefulWidget {
   final Duration autoplayDelay;
   final double initialSpeed;
 
+  /// Dev evidence switch: the camera view for this run (otherwise the saved one).
+  final CameraPreset? initialCameraPreset;
+
   /// Dev evidence switches: fill the form from this preset, and press Preview after [autoPreviewDelay] (null = never).
   final int initialPreset;
   final Duration? autoPreviewDelay;
@@ -47,6 +51,7 @@ class RequestScreen extends StatefulWidget {
     this.autoplay = false,
     this.autoplayDelay = Duration.zero,
     this.initialSpeed = 1.0,
+    this.initialCameraPreset,
     this.initialPreset = 0,
     this.autoPreviewDelay,
   });
@@ -201,6 +206,8 @@ class _RequestScreenState extends State<RequestScreen> {
         autoplay: widget.autoplay,
         autoplayDelay: widget.autoplayDelay,
         initialSpeed: widget.initialSpeed,
+        settings: widget.settings,
+        initialCameraPreset: widget.initialCameraPreset,
         onClose: () => Navigator.of(ctx).pop(),
       ),
     ));

@@ -22,66 +22,80 @@ Color sourceColor(SegmentSource s) => switch (s) {
 /// the current position, plus a label for the segment playing: which source is on screen. Tapping a block jumps to it.
 class SegmentStrip extends StatelessWidget {
   final FlyoverPlayerController controller;
-  const SegmentStrip({super.key, required this.controller});
+
+  /// Long-press on the strip (the hidden switch for the frame overlay); null = no long-press.
+  final VoidCallback? onLongPress;
+  const SegmentStrip({super.key, required this.controller, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        final tl = controller.timeline;
-        final cur = tl.segmentAt(controller.positionSec);
-        final total = tl.totalDurationSec;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12),
-          padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Section ${tl.segments.indexOf(cur) + 1} of ${tl.segments.length} · ${sourceLabel(cur.source)}',
-                key: const Key('segment-label'),
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 5),
-              LayoutBuilder(builder: (context, c) {
-                final w = c.maxWidth;
-                return SizedBox(
-                  height: 14,
-                  child: Stack(children: [
-                    for (var i = 0; i < tl.segments.length; i++)
-                      Positioned(
-                        left: tl.segments[i].startT / total * w,
-                        width: (tl.segments[i].durationSec / total * w - 2).clamp(2.0, w),
-                        top: 2,
-                        height: 10,
-                        child: GestureDetector(
-                          key: Key('segment-$i'),
-                          onTap: () => controller.seek(tl.segments[i].startT),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: sourceColor(tl.segments[i].source).withValues(alpha: tl.segments[i] == cur ? 1 : 0.55),
-                              borderRadius: BorderRadius.circular(3),
+    // The blocks and the label change only with the section (structural); the marker moves every tick on its own.
+    return RepaintBoundary(
+      child: GestureDetector(
+        key: const Key('segment-strip'),
+        behavior: HitTestBehavior.opaque,
+        onLongPress: onLongPress,
+        child: ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) {
+            final tl = controller.timeline;
+            final cur = tl.segmentAt(controller.positionSec);
+            final total = tl.totalDurationSec;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Section ${tl.segments.indexOf(cur) + 1} of ${tl.segments.length} · ${sourceLabel(cur.source)}',
+                    key: const Key('segment-label'),
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 5),
+                  LayoutBuilder(builder: (context, c) {
+                    final w = c.maxWidth;
+                    return SizedBox(
+                      height: 14,
+                      child: Stack(children: [
+                        for (var i = 0; i < tl.segments.length; i++)
+                          Positioned(
+                            left: tl.segments[i].startT / total * w,
+                            width: (tl.segments[i].durationSec / total * w - 2).clamp(2.0, w),
+                            top: 2,
+                            height: 10,
+                            child: GestureDetector(
+                              key: Key('segment-$i'),
+                              onTap: () => controller.seek(tl.segments[i].startT),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: sourceColor(tl.segments[i].source).withValues(alpha: tl.segments[i] == cur ? 1 : 0.55),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
                             ),
                           ),
+                        ValueListenableBuilder<double>(
+                          valueListenable: controller.position,
+                          builder: (context, pos, _) => Positioned(
+                            key: const Key('segment-marker'),
+                            left: (pos / total * w - 1).clamp(0.0, w - 2),
+                            width: 2,
+                            top: 0,
+                            height: 14,
+                            child: const ColoredBox(color: Colors.white),
+                          ),
                         ),
-                      ),
-                    Positioned(
-                      key: const Key('segment-marker'),
-                      left: (controller.positionSec / total * w - 1).clamp(0.0, w - 2),
-                      width: 2,
-                      top: 0,
-                      height: 14,
-                      child: const ColoredBox(color: Colors.white),
-                    ),
-                  ]),
-                );
-              }),
-            ],
-          ),
-        );
-      },
+                      ]),
+                    );
+                  }),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

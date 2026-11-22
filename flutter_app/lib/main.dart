@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'api/preview_api.dart';
+import 'flyover/camera_preset.dart';
 import 'flyover/manifest.dart';
 import 'request/request_screen.dart';
 import 'request/settings_store.dart';
@@ -10,7 +11,9 @@ import 'scene/scene_loader.dart';
 ///
 ///   AUTOPLAY=true          start the flyover as soon as a preview opens
 ///   AUTOPLAY_DELAY_SEC=n   wait n seconds (paused at the start) before autoplay begins
-///   PLAYBACK_SPEED=0.5|1|2 starting playback speed (default 1)
+///   PLAYBACK_SPEED=0.5|1|2|4starting playback speed (default 1)
+///   CAMERA_PRESET=close|standard|high  camera view for this run (otherwise the saved choice, Close by default)
+///   FRAME_LOG=true         record frame timings and print the summary when the flyover ends
 ///   HILLSHADE=off          hide the terrain hillshade
 ///   API_BASE_URL=url       override the stored API address for this run
 ///   PRESET=0|1|2           start with this preset filled in
@@ -18,6 +21,7 @@ import 'scene/scene_loader.dart';
 const bool _autoplay = bool.fromEnvironment('AUTOPLAY');
 const int _autoplayDelaySec = int.fromEnvironment('AUTOPLAY_DELAY_SEC');
 const String _playbackSpeed = String.fromEnvironment('PLAYBACK_SPEED', defaultValue: '1');
+const String _cameraPreset = String.fromEnvironment('CAMERA_PRESET');
 const String _hillshade = String.fromEnvironment('HILLSHADE', defaultValue: 'on');
 const String _apiBaseUrl = String.fromEnvironment('API_BASE_URL');
 const int _preset = int.fromEnvironment('PRESET');
@@ -62,6 +66,7 @@ class RoutePreviewApp extends StatelessWidget {
         autoplay: _autoplay,
         autoplayDelay: const Duration(seconds: _autoplayDelaySec),
         initialSpeed: double.parse(_playbackSpeed),
+        initialCameraPreset: _cameraPreset.isEmpty ? null : CameraPreset.parse(_cameraPreset),
         initialPreset: _preset,
         autoPreviewDelay: _autoPreviewSec >= 0 ? const Duration(seconds: _autoPreviewSec) : null,
       ),
