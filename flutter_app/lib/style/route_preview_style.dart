@@ -25,7 +25,7 @@ class RoutePreviewStyle {
 
   static const Map<String, dynamic> emptyCollection = {'type': 'FeatureCollection', 'features': <dynamic>[]};
 
-  /// Returns the style as a JSON string. With [hillshade] false the hillshade layer is hidden (`visibility: none`).
+  /// Returns the style as a JSON string. An empty [terrainUrl] drops the terrain source and the hillshade layer. With [hillshade] false the hillshade layer is hidden (`visibility: none`).
   static String build(
     String template, {
     required String vectorUrl,
@@ -51,6 +51,11 @@ class RoutePreviewStyle {
     }
 
     final style = walk(jsonDecode(template)) as Map<String, dynamic>;
+    if (terrainUrl.isEmpty) {
+      // No terrain tiles installed: no terrain source and no layer that reads it (hillshade).
+      (style['sources'] as Map).remove('terrain');
+      (style['layers'] as List).removeWhere((l) => (l as Map)['source'] == 'terrain');
+    }
     if (!hillshade) {
       for (final layer in style['layers'] as List) {
         if ((layer as Map)['id'] == 'hillshade') {

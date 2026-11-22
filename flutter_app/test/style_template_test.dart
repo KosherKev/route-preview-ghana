@@ -278,6 +278,20 @@ void main() {
       expect(optional, {'landuse', 'sea'}, reason: 'the layers that may be absent are declared');
     });
 
+    test('an empty terrain URL drops the terrain source and the hillshade layer and nothing else', () {
+      final full = built();
+      final out = jsonDecode(RoutePreviewStyle.build(template, vectorUrl: 'pmtiles://file:///x/accra-v2.pmtiles', terrainUrl: '', route: route, destination: dest))
+          as Map<String, dynamic>;
+      expect((out['sources'] as Map).keys, isNot(contains('terrain')));
+      expect((full['sources'] as Map).keys, contains('terrain'));
+      final fullIds = [for (final l in _layers(full)) l['id']];
+      final outIds = [for (final l in _layers(out)) l['id']];
+      expect(fullIds.where((i) => !outIds.contains(i)), ['hillshade']);
+      final refs = jsonEncode([out['sources'], out['layers']]);
+      expect(refs, isNot(contains('terrain')), reason: 'no leftover reference to the terrain source');
+      expect(refs, isNot(contains('hillshade')));
+    });
+
     test('hillshade can be hidden without removing the layer', () {
       Map<String, dynamic> hill(Map<String, dynamic> s) => _layers(s).firstWhere((l) => l['id'] == 'hillshade');
       expect(hill(built())['layout'], isNull);

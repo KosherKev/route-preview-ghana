@@ -76,7 +76,11 @@ writes a file, sends data or touches location. Dev switches: `FRAME_OVERLAY=true
 The request screen shows per-step elapsed time for Test connection and Preview (name lookup, connect, first byte, total) and
 "Waking the Tailscale connection, still trying" once a step has run over 5 seconds. Each request is cut at 20 seconds
 (6 s for `/health`) with a readable message. The lookup and connect are small probes of the same host and port on the real
-network client; the existing single connection retry is unchanged and nothing new is retried.
+network client; the existing single connection retry is unchanged and nothing new is retried. The name lookup also shows what
+the host resolved to ("resolved to 100.101.2.3", first three addresses) and says in plain words when an address is neither
+tailnet (100.64.0.0/10) nor private LAN ("This looks like a public address. The API is only reachable inside Tailscale.").
+That lookup has its own 5 second cap and is a diagnostic only: if it fails the error is shown and the request goes on as
+before. `FAKE_RESOLVED_IP=a.b.c.d` (or `fail`) fakes it for screenshots.
 
 ## Real map (5B-2a)
 
@@ -84,8 +88,9 @@ The app draws the real Accra map from dev tile files read at runtime from `Docum
 `accra-v2.pmtiles` (OSM vector tiles: building, road, water, landuse, sea; see `docs/data/tiles.md`), `accra.pmtiles`
 (v1, the same without landuse and sea, used when v2 is absent or unusable) and `accra-terrain.pmtiles` (Copernicus GLO-30
 Terrarium raster-dem). They are never in the repo or the app assets. `tool/push_dev_tiles.sh` copies all three from
-`~/dev/.scratch/tiles/` into the simulator container and refuses if a SHA-256 differs from `SHA256SUMS`. If no vector file or
-the terrain file is missing or invalid the app shows a message and falls back to the synthetic fixture, never a blank map.
+`~/dev/.scratch/tiles/` into the simulator container and refuses if a SHA-256 differs from `SHA256SUMS`. If no usable vector file is
+there the app shows a message and falls back to the synthetic fixture, never a blank map. The terrain file is optional: without it
+the map draws with no terrain source and no hillshade layer, and the info panel says "terrain not installed: no hillshade".
 The info panel names the vector file in use (with a note that sea and land use need v2 when v1 is in use).
 
 - Style: `assets/style/route_preview_style.json` (template; no remote URLs, glyphs or sprites, so no text labels). Layers

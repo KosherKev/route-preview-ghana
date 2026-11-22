@@ -11,8 +11,11 @@ const String kVectorV2TilesFile = 'accra-v2.pmtiles';
 const String kVectorTilesFile = 'accra.pmtiles';
 const String kTerrainTilesFile = 'accra-terrain.pmtiles';
 
+/// The info panel line when the terrain tiles are not installed.
+const String kNoTerrainNote = 'terrain not installed: no hillshade';
+
 class DevTilesResult {
-  /// True when both files are present and look like the right kind of PMTiles archive.
+  /// True when a vector file is present and looks right (the terrain file is optional).
   final bool usable;
 
   /// Human-readable reason when not [usable]; shown to the user, with the fixture as the fallback map.
@@ -26,6 +29,10 @@ class DevTilesResult {
   final String vectorFile;
   final String? note;
 
+  /// Set when the terrain file is not usable: the one-line note for the info panel, and why (for the debug log).
+  final String? terrainNote;
+  final String? terrainProblem;
+
   const DevTilesResult({
     required this.usable,
     this.message,
@@ -35,13 +42,18 @@ class DevTilesResult {
     this.terrain,
     this.vectorFile = '',
     this.note,
+    this.terrainNote,
+    this.terrainProblem,
   });
+
+  /// True when the terrain (hillshade) tiles are installed and valid. Without them the map still draws, just without hillshade.
+  bool get hasTerrain => terrain != null;
 
   /// True when the vector tiles in use are v2, which carry the `landuse` and `sea` layers.
   bool get hasSeaAndLandUse => vectorFile == kVectorV2TilesFile;
 }
 
-/// Looks for both tile files in [dir] (`Documents/tiles`). Never throws: every problem becomes a [DevTilesResult] with a
+/// Looks for the tile files in [dir] (`Documents/tiles`). Never throws: every problem becomes a [DevTilesResult] with a
 /// message, so the caller can fall back to the 5B-1 fixture instead of showing a blank map.
 Future<DevTilesResult> loadDevTiles(Directory dir) async {
   final problems = <String>[];
@@ -78,7 +90,15 @@ Future<DevTilesResult> loadDevTiles(Directory dir) async {
   }
   // v1 was fine: v2 problems are not blocking, they only go into the note. With no vector file at all every problem counts.
   if (vector != null) problems.clear();
+  // The terrain file is optional: absent (or unusable) means no hillshade, never an error and never the fixture.
+  final terrainProblems = <String>[];
+  final vectorProblems = List<String>.of(problems);
+  problems.clear();
   final terrain = await check(kTerrainTilesFile, PmtilesInfo.tileTypePng, 'terrain');
+  terrainProblems.addAll(problems.where((m) => !m.endsWith(' is missing'))); // absent is not a problem
+  problems
+    ..clear()
+    ..addAll(vectorProblems);
   if (problems.isNotEmpty) {
     return DevTilesResult(
       usable: false,
@@ -96,10 +116,12 @@ Future<DevTilesResult> loadDevTiles(Directory dir) async {
   return DevTilesResult(
     usable: true,
     vectorUrl: 'pmtiles://${Uri.file('${dir.path}/$vectorFile')}',
-    terrainUrl: 'pmtiles://${Uri.file('${dir.path}/$kTerrainTilesFile')}',
+    terrainUrl: terrain == null ? '' : 'pmtiles://${Uri.file('${dir.path}/$kTerrainTilesFile')}',
     vector: vector,
     terrain: terrain,
     vectorFile: vectorFile,
     note: note,
+    terrainNote: terrain == null ? kNoTerrainNote : null,
+    terrainProblem: terrainProblems.isEmpty ? null : terrainProblems.join('; '),
   );
 }

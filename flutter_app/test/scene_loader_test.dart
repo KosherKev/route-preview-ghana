@@ -36,17 +36,41 @@ void main() {
   test('no tiles: the 5B-1 fixture plays, with a message saying why (never a blank map)', () async {
     final s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
     expect(s, isA<FixtureScene>());
-    expect(s.fallbackMessage, allOf(contains(kVectorTilesFile), contains(kTerrainTilesFile), contains('fixture')));
+    expect(s.fallbackMessage, allOf(contains(kVectorV2TilesFile), contains(kVectorTilesFile), contains('fixture')));
     expect(s.styleJson, isNotEmpty);
     expect(s.manifest.segments, isNotEmpty);
     expect(s.bannerTitle, contains('SYNTHETIC'));
   });
 
-  test('one tile file missing also falls back to the fixture', () async {
-    writePmtiles(dir, kVectorTilesFile, pmtilesBytes(tileType: 1));
+  test('the vector file missing (terrain present) falls back to the fixture', () async {
+    writePmtiles(dir, kTerrainTilesFile, pmtilesBytes(tileType: 2));
     final s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
     expect(s, isA<FixtureScene>());
-    expect(s.fallbackMessage, contains('$kTerrainTilesFile is missing'));
+    expect(s.fallbackMessage, contains('$kVectorTilesFile is missing'));
+  });
+
+  test('terrain absent: the real scene still plays, with no terrain source, no hillshade layer, and the note', () async {
+    writePmtiles(dir, kVectorTilesFile, pmtilesBytes(tileType: 1, gzipMetadata: true, metadata: {'attribution': 'osm'}));
+    final s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
+    expect(s, isA<TileScene>());
+    expect(s.fallbackMessage, isNull);
+    final style = jsonDecode(s.styleJson) as Map<String, dynamic>;
+    expect((style['sources'] as Map).containsKey('terrain'), isFalse);
+    final layers = (style['layers'] as List).cast<Map>();
+    expect(layers.where((l) => l['id'] == 'hillshade' || l['source'] == 'terrain'), isEmpty);
+    expect(layers.any((l) => l['id'] == 'buildings-3d'), isTrue, reason: 'the rest of the map is still there');
+    expect(s.styleJson, isNot(contains('{{')));
+    final byTitle = {for (final a in s.attributions) a.title: a.text};
+    expect(byTitle['Terrain'], 'terrain not installed: no hillshade');
+  });
+
+  test('terrain present: the terrain source and hillshade layer are in the style, with the Copernicus string', () async {
+    putBoth();
+    final s = await loadScene(tilesDir: dir, bundle: FileAssetBundle());
+    final style = jsonDecode(s.styleJson) as Map<String, dynamic>;
+    expect((style['sources'] as Map).containsKey('terrain'), isTrue);
+    expect((style['layers'] as List).any((l) => (l as Map)['id'] == 'hillshade'), isTrue);
+    expect({for (final a in s.attributions) a.title: a.text}['Terrain'], 'terrain attribution');
   });
 
   test('a corrupt tile file falls back to the fixture, without throwing', () async {
