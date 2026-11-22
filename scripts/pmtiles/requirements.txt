@@ -1,0 +1,7 @@
+# Hash-pinned tiles tooling. Install: python3 -m venv data/tools/tiles-venv && data/tools/tiles-venv/bin/pip install --only-binary=:all: --require-hashes -r scripts/pmtiles/requirements.txt
+# Wheels for macOS x86_64, CPython 3.14 (same pins as scripts/terrain/requirements.txt on the DEM branch). build_sea.py needs numpy, tifffile, imagecodecs; verify_tiles.py needs pmtiles.
+imagecodecs==2026.11.11 --hash=sha256:25d2f5661a50e0d13eade7127cb0a49ea01e8da49cae0db839da09e8476e0c7c
+numpy==2.5.5 --hash=sha256:ab3ff087826c49d07953d0219eb00663ce5b1a0ef0a6b757e1ac041b09387428
+pillow==13.0.0 --hash=sha256:49c12af515073e9bf511e4ef736743bf70d531a643668722279314b937742ba4
+pmtiles==3.8.1 --hash=sha256:718561bb21f8c7dd5464fdcc3b9ad0e7b1c917be60ddfdf9a5ab56b8c67f7bde
+tifffile==2026.11.16 --hash=sha256:d2103c2537f185868f0a880eceba590b316aa1981bd76d91028e5f2eb0e1a6e6

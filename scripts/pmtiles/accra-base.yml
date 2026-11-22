@@ -1,0 +1,133 @@
+# Planetiler custom schema for Accra tiles v2 (docs/data/tiles.md): everything in accra-buildings.yml (building, road and water
+# layers, unchanged: same attributes, zooms and the same building height rule) plus two layers:
+#   landuse: OSM polygons mapped to a small class set (see the class table in docs/data/tiles.md), from zoom 10.
+#   sea: ocean polygons derived from the OSM natural=coastline ways by scripts/pmtiles/build_sea.py (a GeoPackage, built before the tiles).
+# Still no OpenMapTiles profile and no download without a verifiable checksum.
+schema_name: Accra base (landuse and sea)
+schema_description: OSM buildings, roads, water and landuse for the Accra metropolitan area, plus a sea layer derived from the OSM coastline
+version: 0.2.0
+attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>
+sources:
+  osm:
+    type: osm
+    local_path: data/osm/ghana-latest.osm.pbf
+  sea:
+    type: geopackage
+    local_path: data/tmp/sea.gpkg
+layers:
+- id: building
+  features:
+  - source: osm
+    geometry: polygon
+    min_zoom: 13
+    include_when:
+      building: __any__
+    exclude_when:
+      building: "no"
+    attributes:
+    - key: height
+    - key: min_height
+    - key: building:levels
+    - key: building:min_level
+    - key: roof:height
+    - key: building
+    - key: name
+      min_zoom: 14
+    - key: height_source
+      value:
+        default_value: default
+        overrides:
+          height:
+            height: __any__
+          levels:
+            building:levels: __any__
+- id: road
+  features:
+  - source: osm
+    geometry: line
+    min_zoom: 8
+    include_when:
+      highway:
+      - motorway
+      - trunk
+      - primary
+      - secondary
+      - tertiary
+      - unclassified
+      - residential
+      - service
+      - motorway_link
+      - trunk_link
+      - primary_link
+      - secondary_link
+      - tertiary_link
+    attributes:
+    - key: highway
+    - key: name
+      min_zoom: 12
+    - key: bridge
+    - key: tunnel
+- id: water
+  features:
+  - source: osm
+    geometry: polygon
+    min_zoom: 6
+    include_when:
+      natural: water
+    attributes:
+    - key: natural
+    - key: name
+      min_zoom: 12
+- id: landuse
+  features:
+  - source: osm
+    geometry: polygon
+    min_zoom: 10
+    include_when:
+      leisure: [park, garden, recreation_ground, pitch, stadium, sports_centre]
+      natural: [wood, grassland, scrub, heath, wetland, beach, sand]
+      landuse: [forest, grass, meadow, village_green, farmland, orchard, allotments, cemetery, residential, commercial, retail, industrial]
+      amenity: [school, university, college, hospital]
+      aeroway: aerodrome
+    exclude_when:
+      building: __any__
+    attributes:
+    - key: class
+      value:
+        default_value: other
+        overrides:
+          park:
+            leisure: [park, garden, recreation_ground]
+          pitch:
+            leisure: [pitch, stadium, sports_centre]
+          forest:
+            natural: wood
+            landuse: forest
+          grass:
+            landuse: [grass, meadow, village_green]
+            natural: [grassland, scrub, heath]
+          farmland:
+            landuse: [farmland, orchard, allotments]
+          wetland:
+            natural: wetland
+          beach:
+            natural: [beach, sand]
+          cemetery:
+            landuse: cemetery
+          residential:
+            landuse: residential
+          commercial:
+            landuse: [commercial, retail]
+          industrial:
+            landuse: industrial
+          institution:
+            amenity: [school, university, college, hospital]
+          airport:
+            aeroway: aerodrome
+    - key: name
+      min_zoom: 13
+- id: sea
+  features:
+  - source: sea
+    geometry: polygon
+    min_zoom: 8
