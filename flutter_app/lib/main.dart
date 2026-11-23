@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'api/preview_api.dart';
@@ -18,6 +20,8 @@ import 'scene/scene_loader.dart';
 ///   HILLSHADE=off          hide the terrain hillshade
 ///   API_BASE_URL=url       override the stored API address for this run
 ///   PRESET=0|1|2           start with this preset filled in
+///   FAKE_RESOLVED_IP=a.b.c.d  the connection diagnostic shows this address as "resolved to" (screenshots; the request itself
+///                          is unchanged). FAKE_RESOLVED_IP=fail shows a failed lookup.
 ///   AUTO_PREVIEW_SEC=n     press Preview n seconds after launch (hands-free evidence runs)
 const bool _autoplay = bool.fromEnvironment('AUTOPLAY');
 const int _autoplayDelaySec = int.fromEnvironment('AUTOPLAY_DELAY_SEC');
@@ -26,6 +30,7 @@ const String _cameraPreset = String.fromEnvironment('CAMERA_PRESET');
 const String _hillshade = String.fromEnvironment('HILLSHADE', defaultValue: 'on');
 const String _apiBaseUrl = String.fromEnvironment('API_BASE_URL');
 const int _preset = int.fromEnvironment('PRESET');
+const String _fakeResolvedIp = String.fromEnvironment('FAKE_RESOLVED_IP');
 const int _autoPreviewSec = int.fromEnvironment('AUTO_PREVIEW_SEC', defaultValue: -1);
 
 Future<void> main() async {
@@ -49,7 +54,13 @@ class RoutePreviewApp extends StatelessWidget {
     this.bundledSceneOverride,
   });
 
-  static PreviewApi _defaultApi(String baseUrl) => PreviewApi(baseUrl);
+  static PreviewApi _defaultApi(String baseUrl) => PreviewApi(baseUrl,
+      resolver: _fakeResolvedIp.isEmpty
+          ? null
+          : (host) async {
+              if (_fakeResolvedIp == 'fail') throw const SocketException('Failed host lookup (fake)');
+              return [InternetAddress(_fakeResolvedIp)];
+            });
 
   @override
   Widget build(BuildContext context) {

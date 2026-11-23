@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:route_preview/flyover/manifest.dart';
 
 /// The hand-authored mixed manifest (assets/fixtures/mixed-manifest.json): four segment cases on the real Accra route.
-///   0 STREET_VIDEO ready clip 900001 (flyover null)   1 BIRDS_EYE_3D flyover
-///   2 STREET_VIDEO not_rendered with flyover          3 STREET_VIDEO ready clip 900002 (flyover null)
+///   0 STREET_VIDEO ready clip 900001 (flyover keyframes)   1 BIRDS_EYE_3D flyover
+///   2 STREET_VIDEO not_rendered with flyover          3 STREET_VIDEO ready clip 900002 (flyover keyframes)
 const kClipA = '900001/forward.mp4';
 const kClipB = '900002/forward.mp4';
 

@@ -96,14 +96,25 @@ class PreviewApi {
   /// (an in-memory mock) has no network to probe.
   final bool _probe;
 
+  /// Resolves the host for the connection diagnostic only (the request itself is resolved by the HTTP client). Tests and
+  /// the dev switch inject one. With a custom resolver the connect probe is skipped: its addresses are not real.
+  final Future<List<InternetAddress>> Function(String host) _resolver;
+  final bool _customResolver;
+
+  /// The diagnostic lookup has its own cap, separate from the request's.
+  static const Duration lookupCap = Duration(seconds: 5);
+
   PreviewApi(
     String baseUrl, {
     http.Client? client,
     this.timeout = const Duration(seconds: 20),
     this.healthTimeout = const Duration(seconds: 6),
+    Future<List<InternetAddress>> Function(String host)? resolver,
   })  : baseUri = _parseBase(baseUrl),
         _client = client ?? http.Client(),
-        _probe = client == null;
+        _probe = client == null,
+        _resolver = resolver ?? InternetAddress.lookup,
+        _customResolver = resolver != null;
 
   static Uri _parseBase(String raw) {
     final s = raw.trim().replaceAll(RegExp(r'/+$'), '');
@@ -154,12 +165,28 @@ class PreviewApi {
     final uri = baseUri;
     final port = uri.hasPort ? uri.port : (uri.scheme == 'https' ? 443 : 80);
     try {
-      if (_probe) {
+      if (_probe || _customResolver) {
+        // Diagnostic lookup: records what the host resolved to, never changes the outcome of the request. A failure or a
+        // timeout is recorded and the request goes on with the real client, which does its own lookup and errors as before.
         tracker.begin(StepTracker.lookup);
-        final addrs = await InternetAddress.lookup(uri.host);
-        tracker.begin(StepTracker.connect);
-        final sock = await Socket.connect(addrs.first, port);
-        sock.destroy();
+        tracker.resolved = const [];
+        tracker.lookupError = null;
+        List<InternetAddress> addrs = const [];
+        try {
+          addrs = await _resolver(uri.host).timeout(lookupCap);
+          tracker.resolved = addrs;
+        } on TimeoutException {
+          tracker.lookupError = 'no answer within ${lookupCap.inSeconds} seconds';
+        } on SocketException catch (e) {
+          tracker.lookupError = e.message;
+        } on Object catch (e) {
+          tracker.lookupError = '$e';
+        }
+        if (_probe && !_customResolver && addrs.isNotEmpty) {
+          tracker.begin(StepTracker.connect);
+          final sock = await Socket.connect(addrs.first, port);
+          sock.destroy();
+        }
       }
       tracker.begin(StepTracker.firstByte);
       final streamed = await _client.send(make());

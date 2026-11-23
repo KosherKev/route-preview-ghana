@@ -9,8 +9,15 @@ import 'support/mixed.dart';
 
 void main() {
   late FlyoverPlayerController p;
-  Future<void> pump(WidgetTester t) async {
-    p = FlyoverPlayerController(FlyoverTimeline.fromManifest(mixedManifest(), availableClips: const {kClipA}));
+  Future<void> pump(WidgetTester t, {bool oldServerNoFlyover = false}) async {
+    final m = mixedManifest(oldServerNoFlyover
+        ? (j) {
+            for (final i in [0, 3]) {
+              ((j['segments'] as List)[i] as Map<String, dynamic>)['flyover'] = null; // an old server; the schema forbids it now
+            }
+          }
+        : null);
+    p = FlyoverPlayerController(FlyoverTimeline.fromManifest(m, availableClips: const {kClipA}));
     await t.pumpWidget(MaterialApp(home: Scaffold(body: Align(alignment: Alignment.bottomCenter, child: SegmentStrip(controller: p)))));
   }
 
@@ -29,13 +36,20 @@ void main() {
       0: 'Street video (local clip)',
       1: 'Flyover',
       2: 'Flyover fallback (no local clip)',
-      3: 'No preview for this section',
+      3: 'Flyover fallback (no local clip)', // the ready clip carries keyframes (schema: a flyover on every segment)
     };
     for (final s in t.segments) {
       p.seek(s.startT + s.durationSec / 2);
       await tester.pump();
       expect(find.text('Section ${s.index + 1} of 4 · ${want[s.index]}'), findsOneWidget, reason: 'segment ${s.index}');
     }
+  });
+
+  testWidgets('NEGATIVE: an old server with no flyover on a missing clip still labels it "No preview for this section"', (tester) async {
+    await pump(tester, oldServerNoFlyover: true);
+    p.seek(p.timeline.segments[3].startT + p.timeline.segments[3].durationSec / 2);
+    await tester.pump();
+    expect(find.text('Section 4 of 4 · No preview for this section'), findsOneWidget);
   });
 
   testWidgets('tapping a block jumps to the start of that section', (tester) async {

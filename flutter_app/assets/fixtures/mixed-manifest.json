@@ -74,7 +74,102 @@
     "min": 2024,
     "max": 2024
    },
-   "flyover": null
+   "flyover": {
+    "durationSec": 10.0,
+    "nominalSpeedMps": 30.0,
+    "keyframes": [
+     {
+      "t": 0.0,
+      "offsetM": 4800.0,
+      "lat": 5.564229,
+      "lon": -0.201751,
+      "bearingDeg": 166.84,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "linear"
+     },
+     {
+      "t": 1.25,
+      "offsetM": 4837.5,
+      "lat": 5.563907,
+      "lon": -0.201653,
+      "bearingDeg": 184.42,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 2.5,
+      "offsetM": 4875.0,
+      "lat": 5.563573,
+      "lon": -0.201632,
+      "bearingDeg": 204.42,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 3.75,
+      "offsetM": 4912.5,
+      "lat": 5.563262,
+      "lon": -0.201757,
+      "bearingDeg": 188.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 5.0,
+      "offsetM": 4950.0,
+      "lat": 5.562973,
+      "lon": -0.201902,
+      "bearingDeg": 168.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 6.25,
+      "offsetM": 4987.5,
+      "lat": 5.562755,
+      "lon": -0.201699,
+      "bearingDeg": 148.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 7.5,
+      "offsetM": 5025.0,
+      "lat": 5.56266,
+      "lon": -0.201374,
+      "bearingDeg": 168.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 8.75,
+      "offsetM": 5062.5,
+      "lat": 5.562372,
+      "lon": -0.201336,
+      "bearingDeg": 188.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 10.0,
+      "offsetM": 5100.0,
+      "lat": 5.562151,
+      "lon": -0.201591,
+      "bearingDeg": 208.75,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     }
+    ]
+   }
   },
   {
    "index": 1,
@@ -305,7 +400,72 @@
     "min": 2024,
     "max": 2024
    },
-   "flyover": null
+   "flyover": {
+    "durationSec": 6.0,
+    "nominalSpeedMps": 29.58,
+    "keyframes": [
+     {
+      "t": 0.0,
+      "offsetM": 5550.0,
+      "lat": 5.561095,
+      "lon": -0.204531,
+      "bearingDeg": 228.07,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "linear"
+     },
+     {
+      "t": 1.2,
+      "offsetM": 5585.49,
+      "lat": 5.560882,
+      "lon": -0.20477,
+      "bearingDeg": 228.11,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 2.4,
+      "offsetM": 5620.99,
+      "lat": 5.560669,
+      "lon": -0.205008,
+      "bearingDeg": 228.94,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 3.6,
+      "offsetM": 5656.48,
+      "lat": 5.560458,
+      "lon": -0.205249,
+      "bearingDeg": 229.06,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 4.8,
+      "offsetM": 5691.98,
+      "lat": 5.56025,
+      "lon": -0.205493,
+      "bearingDeg": 228.58,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     },
+     {
+      "t": 6.0,
+      "offsetM": 5727.47,
+      "lat": 5.560039,
+      "lon": -0.205733,
+      "bearingDeg": 248.58,
+      "pitchDeg": 60.0,
+      "zoom": 16.5,
+      "easing": "cubic-in-out"
+     }
+    ]
+   }
   }
  ],
  "overlays": {

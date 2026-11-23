@@ -244,7 +244,10 @@ class TileScene implements Scene {
           'https://www.openstreetmap.org/copyright',
         ),
         // Exactly the string in the terrain tile file's metadata (docs/data/terrain.md).
-        Attribution('Terrain', tiles.terrain?.attribution ?? ''),
+        if (tiles.hasTerrain)
+          Attribution('Terrain', tiles.terrain?.attribution ?? '')
+        else
+          Attribution('Terrain', tiles.terrainNote ?? kNoTerrainNote),
         Attribution('Tile file', tiles.note ?? ''),
         const Attribution(
           'Route and heights',
@@ -259,7 +262,7 @@ class TileScene implements Scene {
   @override
   Future<void> onStyleLoaded(MapLibreMapController map) async {
     debugPrint('[flyover] tile style ready: vector=${tiles.vector?.minZoom}-${tiles.vector?.maxZoom} '
-        'layers=${tiles.vector?.vectorLayers} terrain=${tiles.terrain?.minZoom}-${tiles.terrain?.maxZoom} hillshade=$hillshade');
+        'layers=${tiles.vector?.vectorLayers} terrain=${tiles.terrain?.minZoom}-${tiles.terrain?.maxZoom} hillshade=${hillshade && tiles.hasTerrain}');
     if (probeUnsupported) {
       final out = <String>[];
       try {

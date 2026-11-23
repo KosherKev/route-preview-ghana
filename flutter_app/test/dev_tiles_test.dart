@@ -131,25 +131,63 @@ void main() {
     test('a missing directory or no files: not usable, the message names both files and the fixture fallback', () async {
       final missing = await loadDevTiles(Directory('${dir.path}/nope'));
       expect(missing.usable, isFalse);
-      expect(missing.message, allOf(contains(kVectorTilesFile), contains(kTerrainTilesFile), contains('fixture'), contains('push_dev_tiles')));
+      expect(missing.message, allOf(contains(kVectorV2TilesFile), contains(kVectorTilesFile), contains('fixture'), contains('push_dev_tiles')));
       expect((await loadDevTiles(dir)).usable, isFalse);
     });
 
-    test('one file missing: not usable and says which', () async {
+    test('terrain present: both URLs, hasTerrain, no terrain note', () async {
+      putVector();
+      putTerrain();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.hasTerrain, isTrue);
+      expect(r.terrainUrl, endsWith('/$kTerrainTilesFile'));
+      expect(r.terrainNote, isNull);
+    });
+
+    test('terrain absent: still usable, no terrain URL, and the one-line note', () async {
       putVector();
       final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.message, isNull);
+      expect(r.hasTerrain, isFalse);
+      expect(r.terrainUrl, isEmpty);
+      expect(r.terrainNote, 'terrain not installed: no hillshade');
+      expect(r.terrainProblem, isNull, reason: 'absent is not a problem');
+      expect(r.vectorUrl, endsWith('/$kVectorTilesFile'));
+    });
+
+    test('terrain absent with v2: v2 is used and there is still no hillshade', () async {
+      putV2();
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.vectorFile, kVectorV2TilesFile);
+      expect(r.terrainUrl, isEmpty);
+    });
+
+    test('terrain file broken or the wrong kind: treated as not installed, with the reason kept, never an error', () async {
+      putVector();
+      writePmtiles(dir, kTerrainTilesFile, pmtilesBytes(tileType: 1)); // vector where terrain is expected
+      final r = await loadDevTiles(dir);
+      expect(r.usable, isTrue);
+      expect(r.hasTerrain, isFalse);
+      expect(r.terrainNote, kNoTerrainNote);
+      expect(r.terrainProblem, contains('$kTerrainTilesFile is not a terrain archive'));
+    });
+
+    test('vector missing but terrain present: not usable (the fixture takes over)', () async {
+      putTerrain();
+      final r = await loadDevTiles(dir);
       expect(r.usable, isFalse);
-      expect(r.message, contains('$kTerrainTilesFile is missing'));
-      expect(r.message, isNot(contains('$kVectorTilesFile is missing')));
+      expect(r.message, contains('$kVectorTilesFile is missing'));
     });
 
     test('a file that is not PMTiles, or the wrong kind, is reported, not thrown', () async {
       File('${dir.path}/$kVectorTilesFile').writeAsStringSync('this is not a tile archive');
-      writePmtiles(dir, kTerrainTilesFile, pmtilesBytes(tileType: 1)); // vector where terrain is expected
+      putTerrain();
       final r = await loadDevTiles(dir);
       expect(r.usable, isFalse);
       expect(r.message, contains('$kVectorTilesFile is not a valid PMTiles file'));
-      expect(r.message, contains('$kTerrainTilesFile is not a terrain archive'));
     });
 
     test('an empty or truncated file is reported', () async {
